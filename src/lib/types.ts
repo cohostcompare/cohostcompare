@@ -1,16 +1,5 @@
 export type Platform = 'Airbnb' | 'Booking.com' | 'Stayz' | 'Vrbo' | 'Direct';
 
-export type Service =
-  | 'Listing setup'
-  | 'Photography'
-  | 'Dynamic pricing'
-  | 'Guest messaging'
-  | 'Check-in'
-  | 'Cleaning and linen'
-  | 'Maintenance'
-  | 'Registration help'
-  | 'Styling';
-
 /** What anyone can see on a manager's profile. */
 export type PublicManager = {
   slug: string;
@@ -20,30 +9,34 @@ export type PublicManager = {
   initials: string;
   cities: string[];
   suburbs: string[];
-  postcodes: string[];
   propertyCount: number | null;
   avgRating: number | null;
   reviewCount: number | null;
-  platforms: Platform[];
-  services: Service[];
-  feeMin: number; // % of booking revenue
-  feeMax: number;
-  licensedAgent: boolean;
-  responseHours: number | null; // median, from our enquiries
+  avgOccupancy: number | null; // 0–1, last 12 months
+  avgNightlyRate: number | null; // A$
+  platforms: string[];
+  services: string[];
+  feeMin: number | null; // % of booking revenue, only when published by the manager
+  feeMax: number | null;
+  licensedAgent: boolean | null;
+  responseHours: number | null;
   claimed: boolean;
+  dataAsOf: string | null;
   demo?: boolean;
 };
 
+/** Search results add how active the manager is near the searched location. */
+export type NearbyManager = PublicManager & { nearby: number; nearbyRating: number | null; nearestKm: number | null };
+
 /** Only after a free owner account. */
 export type GatedDetails = {
+  feeNote: string | null;
   setupFee: number | null; // A$
-  cleaningPassedOn: boolean;
-  linenIncluded: boolean;
+  setupNote: string | null;
+  cleaningPassedOn: boolean | null;
+  linenIncluded: boolean | null;
   minTermMonths: number | null;
   noticeDays: number | null;
-  ownerStaysAllowed: string;
+  ownerStaysAllowed: string | null;
   inclusions: string[];
-  nearbyStats?: { withinKm: number; properties: number; avgRating: number | null };
 };
-
-export type Manager = PublicManager & { gated: GatedDetails };

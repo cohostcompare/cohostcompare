@@ -1,33 +1,46 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import PlacesInput from '@/components/PlacesInput';
 import { submitQuoteRequest } from './actions';
+import { checkCoverage } from './coverage';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
 const L = { display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 } as const;
 const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))` });
 
-type Addr = { street: string; suburb: string; state: string; postcode: string };
+type Addr = { street: string; suburb: string; state: string; postcode: string; lat: number | null; lng: number | null };
 
-type M = { slug: string; name: string; postcodes: string[] };
+type M = { slug: string; name: string };
 
 export default function QuoteForm({ managers, initial, email }: { managers: M[]; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
-  const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode));
+  const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode) && initial.lat != null);
   const [editing, setEditing] = useState(!known);
   const [removed, setRemoved] = useState<string[]>([]);
   const active = managers.filter((m) => !removed.includes(m.slug));
-  const pcOk = /^\d{4}$/.test(addr.postcode);
-  const uncovered = pcOk ? active.filter((m) => !m.postcodes.includes(addr.postcode)) : [];
-  const covered = active.filter((m) => !uncovered.includes(m));
-  const set = (k: keyof Addr) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setAddr({ ...addr, [k]: e.target.value });
+  const located = addr.lat != null && addr.lng != null;
+  const [coveredSlugs, setCoveredSlugs] = useState<string[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    setCoveredSlugs(null);
+    if (located) checkCoverage(addr.lat!, addr.lng!, managers.map((m) => m.slug)).then((c) => { if (live) setCoveredSlugs(c); });
+    return () => { live = false; };
+  }, [addr.lat, addr.lng, located, managers]);
+  const checking = located && coveredSlugs === null;
+  const uncovered = located && coveredSlugs ? active.filter((m) => !coveredSlugs.includes(m.slug)) : [];
+  const covered = located && coveredSlugs ? active.filter((m) => coveredSlugs.includes(m.slug)) : [];
+  // Typing over the suburb or postcode means we no longer know exactly where the property is.
+  const set = (k: 'street' | 'suburb' | 'state' | 'postcode') => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setAddr({ ...addr, [k]: e.target.value, ...(k === 'suburb' || k === 'postcode' ? { lat: null, lng: null } : {}) });
 
   return (
     <form action={action} className="panel" style={{ display: 'grid', gap: 16 }}>
       <input type="hidden" name="managers" value={covered.map((m) => m.slug).join(',')} />
+      <input type="hidden" name="lat" value={addr.lat ?? ''} />
+      <input type="hidden" name="lng" value={addr.lng ?? ''} />
       <p className="hint" style={{ margin: 0 }}>Signed in as {email}.</p>
       <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
@@ -49,7 +62,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       ) : (
         <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 12 }}>
         <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Property address</legend>
-        <PlacesInput kind="any" placeholder="Start typing the address or suburb to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode })} />
+        <PlacesInput kind="any" placeholder="Start typing the address or suburb to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode, lat: p.lat ?? null, lng: p.lng ?? null })} />
         <label style={L}>Street address (optional if you haven&apos;t bought yet)<input className="field" name="street" value={addr.street} onChange={set('street')} autoComplete="address-line1" placeholder="Unit/number and street" /></label>
         <div style={grid(140)}>
           <label style={L}>Suburb<input className="field" name="suburb" value={addr.suburb} onChange={set('suburb')} autoComplete="address-level2" required /></label>
@@ -61,9 +74,12 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       </fieldset>
       )}
 
+      {!located && (
+        <p role="status" style={{ margin: 0, color: 'var(--signal)' }}>Pick the address from the suggestions so we can check which managers cover it.</p>
+      )}
       {uncovered.length > 0 && (
         <div role="alert" style={{ border: '1px solid var(--signal)', borderRadius: 10, padding: '12px 14px', display: 'grid', gap: 8 }}>
-          <b>{uncovered.map((m) => m.name).join(' and ')} {uncovered.length === 1 ? "doesn't" : "don't"} cover postcode {addr.postcode}.</b>
+          <b>{uncovered.map((m) => m.name).join(' and ')} {uncovered.length === 1 ? "doesn't" : "don't"} run homes near {addr.suburb || 'this address'}.</b>
           <span className="hint">
             {covered.length
               ? `Remove ${uncovered.length === 1 ? 'them' : 'them'} to send your request to ${covered.map((m) => m.name).join(', ')} only, or search again for managers who cover this address.`
@@ -71,7 +87,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
           </span>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {covered.length > 0 && <button type="button" className="btn secondary" onClick={() => setRemoved([...removed, ...uncovered.map((m) => m.slug)])}>Remove {uncovered.length === 1 ? uncovered[0].name : 'them'}</button>}
-            <a className="btn secondary" href={`/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}) }).toString()}`}>Search managers for this address</a>
+            <a className="btn secondary" href={`/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}), ...(located ? { lat: String(addr.lat), lng: String(addr.lng) } : {}) }).toString()}`}>Search managers for this address</a>
           </div>
         </div>
       )}
@@ -102,8 +118,8 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       <label style={L}>Anything else managers should know? (optional)
         <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
       </label>
-      <button className="btn primary" type="submit" disabled={pending || uncovered.length > 0 || covered.length === 0}>
-        {pending ? 'Sending…' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
+      <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || covered.length === 0}>
+        {pending ? 'Sending…' : checking ? 'Checking coverage…' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
       <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept.</p>

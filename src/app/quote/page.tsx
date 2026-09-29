@@ -7,7 +7,7 @@ import QuoteForm from './QuoteForm';
 
 export const metadata: Metadata = { title: 'Request quotes', robots: { index: false } };
 
-type SP = Promise<{ managers?: string; postcode?: string; street?: string; suburb?: string; state?: string }>;
+type SP = Promise<{ managers?: string; postcode?: string; street?: string; suburb?: string; state?: string; lat?: string; lng?: string }>;
 
 export default async function Quote({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
@@ -27,7 +27,7 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
         <div className="panel">Pick managers from your search results first. <Link href="/">Start a search</Link></div>
       )}
       {picked.length > 0 && (user?.email ? (
-        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name, postcodes: m.postcodes }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '' }} email={user.email} />
+        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '', lat: sp.lat ? Number(sp.lat) : null, lng: sp.lng ? Number(sp.lng) : null }} email={user.email} />
       ) : (
         <EmailSignIn next={here} intro="First, confirm your email. We'll send a one-click link that brings you straight back here. This also unlocks full fees and contract terms on every profile." />
       ))}

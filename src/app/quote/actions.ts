@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { publicManager } from '@/lib/data';
+import { coveringSlugs, publicManager } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -25,8 +25,11 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (!name) return { error: 'Enter your name.' };
   if (!suburb) return { error: "Enter your property's suburb." };
   if (!/^\d{4}$/.test(postcode)) return { error: "Enter your property's 4-digit postcode." };
-  const notCovering = managers.filter((m) => !m.postcodes.includes(postcode));
-  if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} cover postcode ${postcode}. Remove ${notCovering.length === 1 ? 'them' : 'them'} or search again for this address.` };
+  const lat = Number(form.get('lat')), lng = Number(form.get('lng'));
+  if (!form.get('lat') || !form.get('lng') || !Number.isFinite(lat) || !Number.isFinite(lng)) return { error: 'Pick the property address from the suggestions so we can check which managers cover it.' };
+  const covering = await coveringSlugs(lat, lng, managers.map((m) => m.slug));
+  const notCovering = managers.filter((m) => !covering.has(m.slug));
+  if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} run homes near this address. Remove them or search again for this address.` };
   if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
   if (!services.length) return { error: 'Choose at least one service you want.' };
 

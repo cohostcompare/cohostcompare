@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import type { PublicManager } from '@/lib/types';
+import type { NearbyManager } from '@/lib/types';
 
 const MAX = 5;
+const pct = (v: number | null) => (v == null ? null : `${Math.round(v * 100)}%`);
 
-export default function ResultsList({ managers, query }: { managers: PublicManager[]; query: string }) {
+export default function ResultsList({ managers, query }: { managers: NearbyManager[]; query: string }) {
   const router = useRouter();
   const [picked, setPicked] = useState<string[]>([]);
 
@@ -20,25 +21,27 @@ export default function ResultsList({ managers, query }: { managers: PublicManag
       <div className="results">
         {managers.map((m) => {
           const on = picked.includes(m.slug);
+          const fee = m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`;
           return (
             <article key={m.slug} className={`card${on ? ' selected' : ''}`}>
               <div className="av" aria-hidden="true">{m.initials}</div>
               <div style={{ minWidth: 0 }}>
-                <h2><Link href={`/managers/${m.slug}?${query}`}>{m.name}</Link> {m.demo && <span className="demo-flag">Demo</span>}</h2>
+                <h2><Link href={`/managers/${m.slug}?${query}`}>{m.name}</Link></h2>
+                {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you{m.nearbyRating ? ` · ${m.nearbyRating.toFixed(2)} ★ nearby` : ''}</p>}
                 <div className="meta">
-                  {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} guest reviews</span>}
-                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> properties managed</span>}
-                  {m.responseHours != null && <span>Replies in about <b>{m.responseHours}h</b></span>}
+                  {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
+                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> homes tracked</span>}
+                  {m.avgOccupancy != null && <span><b>{pct(m.avgOccupancy)}</b> nights booked</span>}
                 </div>
-                <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}</div>
+                <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
                 <label className="pick">
                   <input type="checkbox" checked={on} onChange={() => toggle(m.slug)} disabled={!on && picked.length >= MAX} />
                   Add to my quote request
                 </label>
               </div>
               <div className="fee">
-                <span className="n">{m.feeMin === m.feeMax ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`}</span>
-                <span className="s">management fee<br /><Link href={`/managers/${m.slug}?${query}`}>Full fee breakdown</Link></span>
+                {fee ? <><span className="n">{fee}</span><span className="s">management fee</span></> : <><span className="n" style={{ fontSize: 16 }}>Not published</span><span className="s">fees come with your quote</span></>}
+                <span className="s"><br /><Link href={`/managers/${m.slug}?${query}`}>View profile</Link></span>
               </div>
             </article>
           );
