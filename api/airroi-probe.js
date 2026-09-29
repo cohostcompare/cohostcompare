@@ -9,14 +9,21 @@ export default async function handler(req, res) {
   }
   const lat = Number((req.query && req.query.lat) || url.searchParams.get('lat') || -33.8915);   // Bondi Beach
   const lng = Number((req.query && req.query.lng) || url.searchParams.get('lng') || 151.2767);
-  const r = await fetch('https://api.airroi.com/listings/search/radius', {
-    method: 'POST',
-    headers: { 'x-api-key': process.env.AIRROI_API_KEY || '', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ latitude: lat, longitude: lng, radius_miles: 1, currency: 'native', filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: 50, offset: 0 } }),
-  });
-  const text = await r.text();
-  let data; try { data = JSON.parse(text); } catch { return res.status(200).json({ status: r.status, raw: text.slice(0, 2000) }); }
-  const list = data.results || data.listings || data.data || [];
+  const pages = Math.min(Number((req.query && req.query.pages) || 5), 10);
+  let list = []; let data = {}; let status = 0;
+  for (let i = 0; i < pages; i++) {
+    const r = await fetch('https://api.airroi.com/listings/search/radius', {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.AIRROI_API_KEY || '', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ latitude: lat, longitude: lng, radius_miles: 1, currency: 'native', filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: 10, offset: i * 10 } }),
+    });
+    status = r.status;
+    const text = await r.text();
+    try { data = JSON.parse(text); } catch { return res.status(200).json({ status, raw: text.slice(0, 2000) }); }
+    const batch = data.results || data.listings || data.data || [];
+    list = list.concat(batch);
+    if (batch.length < 10) break;
+  }
   const first = list[0] || {};
   const flatKeys = (o, p = '') => Object.entries(o || {}).flatMap(([k, v]) =>
     v && typeof v === 'object' && !Array.isArray(v) ? flatKeys(v, p + k + '.') : [p + k]);
@@ -27,7 +34,7 @@ export default async function handler(req, res) {
   if (hostKey) for (const l of list) { const h = String(get(l, hostKey)); groups[h] = (groups[h] || 0) + 1; }
   res.setHeader('Cache-Control', 'no-store');
   return res.status(200).json({
-    status: r.status,
+    status,
     topLevelKeys: Object.keys(data),
     errors: data.errors || null,
     totalCount: data.total_count ?? data.total ?? null,
