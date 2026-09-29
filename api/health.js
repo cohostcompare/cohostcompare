@@ -2,7 +2,7 @@
 export default function handler(req, res) {
   const url = new URL(req.url, 'https://x');
   const expected = (process.env.ADMIN_TOKEN || '').replace(/[`'"\s]/g, '');
-  const t = url.searchParams.get('t');
+  const t = (req.query && req.query.t) ?? url.searchParams.get('t');
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({
     ok: true,
@@ -12,6 +12,6 @@ export default function handler(req, res) {
     airroiKey: Boolean(process.env.AIRROI_API_KEY),
     resendKey: Boolean(process.env.RESEND_API_KEY),
     supabaseSecret: Boolean(process.env.SUPABASE_SECRET_KEY),
-    commit: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7),
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), seenQueryKeys: Object.keys(req.query || {}), rawUrlHasQuery: String(req.url).includes('?'),
   });
 }

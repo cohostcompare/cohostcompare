@@ -4,11 +4,11 @@
 export default async function handler(req, res) {
   const url = new URL(req.url, 'https://x');
   const expected = (process.env.ADMIN_TOKEN || '').replace(/[`'"\s]/g, '');
-  if (!expected || (url.searchParams.get('t') || '').trim() !== expected) {
+  if (!expected || String((req.query && req.query.t) ?? url.searchParams.get('t') ?? '').trim() !== expected) {
     return res.status(404).send('Not found');
   }
-  const lat = Number(url.searchParams.get('lat') || -33.8915);   // Bondi Beach
-  const lng = Number(url.searchParams.get('lng') || 151.2767);
+  const lat = Number((req.query && req.query.lat) || url.searchParams.get('lat') || -33.8915);   // Bondi Beach
+  const lng = Number((req.query && req.query.lng) || url.searchParams.get('lng') || 151.2767);
   const r = await fetch('https://api.airroi.com/listings/search/radius', {
     method: 'POST',
     headers: { 'x-api-key': process.env.AIRROI_API_KEY || '', 'Content-Type': 'application/json' },
