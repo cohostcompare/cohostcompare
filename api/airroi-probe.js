@@ -3,7 +3,8 @@
 // ADMIN_TOKEN set in Vercel. Remove once the data pipeline is built.
 export default async function handler(req, res) {
   const url = new URL(req.url, 'https://x');
-  if (!process.env.ADMIN_TOKEN || url.searchParams.get('t') !== process.env.ADMIN_TOKEN) {
+  const expected = (process.env.ADMIN_TOKEN || '').trim().replace(/^['"]|['"]$/g, '');
+  if (!expected || (url.searchParams.get('t') || '').trim() !== expected) {
     return res.status(404).send('Not found');
   }
   const lat = Number(url.searchParams.get('lat') || -33.8915);   // Bondi Beach
