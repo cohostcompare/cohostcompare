@@ -1,24 +1,44 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
+import PlacesInput from '@/components/PlacesInput';
 import { submitQuoteRequest } from './actions';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
+const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
 const L = { display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 } as const;
+const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))` });
 
-export default function QuoteForm({ managers, address, postcode, email }: { managers: string; address: string; postcode: string; email: string }) {
+type Addr = { street: string; suburb: string; state: string; postcode: string };
+
+export default function QuoteForm({ managers, initial, email }: { managers: string; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
+  const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
+  const set = (k: keyof Addr) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setAddr({ ...addr, [k]: e.target.value });
+
   return (
     <form action={action} className="panel" style={{ display: 'grid', gap: 16 }}>
       <input type="hidden" name="managers" value={managers} />
       <p className="hint" style={{ margin: 0 }}>Signed in as {email}.</p>
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
+      <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
         <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
       </div>
-      <label style={L}>Property address<input className="field" name="address" defaultValue={address} autoComplete="street-address" /></label>
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))' }}>
-        <label style={L}>Postcode<input className="field" name="postcode" defaultValue={postcode} inputMode="numeric" maxLength={4} required /></label>
+
+      <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 12 }}>
+        <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Property address</legend>
+        <PlacesInput kind="address" placeholder="Start typing the address to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode })} />
+        <label style={L}>Street address<input className="field" name="street" value={addr.street} onChange={set('street')} autoComplete="address-line1" placeholder="Unit/number and street" /></label>
+        <div style={grid(140)}>
+          <label style={L}>Suburb<input className="field" name="suburb" value={addr.suburb} onChange={set('suburb')} autoComplete="address-level2" required /></label>
+          <label style={L}>State
+            <select className="field" name="state" value={addr.state} onChange={set('state')}>{STATES.map((s) => <option key={s}>{s}</option>)}</select>
+          </label>
+          <label style={L}>Postcode<input className="field" name="postcode" value={addr.postcode} onChange={set('postcode')} inputMode="numeric" maxLength={4} autoComplete="postal-code" required /></label>
+        </div>
+      </fieldset>
+
+      <div style={grid(150)}>
         <label style={L}>Property type
           <select className="field" name="property_type"><option>Apartment</option><option>House</option><option>Townhouse</option><option>Granny flat or studio</option></select>
         </label>
@@ -26,7 +46,7 @@ export default function QuoteForm({ managers, address, postcode, email }: { mana
           <select className="field" name="bedrooms" defaultValue="2">{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select>
         </label>
       </div>
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))' }}>
+      <div style={grid(200)}>
         <label style={L}>Is it listed now?
           <select className="field" name="currently_listed"><option>Not yet listed</option><option>Listed, I manage it myself</option><option>Listed with another manager</option></select>
         </label>

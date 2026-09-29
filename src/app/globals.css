@@ -85,3 +85,4 @@ h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; }
 footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
 .field { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); font: 400 16px var(--body); }
 @media (max-width: 880px) { .hero[style] { grid-template-columns: 1fr !important; } }
+.places gmp-place-autocomplete { width: 100%; color-scheme: light; }

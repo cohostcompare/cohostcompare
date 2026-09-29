@@ -7,7 +7,7 @@ import { currentUser } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 type P = Promise<{ slug: string }>;
-type SP = Promise<{ postcode?: string; address?: string }>;
+type SP = Promise<{ postcode?: string; street?: string; suburb?: string; state?: string }>;
 
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
   const m = await publicManager((await params).slug);
@@ -27,7 +27,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const g = user ? await gatedDetails(m.slug) : null;
   const q = new URLSearchParams({ managers: m.slug });
   if (sp.postcode) q.set('postcode', sp.postcode);
-  if (sp.address) q.set('address', sp.address);
+  for (const k of ['street', 'suburb', 'state'] as const) if (sp[k]) q.set(k, sp[k]!);
 
   return (
     <main className="profile">

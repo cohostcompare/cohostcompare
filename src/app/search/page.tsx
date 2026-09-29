@@ -5,7 +5,7 @@ import { managersForPostcode } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Managers near you', robots: { index: false } };
 
-type SP = Promise<{ postcode?: string; address?: string; lat?: string; lng?: string }>;
+type SP = Promise<{ postcode?: string; street?: string; suburb?: string; state?: string; lat?: string; lng?: string }>;
 
 export default async function Search({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
@@ -13,8 +13,8 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
   const managers = postcode ? await managersForPostcode(postcode) : [];
   const q = new URLSearchParams();
   if (postcode) q.set('postcode', postcode);
-  if (sp.address) q.set('address', sp.address);
-  const place = sp.address || (postcode ? `postcode ${postcode}` : '');
+  for (const k of ['street', 'suburb', 'state'] as const) if (sp[k]) q.set(k, sp[k]!);
+  const place = sp.street ? `${sp.street}, ${sp.suburb ?? ''}`.replace(/, $/, '') : sp.suburb ? `${sp.suburb} ${postcode}` : postcode ? `postcode ${postcode}` : '';
 
   return (
     <main>
