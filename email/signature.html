@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Email signature · CoHostCompare</title>
+<style>
+  body{margin:0;background:#F3F6F5;color:#10302F;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5}
+  .wrap{max-width:680px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:22px;margin:0 0 6px}
+  .how{color:#4A605D;margin:0 0 24px}
+  ol{padding-left:20px;color:#4A605D}
+  .frame{background:#fff;border:1px solid #DCE5E2;border-radius:12px;padding:28px 24px;margin:24px 0}
+  .label{font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;color:#4A605D;margin:0 0 12px}
+  button{font:bold 15px Arial,Helvetica,sans-serif;background:#0F5E57;color:#fff;border:0;border-radius:10px;padding:12px 18px;cursor:pointer}
+  #msg{margin-left:12px;color:#0F5E57;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ben's email signature</h1>
+  <p class="how">For Gmail on hello@cohostcompare.com. This page isn't linked from the site or indexed.</p>
+
+  <div class="frame">
+    <p class="label">Signature</p>
+    <!-- SIGNATURE START: email-safe table layout, inline styles, hosted PNG -->
+    <div id="sig">
+      <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#10302F;">
+        <tr>
+          <td valign="middle" style="padding:0 14px 0 0;border-right:2px solid #DDEEE9;">
+            <a href="https://www.cohostcompare.com" style="text-decoration:none;"><img src="https://www.cohostcompare.com/email/logo-mark.png" width="56" height="56" alt="CoHostCompare" style="display:block;border:0;width:56px;height:56px;"></a>
+          </td>
+          <td valign="middle" style="padding:0 0 0 14px;">
+            <div style="font-size:15px;line-height:20px;font-weight:bold;color:#10302F;">Ben Deeley</div>
+            <div style="font-size:13px;line-height:18px;color:#4A605D;">Founder, <span style="color:#0F5E57;font-weight:bold;">CoHostCompare</span></div>
+            <div style="font-size:13px;line-height:18px;color:#4A605D;padding-top:4px;">Compare short-term rental managers: fees side by side, every platform.</div>
+            <div style="font-size:13px;line-height:18px;padding-top:4px;">
+              <a href="https://www.cohostcompare.com" style="color:#0F5E57;text-decoration:none;font-weight:bold;">cohostcompare.com</a>
+              <span style="color:#8FA6A1;">&nbsp;|&nbsp;</span>
+              <a href="mailto:hello@cohostcompare.com" style="color:#0F5E57;text-decoration:none;">hello@cohostcompare.com</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <!-- SIGNATURE END -->
+  </div>
+
+  <p><button type="button" id="copy">Copy signature</button><span id="msg" role="status"></span></p>
+
+  <p class="label" style="margin-top:28px">Add it to Gmail</p>
+  <ol>
+    <li>Click <b>Copy signature</b>. If nothing copies, select everything inside the white box with your mouse and press Cmd+C (Ctrl+C on Windows).</li>
+    <li>In Gmail, open <b>Settings (gear) → See all settings → General → Signature → Create new</b>, name it "CoHostCompare".</li>
+    <li>Click in the signature box and paste (Cmd+V). The logo and links come across.</li>
+    <li>Under <b>Signature defaults</b>, set it for new emails and for replies/forwards, then <b>Save changes</b> at the bottom.</li>
+  </ol>
+</div>
+<script>
+document.getElementById('copy').addEventListener('click', async () => {
+  const el = document.getElementById('sig'), msg = document.getElementById('msg');
+  try {
+    const html = new Blob([el.innerHTML], {type:'text/html'});
+    const text = new Blob([el.innerText], {type:'text/plain'});
+    await navigator.clipboard.write([new ClipboardItem({'text/html': html, 'text/plain': text})]);
+    msg.textContent = 'Copied. Now paste into Gmail.';
+  } catch (e) {
+    const r = document.createRange(); r.selectNodeContents(el);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    msg.textContent = 'Selected. Press Cmd+C (or Ctrl+C) to copy.';
+  }
+});
+</script>
+</body>
+</html>
