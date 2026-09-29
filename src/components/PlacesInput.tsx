@@ -114,9 +114,9 @@ export default function PlacesInput({ kind, placeholder, onPick, id, fallback }:
 
   return (
     <>
-      <div ref={holder} className="places" hidden={status === 'failed'}>
-        {status === 'loading' && <input className="field" disabled placeholder="Loading suggestions…" />}
-      </div>
+      {/* Google's element lives in its own empty div that React never renders into. */}
+      <div ref={holder} className="places" hidden={status !== 'ready'} />
+      {status === 'loading' && <input className="field" disabled placeholder="Loading suggestions…" />}
       {status === 'failed' && (fallback ?? null)}
       {status === 'failed' && code && <p className="hint" style={{ margin: 0, fontSize: 12 }}>Suggestions unavailable ({code}).</p>}
     </>
