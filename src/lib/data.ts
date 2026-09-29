@@ -32,3 +32,10 @@ export function feeBand(m: Pick<PublicManager, 'feeMin' | 'feeMax'>): string {
 }
 
 export const coveredPostcodes = Array.from(new Set(demoManagers.flatMap((m) => m.postcodes))).sort();
+
+import type { GatedDetails } from './types';
+
+/** Owner-only details. Call only after confirming the visitor is signed in. */
+export async function gatedDetails(slug: string): Promise<GatedDetails | null> {
+  return demoManagers.find((m) => m.slug === slug)?.gated ?? null;
+}

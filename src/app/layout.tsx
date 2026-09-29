@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
-            <nav className="nav"><Link href="/#how">How it works</Link><Link href="/managers">For managers</Link></nav>
+            <nav className="nav"><Link href="/managers">For managers</Link><Link href="/account">My account</Link></nav>
           </header>
           {children}
           <footer className="site">

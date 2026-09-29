@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { allManagerSlugs, feeBand, publicManager } from '@/lib/data';
+import { feeBand, gatedDetails, publicManager } from '@/lib/data';
+import { currentUser } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 type P = Promise<{ slug: string }>;
 type SP = Promise<{ postcode?: string; address?: string }>;
-
-export async function generateStaticParams() {
-  return (await allManagerSlugs()).map((slug) => ({ slug }));
-}
 
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
   const m = await publicManager((await params).slug);
@@ -24,6 +23,8 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const m = await publicManager((await params).slug);
   if (!m) notFound();
   const sp = await searchParams;
+  const user = await currentUser();
+  const g = user ? await gatedDetails(m.slug) : null;
   const q = new URLSearchParams({ managers: m.slug });
   if (sp.postcode) q.set('postcode', sp.postcode);
   if (sp.address) q.set('address', sp.address);
@@ -61,15 +62,31 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <div><div className="label">Credentials</div><p style={{ margin: '6px 0 0' }}>{m.licensedAgent ? 'Licensed real estate agency' : 'Co-host (not a licensed agency)'}</p></div>
         </section>
 
-        <section className="locked" aria-label="Details for signed-in owners">
-          <h2 style={{ fontSize: 20, margin: 0 }}>Full fees and contract terms</h2>
-          <ul>
-            <li>Setup fee, and whether cleaning and linen are charged on top</li>
-            <li>Minimum term, notice period and rules on using the property yourself</li>
-            <li>How many properties they manage near your address, and how those are rated</li>
-          </ul>
-          <Link className="btn secondary" href={`/quote?${q.toString()}`}>Create a free account to see these</Link>
-        </section>
+        {g ? (
+          <section className="panel" style={{ display: 'grid', gap: 14 }} aria-label="Full fees and contract terms">
+            <h2 style={{ fontSize: 20, margin: 0 }}>Full fees and contract terms</h2>
+            <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '12px 24px', margin: 0 }}>
+              <div><dt className="label">Management fee</dt><dd style={{ margin: 0 }}>{feeBand(m)} of booking revenue</dd></div>
+              <div><dt className="label">Setup fee</dt><dd style={{ margin: 0 }}>{g.setupFee == null ? 'Ask' : g.setupFee === 0 ? 'None' : `A$${g.setupFee}`}</dd></div>
+              <div><dt className="label">Cleaning</dt><dd style={{ margin: 0 }}>{g.cleaningPassedOn ? 'Charged to guests' : 'Charged to you'}{g.linenIncluded ? ', linen included' : ', linen extra'}</dd></div>
+              <div><dt className="label">Minimum term</dt><dd style={{ margin: 0 }}>{g.minTermMonths ? `${g.minTermMonths} months` : 'None'}</dd></div>
+              <div><dt className="label">Notice to leave</dt><dd style={{ margin: 0 }}>{g.noticeDays ? `${g.noticeDays} days` : 'Ask'}</dd></div>
+              <div><dt className="label">Using it yourself</dt><dd style={{ margin: 0 }}>{g.ownerStaysAllowed}</dd></div>
+            </dl>
+            {g.inclusions.length > 0 && <div><div className="label">Included</div><div className="chips" style={{ marginTop: 8 }}>{g.inclusions.map((x) => <span className="chip" key={x}>{x}</span>)}</div></div>}
+            {g.nearbyStats && <p style={{ margin: 0 }}>Manages <b>{g.nearbyStats.properties} properties within {g.nearbyStats.withinKm} km</b> of this area{g.nearbyStats.avgRating ? <>, averaging <b>{g.nearbyStats.avgRating} ★</b></> : null}.</p>}
+          </section>
+        ) : (
+          <section className="locked" aria-label="Details for signed-in owners">
+            <h2 style={{ fontSize: 20, margin: 0 }}>Full fees and contract terms</h2>
+            <ul>
+              <li>Setup fee, and whether cleaning and linen are charged on top</li>
+              <li>Minimum term, notice period and rules on using the property yourself</li>
+              <li>How many properties they manage near your address, and how those are rated</li>
+            </ul>
+            <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}`)}`}>Sign in free to see these</Link>
+          </section>
+        )}
       </div>
 
       <aside className="sticky">

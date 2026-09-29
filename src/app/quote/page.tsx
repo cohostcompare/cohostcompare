@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import EmailSignIn from '@/components/EmailSignIn';
 import { publicManager } from '@/lib/data';
+import { currentUser } from '@/lib/supabase/server';
+import QuoteForm from './QuoteForm';
 
 export const metadata: Metadata = { title: 'Request quotes', robots: { index: false } };
 
@@ -9,20 +12,25 @@ type SP = Promise<{ managers?: string; postcode?: string; address?: string }>;
 export default async function Quote({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   const slugs = (sp.managers || '').split(',').filter(Boolean).slice(0, 5);
-  const picked = (await Promise.all(slugs.map(publicManager))).filter(Boolean);
+  const picked = (await Promise.all(slugs.map(publicManager))).filter((m): m is NonNullable<typeof m> => Boolean(m));
+  const user = await currentUser();
+  const here = `/quote?${new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString()}`;
 
   return (
-    <main style={{ maxWidth: 720, paddingBlock: '16px 64px' }}>
-      <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', marginBottom: 8 }}>Request quotes</h1>
-      <p style={{ color: 'var(--muted)', marginTop: 0 }}>
-        {picked.length ? <>Sending to {picked.map((m) => m!.name).join(', ')}.</> : 'Pick managers from the search results first.'}
-        {sp.address && <> Property: {sp.address}.</>}
-      </p>
-      <div className="locked">
-        <h2 style={{ fontSize: 20, margin: 0 }}>Coming next in the build</h2>
-        <p style={{ color: 'var(--muted)' }}>This step will ask for your email (one-click sign-in, no password), then a short property form: bedrooms, property type, whether it&apos;s already listed and which services you want. Each manager replies with a quote in the same format so you can compare them side by side.</p>
-        <Link className="btn secondary" href="/">Back to search</Link>
-      </div>
+    <main style={{ maxWidth: 720, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
+      <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Request quotes</h1>
+      {picked.length ? (
+        <p style={{ color: 'var(--muted)', margin: 0 }}>
+          Going to <b style={{ color: 'var(--ink)' }}>{picked.map((m) => m.name).join(', ')}</b>. Describe your property once and each replies with a quote in the same format.
+        </p>
+      ) : (
+        <div className="panel">Pick managers from your search results first. <Link href="/">Start a search</Link></div>
+      )}
+      {picked.length > 0 && (user?.email ? (
+        <QuoteForm managers={picked.map((m) => m.slug).join(',')} address={sp.address || ''} postcode={sp.postcode || ''} email={user.email} />
+      ) : (
+        <EmailSignIn next={here} intro="First, confirm your email. We'll send a one-click link that brings you straight back here. This also unlocks full fees and contract terms on every profile." />
+      ))}
     </main>
   );
 }
