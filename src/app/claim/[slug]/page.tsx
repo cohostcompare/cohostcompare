@@ -33,6 +33,8 @@ export default async function Claim({ params }: { params: P }) {
         <div className="panel">This profile has already been claimed. If that wasn&apos;t you or your team, email <b>hello@cohostcompare.com</b>.</div>
       ) : existing?.status === 'approved' ? (
         <div className="panel" style={{ background: 'var(--tint)' }}>You manage this profile. <Link href="/dashboard">Open your dashboard</Link></div>
+      ) : existing?.status === 'info_requested' ? (
+        <div className="panel" style={{ background: 'var(--tint)' }}><b>We&apos;ve emailed you asking for a little more information</b> to confirm you manage {m.name}. Reply to that email and we&apos;ll finish your claim.</div>
       ) : existing?.status === 'pending' ? (
         <div className="panel" style={{ background: 'var(--tint)' }}><b>Thanks, your claim is being checked.</b> We&apos;ll email you once it&apos;s approved, usually within one business day.</div>
       ) : existing?.status === 'rejected' ? (

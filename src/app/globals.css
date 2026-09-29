@@ -96,3 +96,15 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .av { overflow: hidden; }
 .av img { width: 100%; height: 100%; object-fit: cover; }
 .claimbox { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; }
+/* result card right column: fee, add button, profile link stacked */
+.card .side { display: grid; gap: 10px; justify-items: end; align-content: start; min-width: 170px; }
+.card .side .fee { display: grid; justify-items: end; gap: 2px; min-width: 0; }
+.card .side .fee .s { display: block; }
+.card .side .add { min-height: 40px; padding: 0 14px; width: 100%; }
+.card .side .more { margin-top: 0; }
+@media (max-width: 640px) {
+  .card .side { grid-column: 1 / -1; justify-items: stretch; grid-template-columns: 1fr auto; align-items: center; }
+  .card .side .fee { justify-items: start; }
+  .card .side .add { width: auto; }
+  .card .side .more { grid-column: 1 / -1; }
+}

@@ -35,13 +35,15 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                   {m.avgOccupancy != null && <span><b>{pct(m.avgOccupancy)}</b> nights booked</span>}
                 </div>
                 <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
-                <label className="pick above">
-                  <input type="checkbox" checked={on} onChange={() => toggle(m.slug)} disabled={!on && picked.length >= MAX} />
-                  Add to my quote request
-                </label>
               </div>
-              <div className="fee">
-                {fee ? <><span className="n">{fee}</span><span className="s">management fee</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
+              <div className="side">
+                <div className="fee">
+                  {fee ? <><span className="n">{fee}</span><span className="s">management fee</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
+                </div>
+                <button type="button" className={`btn ${on ? 'primary' : 'secondary'} add above`} aria-pressed={on}
+                  onClick={() => toggle(m.slug)} disabled={!on && picked.length >= MAX}>
+                  {on ? '✓ Added to quote' : '+ Add to quote'}
+                </button>
                 <span className="more" aria-hidden="true">View profile →</span>
               </div>
             </article>

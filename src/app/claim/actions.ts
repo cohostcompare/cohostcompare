@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { approveClaim, emailMatchesSite, sign } from '@/lib/claims';
+import { approveClaim, emailMatchesSite } from '@/lib/claims';
 import { managerForClaim } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -42,11 +42,11 @@ export async function submitClaim(_: unknown, form: FormData): Promise<{ error?:
     redirect('/dashboard?claimed=1');
   }
 
-  const sig = sign(claim.id);
   await sendEmail({
     to: 'hello@cohostcompare.com',
     subject: `Claim to review: ${m.name}`,
-    text: `${name}${role ? ` (${role})` : ''} <${user.email}>${phone ? `, ${phone}` : ''} wants to claim ${m.name}.\n\nTheir email doesn't match the business website (${m.website || 'no website on file'}), so it needs a manual check. Look them up (LinkedIn, the business's site or a quick call) before approving.\n\nApprove: ${origin}/api/admin/claims?id=${claim.id}&action=approve&sig=${sig}\nReject: ${origin}/api/admin/claims?id=${claim.id}&action=reject&sig=${sig}`,
+    text: `${name}${role ? ` (${role})` : ''} <${user.email}>${phone ? `, ${phone}` : ''} wants to claim ${m.name}.\n\nTheir email doesn't match the business website (${m.website || 'no website on file'}), so it needs a manual check.`,
+    cta: { label: 'Review claims', url: `${origin}/admin/claims` },
     replyTo: user.email,
   });
   await sendEmail({

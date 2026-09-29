@@ -73,7 +73,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <p style={{ margin: 0 }}>{m.about}</p>
         </section>
 
-        <AreaMap areas={areas} name={m.name} />
+        <AreaMap areas={areas} name={m.name} near={sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null} />
 
         <section className="panel" style={{ display: 'grid', gap: 16 }}>
           {!areas.length && <div><div className="label">Where they run homes</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}</p></div>}

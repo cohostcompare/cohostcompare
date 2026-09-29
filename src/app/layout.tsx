@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
-            <nav className="nav"><Link href="/managers">For managers</Link>{isManager && <Link href="/dashboard">Dashboard</Link>}{user ? <Link href="/account">Inbox</Link> : <Link href="/signin">Sign in</Link>}</nav>
+            <nav className="nav"><Link href="/managers">For managers</Link>{isAdminEmail(user?.email) && <Link href="/admin">Admin</Link>}{isManager && <Link href="/dashboard">Dashboard</Link>}{user ? <Link href="/account">Inbox</Link> : <Link href="/signin">Sign in</Link>}</nav>
           </header>
           {children}
           <footer className="site">
