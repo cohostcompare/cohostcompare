@@ -64,7 +64,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
         <section className="panel" style={{ display: 'grid', gap: 16 }}>
           <div><div className="label">Where they run homes</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}</p></div>
           <div><div className="label">Platforms</div><div className="chips" style={{ marginTop: 8 }}>{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}</div>
-            {!m.claimed && <p className="hint" style={{ margin: '6px 0 0' }}>Verified from their public listings. Other platforms appear once the manager claims this profile.</p>}</div>
+            {!m.claimed && <p className="hint" style={{ margin: '6px 0 0' }}>Seen on their public listings. Other platforms appear once the manager claims this profile.</p>}</div>
           {m.services.length > 0 && <div><div className="label">Services</div><div className="chips" style={{ marginTop: 8 }}>{m.services.map((s) => <span className="chip" key={s}>{s}</span>)}</div></div>}
           {m.licensedAgent && <div><div className="label">Credentials</div><p style={{ margin: '6px 0 0' }}>Licensed real estate agency</p></div>}
         </section>
@@ -94,7 +94,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
         )}
-        <p className="hint" style={{ margin: 0 }}>Performance figures come from {m.name}&apos;s public Airbnb listings over the last 12 months (data: AirROI{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}). Are you {m.name}? <Link href="/managers">Claim this profile</Link> to correct or add details.</p>
+        <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>). Are you {m.name}? <Link href="/managers">Claim this profile</Link> to correct or add details.</p>
       </div>
 
       <aside className="sticky">

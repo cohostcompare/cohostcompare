@@ -37,7 +37,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
           <AddressSearch />
         </div>
       )}
-      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, property counts and occupancy come from managers&apos; public Airbnb listings over the last 12 months (data: AirROI). Fees are shown only where a manager publishes them.</p>
+      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and occupancy are estimates based on managers&apos; public Airbnb listings over the last 12 months. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>). Fees are shown only where a manager publishes them.</p>
     </main>
   );
 }
