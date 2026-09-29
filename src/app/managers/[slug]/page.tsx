@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { COVER_KM, feeLabel, gatedDetails, managersNear, publicManager } from '@/lib/data';
+import AreaMap from '@/components/AreaMap';
+import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
 import { currentUser } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -33,16 +34,17 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   for (const k of ['postcode', 'street', 'suburb', 'state', 'lat', 'lng'] as const) if (sp[k]) q.set(k, sp[k]!);
   const back = new URLSearchParams(q); back.delete('managers');
   const fee = feeLabel(m);
+  const areas = await managerAreas(m.slug);
 
   return (
     <main className="profile">
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="av" style={{ width: 64, height: 64, fontSize: 20 }} aria-hidden="true">{m.initials}</div>
+          <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.initials}</div>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>{m.name}</h1>
             <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
-              {m.tagline} {!m.claimed && <span className="chip" title="Built from public information. The manager hasn't reviewed it yet.">Not yet claimed</span>}
+              {m.tagline}
             </p>
           </div>
         </div>
@@ -56,13 +58,25 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <div className="stat"><div className="n" style={fee ? undefined : { fontSize: 18 }}>{fee ?? 'Not published'}</div><div className="t">management fee</div></div>
         </div>
 
+        {!m.claimed && (
+          <div className="claimbox">
+            <p style={{ margin: 0 }}>This profile is built from public information, including estimates from {m.name}&apos;s public listings, and is refreshed regularly.</p>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
+              <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
+            </div>
+          </div>
+        )}
+
         <section className="panel">
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
           <p style={{ margin: 0 }}>{m.about}</p>
         </section>
 
+        <AreaMap areas={areas} name={m.name} />
+
         <section className="panel" style={{ display: 'grid', gap: 16 }}>
-          <div><div className="label">Where they run homes</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}</p></div>
+          {!areas.length && <div><div className="label">Where they run homes</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}</p></div>}
           <div><div className="label">Platforms</div><div className="chips" style={{ marginTop: 8 }}>{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}</div>
             {!m.claimed && <p className="hint" style={{ margin: '6px 0 0' }}>Seen on their public listings. Other platforms appear once the manager claims this profile.</p>}</div>
           {m.services.length > 0 && <div><div className="label">Services</div><div className="chips" style={{ marginTop: 8 }}>{m.services.map((s) => <span className="chip" key={s}>{s}</span>)}</div></div>}
@@ -94,7 +108,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
         )}
-        <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>). Are you {m.name}? <Link href="/managers">Claim this profile</Link> to correct or add details.</p>
+        <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
       </div>
 
       <aside className="sticky">

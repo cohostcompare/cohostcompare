@@ -33,6 +33,7 @@ function toPublic(r: Row, s?: Stats): PublicManager {
     platforms: r.platforms || [], services: r.services || [],
     feeMin: n(r.fee_min), feeMax: n(r.fee_max), licensedAgent: r.licensed_agent,
     responseHours: null, claimed: r.claimed, dataAsOf: s?.data_as_of || null,
+    tile: tileColour(r.name),
   };
 }
 
@@ -98,4 +99,30 @@ export async function gatedDetails(slug: string): Promise<GatedDetails | null> {
 export function feeLabel(m: Pick<PublicManager, 'feeMin' | 'feeMax'>): string | null {
   if (m.feeMin == null) return null;
   return m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`;
+}
+
+/** Suburb-level totals for the profile map. Needs at least 2 homes per area (never individual listings). */
+export async function managerAreas(slug: string): Promise<{ area: string; homes: number; lat: number; lng: number }[]> {
+  const db = adminClient();
+  const { data: m } = await db.from('managers').select('id').eq('slug', slug).eq('published', true).maybeSingle();
+  if (!m) return [];
+  const { data, error } = await db.rpc('manager_areas', { p_manager: m.id });
+  if (error) { console.error(error); return []; }
+  return ((data || []) as { area: string; homes: number; lat: number; lng: number }[]).filter((a) => a.area && !GENERIC_PLACES.has(a.area));
+}
+
+/** Private details used only by the claim flow. */
+export async function managerForClaim(slug: string) {
+  const { data } = await adminClient().from('managers').select('id, slug, name, website, claimed').eq('slug', slug).eq('published', true).maybeSingle();
+  return data as { id: string; slug: string; name: string; website: string | null; claimed: boolean } | null;
+}
+
+/** A stable, brand-safe colour for a manager's initials tile. */
+export function tileColour(name: string): { bg: string; fg: string } {
+  const palette = [
+    { bg: '#DDEEE9', fg: '#0F5E57' }, { bg: '#E3ECF7', fg: '#1F4E7A' }, { bg: '#F4E9D8', fg: '#7A4E12' },
+    { bg: '#EDE6F3', fg: '#5B3B7A' }, { bg: '#F6E3E1', fg: '#8A3A2F' }, { bg: '#E6F0DC', fg: '#3F6420' },
+  ];
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return palette[h % palette.length];
 }

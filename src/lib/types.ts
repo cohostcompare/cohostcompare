@@ -22,6 +22,8 @@ export type PublicManager = {
   responseHours: number | null;
   claimed: boolean;
   dataAsOf: string | null;
+  logoUrl?: string | null;
+  tile?: { bg: string; fg: string };
   demo?: boolean;
 };
 
