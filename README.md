@@ -1,17 +1,17 @@
 # CoHostCompare
 
-Pre-launch website for [cohostcompare.com](https://cohostcompare.com): the neutral place for Australian property owners to compare short-term rental managers.
+The neutral place for Australian property owners to compare short-term rental managers: [cohostcompare.com](https://www.cohostcompare.com).
 
-## What's here
+## Stack
+- Next.js (App Router) on Vercel; Supabase (Sydney) for data and sign-in; Google Places for address search; Resend for email.
+- `main` = live site. Feature work happens on branches, which Vercel deploys as previews.
 
-- `index.html`: waitlist landing page (owner and manager sign-up forms)
-- `privacy.html`: privacy policy (served at `/privacy`)
-- `favicon.svg`: the mark
-- `vercel.json`: clean URLs
-- `supabase/waitlist.sql`: the sign-up table and its insert-only access rule
+## Layout
+- `src/app` — pages: home search, `/search`, `/managers/[slug]`, `/managers` (for managers), `/quote`, `/privacy`
+- `src/lib/data.ts` — data access; strips owner-only fields before anything reaches the browser
+- `src/lib/demo-data.ts` — invented demo managers (flagged on screen) until researched profiles are loaded
+- `supabase/` — SQL for tables and access rules
+- `public/email/signature.html` — Gmail signature (served at `/email/signature`)
 
-## How it runs
-
-- Hosted on Vercel as a static site; every push to `main` deploys.
-- Sign-ups go straight from the browser to Supabase (Sydney region) using the publishable key. Row-level security allows inserts only, so the public can't read the list.
-- View sign-ups in Supabase: Table Editor → `waitlist`.
+## Local
+`npm install && npm run dev`
