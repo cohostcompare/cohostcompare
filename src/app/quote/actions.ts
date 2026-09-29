@@ -25,6 +25,8 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (!name) return { error: 'Enter your name.' };
   if (!suburb) return { error: "Enter your property's suburb." };
   if (!/^\d{4}$/.test(postcode)) return { error: "Enter your property's 4-digit postcode." };
+  const notCovering = managers.filter((m) => !m.postcodes.includes(postcode));
+  if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} cover postcode ${postcode}. Remove ${notCovering.length === 1 ? 'them' : 'them'} or search again for this address.` };
   if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
   if (!services.length) return { error: 'Choose at least one service you want.' };
 

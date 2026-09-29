@@ -11,16 +11,23 @@ const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: 
 
 type Addr = { street: string; suburb: string; state: string; postcode: string };
 
-export default function QuoteForm({ managers, initial, email }: { managers: string; initial: Addr; email: string }) {
+type M = { slug: string; name: string; postcodes: string[] };
+
+export default function QuoteForm({ managers, initial, email }: { managers: M[]; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
   const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode));
   const [editing, setEditing] = useState(!known);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const active = managers.filter((m) => !removed.includes(m.slug));
+  const pcOk = /^\d{4}$/.test(addr.postcode);
+  const uncovered = pcOk ? active.filter((m) => !m.postcodes.includes(addr.postcode)) : [];
+  const covered = active.filter((m) => !uncovered.includes(m));
   const set = (k: keyof Addr) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setAddr({ ...addr, [k]: e.target.value });
 
   return (
     <form action={action} className="panel" style={{ display: 'grid', gap: 16 }}>
-      <input type="hidden" name="managers" value={managers} />
+      <input type="hidden" name="managers" value={covered.map((m) => m.slug).join(',')} />
       <p className="hint" style={{ margin: 0 }}>Signed in as {email}.</p>
       <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
@@ -54,6 +61,20 @@ export default function QuoteForm({ managers, initial, email }: { managers: stri
       </fieldset>
       )}
 
+      {uncovered.length > 0 && (
+        <div role="alert" style={{ border: '1px solid var(--signal)', borderRadius: 10, padding: '12px 14px', display: 'grid', gap: 8 }}>
+          <b>{uncovered.map((m) => m.name).join(' and ')} {uncovered.length === 1 ? "doesn't" : "don't"} cover postcode {addr.postcode}.</b>
+          <span className="hint">
+            {covered.length
+              ? `Remove ${uncovered.length === 1 ? 'them' : 'them'} to send your request to ${covered.map((m) => m.name).join(', ')} only, or search again for managers who cover this address.`
+              : 'None of the managers you picked cover this address. Search again to find managers who do.'}
+          </span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {covered.length > 0 && <button type="button" className="btn secondary" onClick={() => setRemoved([...removed, ...uncovered.map((m) => m.slug)])}>Remove {uncovered.length === 1 ? uncovered[0].name : 'them'}</button>}
+            <a className="btn secondary" href={`/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}) }).toString()}`}>Search managers for this address</a>
+          </div>
+        </div>
+      )}
       <div style={grid(150)}>
         <label style={L}>Property type
           <select className="field" name="property_type"><option>Apartment</option><option>House</option><option>Townhouse</option><option>Granny flat or studio</option></select>
@@ -81,7 +102,9 @@ export default function QuoteForm({ managers, initial, email }: { managers: stri
       <label style={L}>Anything else managers should know? (optional)
         <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
       </label>
-      <button className="btn primary" type="submit" disabled={pending}>{pending ? 'Sending…' : 'Send quote request'}</button>
+      <button className="btn primary" type="submit" disabled={pending || uncovered.length > 0 || covered.length === 0}>
+        {pending ? 'Sending…' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
+      </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
       <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept.</p>
     </form>
