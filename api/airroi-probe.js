@@ -4,7 +4,7 @@
 export default async function handler(req, res) {
   const url = new URL(req.url, 'https://x');
   const expected = (process.env.ADMIN_TOKEN || '').replace(/[`'"\s]/g, '');
-  if (!expected || String((req.query && req.query.t) ?? url.searchParams.get('t') ?? '').trim() !== expected) {
+  if (!expected || String((req.query && req.query.pass) ?? url.searchParams.get('pass') ?? '').trim() !== expected) {
     return res.status(404).send('Not found');
   }
   const lat = Number((req.query && req.query.lat) || url.searchParams.get('lat') || -33.8915);   // Bondi Beach

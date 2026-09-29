@@ -2,7 +2,7 @@
 export default function handler(req, res) {
   const url = new URL(req.url, 'https://x');
   const expected = (process.env.ADMIN_TOKEN || '').replace(/[`'"\s]/g, '');
-  const t = (req.query && req.query.t) ?? url.searchParams.get('t');
+  const t = (req.query && req.query.pass) ?? url.searchParams.get('pass');
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({
     ok: true,
