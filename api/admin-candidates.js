@@ -12,6 +12,6 @@ export default async function handler(req, res) {
     ]);
     return res.json({ cells, operators: ops });
   } catch (e) {
-    return res.status(500).json({ error: String(e.message || e) });
+    return res.status(200).json({ ok: false, error: String(e.message || e) });
   }
 }

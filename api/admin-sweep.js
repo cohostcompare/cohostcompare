@@ -33,6 +33,6 @@ export default async function handler(req, res) {
       next_offset: offset, done, listings_seen: cell.listings_seen + stored, calls_used: cell.calls_used + calls, updated_at: new Date().toISOString() } });
     return res.json({ cell: cell.id, label: cell.label, callsThisRun: calls, storedThisRun: stored, nextOffset: offset, done, totalSeen: cell.listings_seen + stored, totalCalls: cell.calls_used + calls });
   } catch (e) {
-    return res.status(500).json({ error: String(e.message || e) });
+    return res.status(200).json({ ok: false, error: String(e.message || e) });
   }
 }
