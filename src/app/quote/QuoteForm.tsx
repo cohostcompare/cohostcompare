@@ -14,6 +14,8 @@ type Addr = { street: string; suburb: string; state: string; postcode: string };
 export default function QuoteForm({ managers, initial, email }: { managers: string; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
+  const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode));
+  const [editing, setEditing] = useState(!known);
   const set = (k: keyof Addr) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setAddr({ ...addr, [k]: e.target.value });
 
   return (
@@ -25,7 +27,20 @@ export default function QuoteForm({ managers, initial, email }: { managers: stri
         <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
       </div>
 
-      <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 12 }}>
+      {!editing ? (
+        <div style={{ display: 'grid', gap: 4 }}>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>Property</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 14px' }}>
+            <span>{[addr.street, addr.suburb, `${addr.state} ${addr.postcode}`].filter(Boolean).join(', ')}</span>
+            <button type="button" className="btn secondary" style={{ minHeight: 36, padding: '0 12px' }} onClick={() => setEditing(true)}>Change</button>
+          </div>
+          <input type="hidden" name="street" value={addr.street} />
+          <input type="hidden" name="suburb" value={addr.suburb} />
+          <input type="hidden" name="state" value={addr.state} />
+          <input type="hidden" name="postcode" value={addr.postcode} />
+        </div>
+      ) : (
+        <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 12 }}>
         <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Property address</legend>
         <PlacesInput kind="any" placeholder="Start typing the address or suburb to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode })} />
         <label style={L}>Street address (optional if you haven&apos;t bought yet)<input className="field" name="street" value={addr.street} onChange={set('street')} autoComplete="address-line1" placeholder="Unit/number and street" /></label>
@@ -37,6 +52,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: stri
           <label style={L}>Postcode<input className="field" name="postcode" value={addr.postcode} onChange={set('postcode')} inputMode="numeric" maxLength={4} autoComplete="postal-code" required /></label>
         </div>
       </fieldset>
+      )}
 
       <div style={grid(150)}>
         <label style={L}>Property type
