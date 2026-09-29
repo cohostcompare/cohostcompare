@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { currentUser } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.cohostcompare.com'),
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.svg' },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await currentUser().catch(() => null);
   return (
     <html lang="en-AU">
       <head>
@@ -23,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
-            <nav className="nav"><Link href="/managers">For managers</Link><Link href="/account">My account</Link></nav>
+            <nav className="nav"><Link href="/managers">For managers</Link>{user ? <Link href="/account">Inbox</Link> : <Link href="/signin">Sign in</Link>}</nav>
           </header>
           {children}
           <footer className="site">

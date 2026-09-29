@@ -30,6 +30,7 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Inbox</h1>
+          <span className="hint">Each quote request is grouped by property, with a conversation per manager. </span>
           <span className="hint">{user.email}</span>
         </div>
         <form action={signOut}><button className="btn secondary" type="submit">Sign out</button></form>
@@ -38,12 +39,13 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
       {!requests?.length ? (
         <div className="panel">No requests yet. <a href="/">Search for managers</a> near your property to get started.</div>
       ) : requests.map((r) => (
-        <section key={r.id} className="panel" style={{ display: 'grid', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <b>{r.address || `Postcode ${r.postcode}`}</b>
-            <span className="hint">{new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })} · {r.property_type}, {r.bedrooms} bed</span>
+        <section key={r.id} className="panel" style={{ display: 'grid', gap: 0, padding: 0, overflow: 'hidden' }} aria-label={`Quote request for ${r.address || r.postcode}`}>
+          <div style={{ background: 'var(--tint)', padding: '14px 20px', display: 'grid', gap: 2 }}>
+            <span className="label">Quote request · {new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <b style={{ fontSize: 18 }}>{r.address || `Postcode ${r.postcode}`}</b>
+            <span className="hint">{r.property_type}, {r.bedrooms === 0 ? 'studio' : `${r.bedrooms} bed`} · sent to {(r.quote_request_managers || []).length} manager{(r.quote_request_managers || []).length === 1 ? '' : 's'}</span>
           </div>
-          <div style={{ display: 'grid', gap: 6 }}>
+          <div style={{ display: 'grid', gap: 6, padding: '4px 20px 16px' }}>
             {(r.quote_request_managers || []).map((m) => {
               const msgs = [...(m.messages || [])].sort((a, b) => a.created_at.localeCompare(b.created_at));
               const last = msgs[msgs.length - 1];

@@ -74,7 +74,8 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   await sendEmail({
     to: user.email,
     subject: `Your quote request has gone to ${managers.length} manager${managers.length === 1 ? '' : 's'}`,
-    text: `Hi ${name},\n\nYour request has gone to: ${managers.map((m) => m.name).join(', ')}.\n\n${summary}\n\nEach manager replies with a quote in the same format, so you can compare them side by side, and message them, in your account: https://www.cohostcompare.com/account\n\nThe CoHostCompare team`,
+    text: `Hi ${name},\n\nYour request has gone to: ${managers.map((m) => m.name).join(', ')}.\n\n${summary}\n\nEach manager replies with a quote in the same format, so you can compare them side by side, and message them, in your inbox.\n\nThe CoHostCompare team`,
+    cta: { label: 'Open my inbox', url: 'https://www.cohostcompare.com/account' },
   });
 
   // Until managers are onboarded, requests come to us to forward by hand.
