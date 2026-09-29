@@ -3,7 +3,7 @@
 // ADMIN_TOKEN set in Vercel. Remove once the data pipeline is built.
 export default async function handler(req, res) {
   const url = new URL(req.url, 'https://x');
-  const expected = (process.env.ADMIN_TOKEN || '').trim().replace(/^['"]|['"]$/g, '');
+  const expected = (process.env.ADMIN_TOKEN || '').replace(/[`'"\s]/g, '');
   if (!expected || (url.searchParams.get('t') || '').trim() !== expected) {
     return res.status(404).send('Not found');
   }
