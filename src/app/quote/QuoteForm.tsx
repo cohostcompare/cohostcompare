@@ -27,8 +27,8 @@ export default function QuoteForm({ managers, initial, email }: { managers: stri
 
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 12 }}>
         <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Property address</legend>
-        <PlacesInput kind="address" placeholder="Start typing the address to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode })} />
-        <label style={L}>Street address<input className="field" name="street" value={addr.street} onChange={set('street')} autoComplete="address-line1" placeholder="Unit/number and street" /></label>
+        <PlacesInput kind="any" placeholder="Start typing the address or suburb to fill it in" onPick={(p) => setAddr({ street: p.street, suburb: p.suburb, state: p.state || addr.state, postcode: p.postcode })} />
+        <label style={L}>Street address (optional if you haven&apos;t bought yet)<input className="field" name="street" value={addr.street} onChange={set('street')} autoComplete="address-line1" placeholder="Unit/number and street" /></label>
         <div style={grid(140)}>
           <label style={L}>Suburb<input className="field" name="suburb" value={addr.suburb} onChange={set('suburb')} autoComplete="address-level2" required /></label>
           <label style={L}>State

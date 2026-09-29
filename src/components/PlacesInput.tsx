@@ -74,7 +74,7 @@ function parse(place: any): PickedPlace { // eslint-disable-line @typescript-esl
  * Google address/suburb suggestions. Falls back to a plain text input if Google can't load.
  * kind="address": street addresses. kind="suburb": suburbs and postcodes.
  */
-export default function PlacesInput({ kind, placeholder, onPick, id, fallback }: { kind: 'address' | 'suburb'; placeholder: string; onPick: (p: PickedPlace) => void; id?: string; fallback?: React.ReactNode }) {
+export default function PlacesInput({ kind, placeholder, onPick, id, fallback }: { kind: 'address' | 'suburb' | 'any'; placeholder: string; onPick: (p: PickedPlace) => void; id?: string; fallback?: React.ReactNode }) {
   const holder = useRef<HTMLDivElement>(null);
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
@@ -96,7 +96,7 @@ export default function PlacesInput({ kind, placeholder, onPick, id, fallback }:
         if (cancelled || !holder.current) return;
         const el = new PlaceAutocompleteElement({
           includedRegionCodes: ['au'],
-          includedPrimaryTypes: kind === 'address' ? ['street_address', 'premise', 'subpremise'] : ['locality', 'postal_code'],
+          includedPrimaryTypes: kind === 'address' ? ['street_address', 'premise', 'subpremise'] : kind === 'suburb' ? ['locality', 'postal_code'] : ['street_address', 'premise', 'subpremise', 'locality', 'postal_code'],
         });
         if (id) el.id = id;
         el.setAttribute('placeholder', placeholder);
