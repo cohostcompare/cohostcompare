@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const r = await fetch('https://api.airroi.com/listings/search/radius', {
     method: 'POST',
     headers: { 'x-api-key': process.env.AIRROI_API_KEY || '', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ latitude: lat, longitude: lng, radius_miles: 0.6, page_size: 50 }),
+    body: JSON.stringify({ latitude: lat, longitude: lng, radius_miles: 1, currency: 'native', filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: 50, offset: 0 } }),
   });
   const text = await r.text();
   let data; try { data = JSON.parse(text); } catch { return res.status(200).json({ status: r.status, raw: text.slice(0, 2000) }); }
@@ -29,6 +29,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     status: r.status,
     topLevelKeys: Object.keys(data),
+    errors: data.errors || null,
     totalCount: data.total_count ?? data.total ?? null,
     returned: list.length,
     listingFields: flatKeys(first),
