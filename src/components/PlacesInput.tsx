@@ -28,12 +28,14 @@ export function loadMaps(): Promise<void> {
   if (window.google?.maps?.importLibrary) return Promise.resolve();
   if (window.__ccMapsLoading) return window.__ccMapsLoading;
   window.__ccMapsLoading = new Promise((resolve, reject) => {
+    // Google calls this once the library is fully ready (the script's onload can fire earlier).
+    (window as any).__ccMapsReady = () => resolve(); // eslint-disable-line @typescript-eslint/no-explicit-any
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&v=weekly&loading=async&libraries=places&region=AU&language=en-AU`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&v=weekly&loading=async&libraries=places&region=AU&language=en-AU&callback=__ccMapsReady`;
     s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => { window.__ccMapsLoading = undefined; reject(new Error('maps failed')); };
+    s.onerror = () => { window.__ccMapsLoading = undefined; reject(new Error('Google script blocked')); };
     document.head.appendChild(s);
+    setTimeout(() => reject(new Error('Google took too long to load')), 15000);
   });
   return window.__ccMapsLoading;
 }
