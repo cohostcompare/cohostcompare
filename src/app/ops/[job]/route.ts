@@ -23,6 +23,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
     }
+    if (job === 'ratings') {
+      // Distribution of listing ratings, to sanity-check averages. Optional ?name= filters host/cohost name.
+      const db = adminClient();
+      let q = db.from('str_listings').select('rating_overall, num_reviews, host_name').limit(5000);
+      const name = p.get('name');
+      if (name) q = q.ilike('host_name', `%${name}%`);
+      const { data } = await q;
+      const rows = data || [];
+      const buckets: Record<string, number> = {};
+      for (const r of rows) { const k = r.rating_overall == null ? 'null' : r.num_reviews ? String(Math.floor(Number(r.rating_overall))) : 'no-reviews'; buckets[k] = (buckets[k] || 0) + 1; }
+      const sample = rows.slice(0, 25).map((r) => `${r.host_name} | rating ${r.rating_overall} | reviews ${r.num_reviews}`);
+      return new NextResponse(`rows ${rows.length}\nbuckets ${JSON.stringify(buckets)}\n${sample.join('\n')}`, { headers });
+    }
     return new NextResponse('Not found', { status: 404 });
   } catch (e) {
     return new NextResponse(`ERROR ${String((e as Error).message || e)}`, { headers });
