@@ -43,21 +43,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
         const occ = ls.filter((l) => Number(l.ttm_occupancy) > 0);
         const occAvg = occ.length ? occ.reduce((a, l) => a + Number(l.ttm_occupancy), 0) / occ.length : null;
         const f: string[] = [];
-        if (!m.tagline) f.push('no tagline'); else if (m.tagline.length > 80) f.push(`long tagline (${m.tagline.length})`);
-        if (!m.about || m.about.length < 40) f.push('thin about');
-        if (/[()|]/.test(m.name)) f.push('odd name');
-        if (!(m.cities || []).length) f.push('no region');
-        if (ids.size && !ls.length) f.push('linked accounts have no listings');
-        if (!ids.size && !(m.postcodes || []).length) f.push('no listings and no postcodes: never appears in searches');
-        if (rating != null && rating < 4.3) f.push(`low rating ${rating.toFixed(2)} (${rated.length} rated homes)`);
-        if (ls.length && rated.length < 3) f.push(`only ${rated.length} rated homes`);
-        if (occAvg != null && occAvg < 0.35) f.push(`low occupancy ${Math.round(occAvg * 100)}%`);
-        if (!m.website) f.push('no website');
+        if (!m.tagline) f.push('T'); else if (m.tagline.length > 80) f.push(`T${m.tagline.length}`);
+        if (!m.about || m.about.length < 40) f.push('A');
+        if (/[()|]/.test(m.name)) f.push('N');
+        if (!(m.cities || []).length) f.push('R');
+        if (ids.size && !ls.length) f.push('L0');
+        if (!ids.size && !(m.postcodes || []).length) f.push('S');
+        if (rating != null && rating < 4.3) f.push(`r${rating.toFixed(2)}/${rated.length}`);
+        if (ls.length && rated.length < 3) f.push(`few${rated.length}`);
+        if (occAvg != null && occAvg < 0.35) f.push(`o${Math.round(occAvg * 100)}`);
+        if (!m.website) f.push('W');
         const d = dom(m.website); if (d) domains.set(d, [...(domains.get(d) || []), m.slug]);
-        if (f.length) out.push(`${m.slug} (${ls.length} homes): ${f.join('; ')}`);
+        if (f.length) out.push(`${m.slug} ${ls.length}h ${f.join(',')}`);
       }
       const dups = [...domains.entries()].filter(([, v]) => v.length > 1).map(([d, v]) => `shared website ${d}: ${v.join(', ')}`);
-      return new NextResponse(`PUBLISHED ${(ms || []).length}, WITH ISSUES ${out.length}\n${out.join('\n')}\n${dups.join('\n')}`, { headers });
+      const from = Number(p.get('from') || 0), n = Number(p.get('n') || 15);
+      return new NextResponse(`PUBLISHED ${(ms || []).length} ISSUES ${out.length}\n${out.slice(from, from + n).join('\n')}${from === 0 ? `\n${dups.join('\n')}` : ''}`, { headers });
     }
     if (job === 'profiles') {
       const db = adminClient();
