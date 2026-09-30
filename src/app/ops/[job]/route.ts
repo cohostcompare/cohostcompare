@@ -28,6 +28,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       if (error) return new NextResponse(`error: ${error.message}`, { headers });
       return new NextResponse(`COUNT ${data?.length}\n` + (data || []).map((r: Record<string, unknown>) => `${r.area_slug} | ${r.period} | homes ${r.homes} | seasonality ${r.seasonality ? 'yes' : 'no'} | notified ${r.notified_at ? 'yes' : 'no'}`).join('\n'), { headers });
     }
+    if (job === 'report-relabel') {
+      // One-off: the first reports were made on 30 Sep (Q3); count them as the October (Q4) edition.
+      const from = p.get('from') || '', to = p.get('to') || '';
+      if (!/^\d{4}-Q[1-4]$/.test(from) || !/^\d{4}-Q[1-4]$/.test(to)) return new NextResponse('from/to like 2026-Q3', { headers });
+      const { periodLabel } = await import('@/lib/reports');
+      const db = adminClient();
+      const { data } = await db.from('suburb_reports').select('id, data').eq('period', from);
+      for (const r of data || []) await db.from('suburb_reports').update({ period: to, data: { ...(r.data as object), period: to, periodLabel: periodLabel(to) } }).eq('id', r.id);
+      return new NextResponse(`relabelled ${data?.length ?? 0}`, { headers });
+    }
     if (job === 'reports') {
       const { runReports } = await import('@/lib/reports');
       const r = await runReports(Number(p.get('n') || 8));
