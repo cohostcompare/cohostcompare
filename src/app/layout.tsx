@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <NavMore label="How it works" items={[{ href: '/how-it-works', label: 'How it works' }, { href: '/why-us', label: 'Why use us' }, { href: '/areas', label: 'Browse by area' }]} />
                   <NavLink href="/earnings" highlight><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>What could I earn?</NavLink>
                   <NavLink href="/rules"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" /><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" /><path d="M9 8h7M9 12h5" /></svg>Rules in my area</NavLink>
-                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <><NavLink href="/signin" exact>Sign in</NavLink><Link className="btn primary small" href="/signin?mode=signup">Join free</Link></>}
+                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <Link className="btn primary small" href="/signin">Sign in or join free</Link>}
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>

@@ -115,12 +115,12 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .menu { display: flex; align-items: center; }
 .menu-toggle { display: none; list-style: none; cursor: pointer; width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--line-strong); place-content: center; gap: 5px; }
 .menu-toggle span { display: block; width: 18px; height: 2px; background: var(--ink); border-radius: 2px; }
-.menu-body { display: flex; align-items: center; gap: 14px; }
+.menu-body { display: flex; align-items: center; gap: 8px; }
 .menu-group { display: flex; align-items: center; gap: 4px; }
-.menu-group .btn { margin-left: 8px; }
+.menu-group .btn { margin-left: 4px; }
 .menu-group a { white-space: nowrap; }
 .menu-group a:not(.btn) { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; }
-.nav-link { display: inline-flex; align-items: center; min-height: 38px; padding: 0 9px; border-radius: 99px; transition: background .15s, color .15s; }
+.nav-link { display: inline-flex; align-items: center; min-height: 38px; padding: 0 8px; border-radius: 99px; transition: background .15s, color .15s; }
 .nav-link:hover { background: var(--tint); color: var(--brand) !important; }
 .nav-link.on { background: var(--tint); color: var(--brand) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 25%, transparent); }
 /* header stays pinned while you scroll */
@@ -218,7 +218,7 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .steps-foot .btn { background: var(--on-brand); color: var(--brand); border-color: transparent; }
 
 /* rules: ask anything hero */
-.nav-link .ico { width: 17px; height: 17px; margin-right: 6px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
+.nav-link .ico { width: 17px; height: 17px; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
 .ask-hero { position: relative; border-radius: 24px; overflow: hidden; color: #fff; min-height: 420px; display: grid; }
 .ask-hero > .photo { position: absolute; inset: 0; }
 .ask-hero > .photo img { height: 100%; border-radius: 0; }

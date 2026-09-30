@@ -62,9 +62,9 @@ export default function EmailSignIn({ next = '/account', intro, mode = 'signin' 
         Email
         <input className="field" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
-      <button className="btn primary" type="submit" disabled={state === 'sending'}>{state === 'sending' ? 'Sending…' : mode === 'signup' ? 'Create my free account' : 'Email me a sign-in link'}</button>
+      <button className="btn primary" type="submit" disabled={state === 'sending'}>{state === 'sending' ? 'Sending…' : 'Continue with email'}</button>
       {error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{error}</p>}
-      <p className="hint" style={{ margin: 0 }}>{mode === 'signup' ? 'We’ll email you a link to finish. ' : ''}No password needed. Free for owners. By continuing you agree to our <a href="/terms">terms</a> and <a href="/privacy">privacy policy</a>.</p>
+      <p className="hint" style={{ margin: 0 }}>We&apos;ll email you a link to sign in. No password needed. Free for owners. By continuing you agree to our <a href="/terms">terms</a> and <a href="/privacy">privacy policy</a>.</p>
     </form>
   );
 }
