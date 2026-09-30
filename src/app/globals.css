@@ -302,3 +302,5 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .dash-stats span { font-size: 13px; color: var(--muted); }
 .meter { height: 10px; border-radius: 99px; background: var(--tint); overflow: hidden; }
 .meter span { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+.split, .split > * { min-width: 0; }
+main { min-width: 0; }
