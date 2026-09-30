@@ -11,15 +11,11 @@ export default function Home() {
           <div className="label" style={{ color: 'var(--brand)' }}>Sydney, Melbourne and NSW and Victorian holiday spots</div>
           <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare every short-term rental manager for your property.</h1>
           <p className="lede">See the managers who cover your address, with fees, platforms and real guest ratings side by side. Then request quotes from up to five managers in one go. Free for owners, and neutral: no manager can pay to change their rating.</p>
-          <AddressSearch />
+          <div className="hero-search"><AddressSearch /></div>
           <p style={{ margin: 0 }}><Link href="/earnings"><b>Not listed yet? See what your property could earn →</b></Link></p>
         </div>
         <div className="hero-photo">
           <HeroCarousel sizes="(max-width: 880px) 100vw, 520px" />
-          <div className="float" aria-hidden="true">
-            <b>Up to 5 quotes</b>
-            <span className="hint">in one standard format, side by side</span>
-          </div>
         </div>
       </section>
 

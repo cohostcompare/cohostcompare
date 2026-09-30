@@ -41,7 +41,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
               </div>
               <div className="side">
                 <div className="fee">
-                  {fee ? <><span className="n">{fee}</span><span className="s">management fee</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
+                  {fee ? <><span className="n">{fee}</span><span className="s">management fee{m.claimed ? '' : ' (from their website)'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
                 </div>
                 <button type="button" className={`btn ${on ? 'primary' : 'secondary'} add above`} aria-pressed={on}
                   onClick={() => toggle({ slug: m.slug, name: m.name })} disabled={!on && full}>

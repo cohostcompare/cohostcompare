@@ -338,3 +338,14 @@ main { min-width: 0; }
 .ask-cta { margin-bottom: 44px; }
 .ask-cta + .band { border-top: 0; padding-top: 8px; }
 select.field { appearance: none; -webkit-appearance: none; padding-right: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238A9B98' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+
+/* hero: the address box reaches across onto the photos on wide screens */
+.hero-search { position: relative; z-index: 3; }
+.hero-search .search { box-shadow: 0 14px 40px rgba(16,48,47,.18); }
+@media (min-width: 881px) { .hero-search { width: calc(100% + 190px); } }
+
+/* plan bullets: Free ticks, Pro plus, Enterprise stars */
+.ticks.plan-free li::before { content: "✓"; background: var(--brand); color: var(--on-brand); }
+.ticks.plan-pro li::before { content: "+"; background: var(--brand); color: var(--on-brand); }
+.ticks.plan-ent li::before { content: "★"; background: var(--ink); color: #F2B84B; font-size: 11px; }
+.ticks .soon { color: var(--muted); font-size: 13px; font-weight: 600; }

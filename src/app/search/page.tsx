@@ -42,7 +42,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
         </div>
       )}
       <p style={{ margin: '0 0 12px' }}><a href="/earnings"><b>What could this property earn? Get a free estimate →</b></a></p>
-      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are shown only where a manager publishes them. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
+      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are shown only where a manager publishes them. For profiles not yet claimed, fees come from the manager&apos;s website and haven&apos;t been confirmed by them. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
     </main>
   );
 }

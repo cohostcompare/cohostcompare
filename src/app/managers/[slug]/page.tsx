@@ -72,9 +72,11 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               <div className="stat"><div className="n" style={{ fontSize: 18 }}>{m.cities.join(', ') || 'See below'}</div><div className="t">where they operate</div></div>
               {m.licensedAgent && <div className="stat"><div className="n" style={{ fontSize: 18 }}>Licensed agency</div><div className="t">real estate licence</div></div>}
             </div>
+            {fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
             <p className="hint" style={{ margin: 0 }}>No guest ratings or booking figures yet. We found {m.name} through its own website rather than in the Airbnb listing data we track, so it may list mainly on Stayz, Booking.com or its own site. Figures appear once its listings are linked, or when the manager claims this profile.</p>
           </div>
         )}
+        {hasData && fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
 
         {!m.claimed && (
           <div className="claimbox">

@@ -51,7 +51,7 @@ export default function ForManagers() {
           <div className="panel plan">
             <h3>Free</h3>
             <p className="price"><b>$0</b> <span className="hint">a month</span></p>
-            <ul className="ticks">
+            <ul className="ticks plan-free">
               <li className="done">Your profile, fees, services, logo and 12 photos</li>
               <li className="done">Unlimited quote requests and replies</li>
               <li className="done">1 login</li>
@@ -65,14 +65,14 @@ export default function ForManagers() {
             <p className="price"><b>{PRO_PRICE_SHORT}</b> <span className="hint">a month + GST</span></p>
             <p className="hint" style={{ margin: 0 }}><b style={{ color: 'var(--brand)' }}>Founding offer:</b> claim your profile by {foundingDeadlineText()} and get Pro free for three months. No card needed.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Free, plus:</p>
-            <ul className="ticks">{PRO_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}{f.live ? '' : ' Coming soon.'}</li>)}</ul>
+            <ul className="ticks plan-pro">{PRO_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}{f.live ? '' : <span className="soon"> Coming soon.</span>}</li>)}</ul>
           </div>
           <div className="panel plan">
             <h3>Enterprise</h3>
             <p className="price"><b>From {ENTERPRISE_PRICE_SHORT}</b> <span className="hint">a month + GST</span></p>
             <p className="hint" style={{ margin: 0 }}>For operators with homes in several regions. We&apos;re building it with our first Enterprise operators, so talk to us about what you need.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Pro, plus:</p>
-            <ul className="ticks">{ENTERPRISE_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}</li>)}</ul>
+            <ul className="ticks plan-ent">{ENTERPRISE_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}{f.live ? '' : <span className="soon"> Coming soon.</span>}</li>)}</ul>
             <details>
               <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--brand)' }}>Talk to us about Enterprise</summary>
               <div style={{ marginTop: 10 }}><InterestForm kind="enterprise" partner button="Send" noteLabel="How many homes, and which regions? (optional)" done="Thanks. We’ll be in touch by email." /></div>
