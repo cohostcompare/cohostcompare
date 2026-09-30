@@ -2,6 +2,8 @@
 
 import { redirect } from 'next/navigation';
 import { coveringSlugs, publicManager } from '@/lib/data';
+import { memberEmails } from '@/lib/managers';
+import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -81,7 +83,21 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     cta: { label: 'Open my inbox', url: 'https://www.cohostcompare.com/account' },
   });
 
-  // Until managers are onboarded, requests come to us to forward by hand.
+  // Managers who've claimed their profile get the request by email; the rest come to us to follow up.
+  const h = await headers();
+  const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
+  const { data: tRows } = await db.from('quote_request_managers').select('id, manager_slug').eq('request_id', req.id);
+  for (const t of tRows || []) {
+    const to = await memberEmails(t.manager_slug);
+    if (!to.length) continue;
+    await sendEmail({
+      to,
+      subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
+      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nReply with your quote in the standard format from your dashboard.`,
+      cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
+    });
+  }
+
   await sendEmail({
     to: 'hello@cohostcompare.com',
     subject: `New quote request: ${postcode}, ${managers.map((m) => m.name).join(', ')}`,

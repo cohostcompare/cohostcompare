@@ -23,6 +23,7 @@ export type PublicManager = {
   claimed: boolean;
   dataAsOf: string | null;
   logoUrl?: string | null;
+  photos?: string[];
   tile?: { bg: string; fg: string };
   demo?: boolean;
 };

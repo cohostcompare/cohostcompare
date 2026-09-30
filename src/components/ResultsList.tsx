@@ -24,7 +24,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
           const fee = m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`;
           return (
             <article key={m.slug} className={`card clickable${on ? ' selected' : ''}`}>
-              <div className="av" aria-hidden="true" style={m.tile ? { background: m.tile.bg, color: m.tile.fg } : undefined}>{m.initials}</div>
+              <div className="av" aria-hidden="true" style={m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : undefined}>{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
               <div style={{ minWidth: 0 }}>
                 {/* The name link stretches over the whole card, so anywhere on it opens the profile. */}
                 <h2><Link className="stretch" href={`/managers/${m.slug}?${query}`}>{m.name}</Link></h2>

@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
+import QuoteTable from '@/components/QuoteTable';
+import type { Quote } from '@/lib/quotes';
+import { acceptQuote } from '../actions';
 import Composer from './Composer';
 
 export const metadata: Metadata = { title: 'Conversation', robots: { index: false } };
@@ -17,7 +20,7 @@ export default async function Thread({ params }: { params: P }) {
   const s = await userClient();
   const { data: t } = await s
     .from('quote_request_managers')
-    .select('id, manager_name, manager_slug, status, quote_requests(address, postcode, bedrooms, property_type, created_at)')
+    .select('id, manager_name, manager_slug, status, quote, quote_requests(address, postcode, bedrooms, property_type, created_at)')
     .eq('id', thread)
     .single();
   if (!t) notFound();
@@ -35,6 +38,22 @@ export default async function Thread({ params }: { params: P }) {
           About {req?.address || `postcode ${req?.postcode}`} · {req?.property_type}, {req?.bedrooms} bed · <Link href={`/managers/${t.manager_slug}`}>View profile</Link>
         </p>
       </div>
+      {t.quote && ['quoted', 'accepted'].includes(t.status) && (
+        <section className="panel" style={{ display: 'grid', gap: 12 }} aria-label="Quote">
+          <h2 style={{ fontSize: 20, margin: 0 }}>{t.manager_name}&apos;s quote</h2>
+          <QuoteTable quotes={[{ name: t.manager_name, q: t.quote as Quote }]} />
+          {(t.quote as Quote).note && <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}><b>Their note:</b> {(t.quote as Quote).note}</p>}
+          {t.status === 'accepted' ? (
+            <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '12px 14px' }}><b>You accepted this quote.</b> We&apos;ve emailed you both each other&apos;s contact details.</div>
+          ) : (
+            <form action={acceptQuote} style={{ display: 'grid', gap: 8 }}>
+              <input type="hidden" name="thread" value={t.id} />
+              <button className="btn primary" type="submit" style={{ justifySelf: 'start' }}>Accept this quote</button>
+              <span className="hint">Accepting shares your name, email, phone and property address with {t.manager_name} so they can arrange next steps. It isn&apos;t a contract: you&apos;ll sign their management agreement directly with them.</span>
+            </form>
+          )}
+        </section>
+      )}
       <section className="panel" style={{ display: 'grid', gap: 14 }} aria-label="Messages">
         {(msgs || []).map((m) => (
           <div key={m.id} style={{ justifySelf: m.sender === 'owner' ? 'end' : 'start', maxWidth: '85%', display: 'grid', gap: 4 }}>
@@ -53,7 +72,7 @@ export default async function Thread({ params }: { params: P }) {
           <Composer thread={t.id} />
         </div>
       </section>
-      <p className="hint" style={{ margin: 0 }}>Keep contact details in the conversation for now. They&apos;re shared automatically when you accept a quote.</p>
+      {t.status !== 'accepted' && <p className="hint" style={{ margin: 0 }}>Keep contact details in the conversation for now. They&apos;re shared automatically when you accept a quote.</p>}
     </main>
   );
 }

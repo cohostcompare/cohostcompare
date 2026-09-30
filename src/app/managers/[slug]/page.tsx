@@ -40,7 +40,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
     <main className="profile">
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.initials}</div>
+          <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>{m.name}</h1>
             <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
@@ -66,6 +66,13 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
             </div>
           </div>
+        )}
+
+        {(m.photos?.length ?? 0) > 0 && (
+          <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
+            <div className="gallery">{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
+            <p className="hint" style={{ margin: 0 }}>Photos supplied by {m.name}.</p>
+          </section>
         )}
 
         <section className="panel">
