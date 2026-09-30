@@ -9,6 +9,7 @@ export type PublicManager = {
   initials: string;
   cities: string[];
   suburbs: string[];
+  postcodes?: string[]; // service areas the manager declares (used when we have no listing data)
   propertyCount: number | null;
   avgRating: number | null;
   reviewCount: number | null;

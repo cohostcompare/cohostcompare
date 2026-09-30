@@ -27,7 +27,7 @@ function toPublic(r: Row, s?: Stats, x?: Extras): PublicManager {
   const n = (v: unknown) => (v == null ? null : Number(v));
   return {
     slug: r.slug, name: r.name, tagline: r.tagline || '', about: r.about || '', initials: initials(r.name),
-    cities: r.cities || [],
+    cities: r.cities || [], postcodes: r.postcodes || [],
     suburbs: (s?.localities || []).filter((x) => !GENERIC_PLACES.has(x)).sort(),
     propertyCount: s ? Number(s.property_count) : null,
     avgRating: n(s?.avg_rating), reviewCount: s ? Number(s.review_count) : null,

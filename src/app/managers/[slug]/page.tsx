@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
   if (!m) return {};
   return {
     title: `${m.name}: short-term rental manager in ${m.cities.join(' and ')}`,
-    description: `${m.name}: ${m.propertyCount ?? 'multiple'} homes tracked${m.avgRating ? `, rated ${m.avgRating.toFixed(2)} by guests` : ''}. Compare with other managers and request a quote.`,
+    description: `${m.name}: ${m.propertyCount ? `${m.propertyCount} homes tracked` : 'short-term rental manager'}${m.avgRating ? `, rated ${m.avgRating.toFixed(2)} by guests` : ''}. Compare with other managers and request a quote.`,
   };
 }
 
@@ -37,6 +37,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const back = new URLSearchParams(q); back.delete('managers');
   const fee = feeLabel(m);
   const areas = await managerAreas(m.slug);
+  const hasData = (m.propertyCount ?? 0) > 0;
 
   return (
     <main className="profile" style={{ paddingBottom: 120 }}>
@@ -52,18 +53,29 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           </div>
         </div>
 
-        <div className="panel stats">
-          <div className="stat"><div className="n">{m.propertyCount ?? '—'}</div><div className="t">homes tracked</div></div>
-          <div className="stat"><div className="n">{m.avgRating != null ? `${m.avgRating.toFixed(2)} ★` : '—'}</div><div className="t">average guest rating</div></div>
-          <div className="stat"><div className="n">{m.reviewCount?.toLocaleString('en-AU') ?? '—'}</div><div className="t">guest reviews</div></div>
-          <div className="stat"><div className="n">{pct(m.avgOccupancy)}</div><div className="t">nights booked, last 12 months</div></div>
-          <div className="stat"><div className="n">{m.avgNightlyRate != null ? `A$${Math.round(m.avgNightlyRate)}` : '—'}</div><div className="t">average nightly rate</div></div>
-          <div className="stat"><div className="n" style={fee ? undefined : { fontSize: 18 }}>{fee ?? 'Not published'}</div><div className="t">management fee</div></div>
-        </div>
+        {hasData ? (
+          <div className="panel stats">
+            <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">homes tracked</div></div>
+            {m.avgRating != null && <div className="stat"><div className="n">{m.avgRating.toFixed(2)} ★</div><div className="t">average guest rating</div></div>}
+            {!!m.reviewCount && <div className="stat"><div className="n">{m.reviewCount.toLocaleString('en-AU')}</div><div className="t">guest reviews</div></div>}
+            {m.avgOccupancy != null && <div className="stat"><div className="n">{pct(m.avgOccupancy)}</div><div className="t">nights booked, last 12 months</div></div>}
+            {m.avgNightlyRate != null && <div className="stat"><div className="n">A${Math.round(m.avgNightlyRate)}</div><div className="t">average nightly rate</div></div>}
+            <div className="stat"><div className="n" style={fee ? undefined : { fontSize: 18 }}>{fee ?? 'On request'}</div><div className="t">management fee</div></div>
+          </div>
+        ) : (
+          <div className="panel" style={{ display: 'grid', gap: 12 }}>
+            <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))' }}>
+              <div className="stat"><div className="n" style={fee ? undefined : { fontSize: 18 }}>{fee ?? 'On request'}</div><div className="t">management fee</div></div>
+              <div className="stat"><div className="n" style={{ fontSize: 18 }}>{m.cities.join(', ') || 'See below'}</div><div className="t">where they operate</div></div>
+              {m.licensedAgent && <div className="stat"><div className="n" style={{ fontSize: 18 }}>Licensed agency</div><div className="t">real estate licence</div></div>}
+            </div>
+            <p className="hint" style={{ margin: 0 }}>No guest ratings or booking figures yet. We found {m.name} through its own website rather than in the Airbnb listing data we track, so it may list mainly on Stayz, Booking.com or its own site. Figures appear once its listings are linked, or when the manager claims this profile.</p>
+          </div>
+        )}
 
         {!m.claimed && (
           <div className="claimbox">
-            <p style={{ margin: 0 }}>This profile is built from public information, including estimates from {m.name}&apos;s public listings, and is refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link></p>
+            <p style={{ margin: 0 }}>This profile is built from public information{hasData ? <>, including estimates from {m.name}&apos;s public listings,</> : <> on {m.name}&apos;s own website,</>} and is refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link></p>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
               <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
@@ -81,15 +93,15 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
 
         <section className="panel">
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
-          <p style={{ margin: 0 }}>{m.about}</p>
+          <p style={{ margin: 0 }}>{m.about || `${m.name} manages short-term rental homes${m.cities.length ? ` in ${m.cities.join(' and ')}` : ''}.`}</p>
         </section>
 
         <AreaMap areas={areas} name={m.name} near={sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null} />
 
         <section className="panel" style={{ display: 'grid', gap: 16 }}>
-          {!areas.length && <div><div className="label">Where they run homes</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}</p></div>}
+          {!areas.length && <div><div className="label">{hasData ? 'Where they run homes' : 'Areas they say they cover'}</div><p style={{ margin: '6px 0 0' }}>{m.suburbs.length ? m.suburbs.join(', ') : m.cities.join(', ')}{!hasData && (m.postcodes?.length ?? 0) > 0 ? <span className="hint"> · postcodes {m.postcodes!.join(', ')}</span> : null}</p></div>}
           <div><div className="label">Platforms</div><div className="chips" style={{ marginTop: 8 }}>{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}</div>
-            {!m.claimed && <p className="hint" style={{ margin: '6px 0 0' }}>Seen on their public listings. Other platforms appear once the manager claims this profile.</p>}</div>
+            {!m.claimed && <p className="hint" style={{ margin: '6px 0 0' }}>{hasData ? 'Seen on their public listings. Other platforms appear once the manager claims this profile.' : 'As stated on their website.'}</p>}</div>
           {m.services.length > 0 && <div><div className="label">Services</div><div className="chips" style={{ marginTop: 8 }}>{m.services.map((s) => <span className="chip" key={s}>{s}</span>)}</div></div>}
           {m.licensedAgent && <div><div className="label">Credentials</div><p style={{ margin: '6px 0 0' }}>Licensed real estate agency</p></div>}
         </section>
@@ -119,7 +131,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
         )}
-        <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
+        {hasData && <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>
 
       <aside className="sticky">
