@@ -161,7 +161,7 @@ export async function seedManagers() {
       fee_min: s.fee_min ?? null, fee_max: s.fee_max ?? null, fee_note: s.fee_note || null, licensed_agent: s.licensed_agent ?? null,
       gated: s.gated || {}, sources: s.sources || [], published: Boolean(s.published), updated_at: new Date().toISOString(),
     });
-    report.push({ slug: s.slug, matched: Boolean(g), accounts: g?.accounts.length ?? 0, listings: g?.listings.size ?? 0 });
+    report.push({ slug: s.slug, matched: Boolean(g), webOnly: Boolean(s.webOnly), accounts: g?.accounts.length ?? 0, listings: g?.listings.size ?? 0 });
   }
   // Never re-publish a manager an admin has hidden, and never overwrite a profile its manager has claimed and edited.
   const { data: existing } = await adminClient().from('managers').select('slug, published, claimed');

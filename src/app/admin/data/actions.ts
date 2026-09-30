@@ -87,7 +87,7 @@ export async function runSeed() {
   let msg = '';
   try {
     const r = await seedManagers();
-    msg = `Saved ${r.saved} profiles (${r.skippedClaimed} claimed profiles left untouched). ${r.report.filter((x: { matched: boolean }) => !x.matched).length} researched managers weren't found in the data yet.`;
+    msg = `Saved ${r.saved} profiles (${r.skippedClaimed} claimed profiles left untouched). ${r.report.filter((x: { matched: boolean }) => x.matched).length} linked to listing data, ${r.report.filter((x: { matched: boolean; webOnly?: boolean }) => !x.matched && x.webOnly).length} from web research (cover their stated postcodes), ${r.report.filter((x: { matched: boolean; webOnly?: boolean }) => !x.matched && !x.webOnly).length} not found in the data.`;
   } catch (e) { back(String((e as Error).message), 'error'); }
   revalidatePath('/admin/data');
   back(msg);

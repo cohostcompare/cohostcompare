@@ -19,7 +19,7 @@ export const unsubscribeUrl = (email: string, api = false) => `${BASE}${api ? '/
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 
 function footer(c: Ctx) {
-  return `\n\n—\nBen Deeley\nFounder, CoHostCompare\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
+  return `\n\nCheers,\nBen Deeley\nFounder, CoHostCompare\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
 }
 
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
@@ -50,16 +50,23 @@ export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; 
   },
 ];
 
+/** Suburbs the manager actually operates in (from their homes), without council names or whole cities; falls back to their stated regions. */
+export function localPlaces(localities: string[], cities: string[]) {
+  const generic = /\b(council|shire|city of|municipality|greater|region)\b|^(sydney|melbourne|newcastle-maitland)$/i;
+  const own = [...new Set(localities.filter((x) => x && !generic.test(x)))].slice(0, 3);
+  return own.length ? own : cities.slice(0, 2);
+}
+
 async function context(contact: { email: string; first_name: string | null; source_url: string; manager_id: string }): Promise<Ctx | null> {
   const db = adminClient();
-  const { data: m } = await db.from('managers').select('id, slug, name, claimed, published').eq('id', contact.manager_id).maybeSingle();
+  const { data: m } = await db.from('managers').select('id, slug, name, claimed, published, cities').eq('id', contact.manager_id).maybeSingle();
   if (!m || !m.published) return null;
   const [{ data: st }, { count: waiting }] = await Promise.all([
     db.from('manager_stats').select('property_count, avg_rating, localities').eq('manager_id', m.id).maybeSingle(),
     db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', m.slug).in('status', ['sent', 'viewed']),
   ]);
   return { manager: m.name, slug: m.slug, first: contact.first_name, homes: st?.property_count ?? null, rating: st?.avg_rating != null ? Number(st.avg_rating) : null,
-    suburbs: ((st?.localities as string[] | null) || []).filter((x) => !['Sydney', 'Melbourne'].includes(x)).slice(0, 3), waiting: waiting ?? 0, email: contact.email, source: contact.source_url };
+    suburbs: localPlaces((st?.localities as string[] | null) || [], (m as { cities?: string[] }).cities || []), waiting: waiting ?? 0, email: contact.email, source: contact.source_url };
 }
 
 export async function suppressed(email: string) {
@@ -133,4 +140,12 @@ export async function unsubscribe(email: string) {
   const db = adminClient();
   await db.from('email_suppressions').upsert({ email: e, reason: 'unsubscribed' });
   await db.from('outreach_contacts').update({ status: 'unsubscribed' }).ilike('email', e);
+}
+
+/** Sends one sequence email for a real manager to hello@ so it can be checked before going out. */
+export async function sendTest(managerId: string, step: number) {
+  const c = await context({ email: 'hello@cohostcompare.com', first_name: 'Ben', source_url: 'https://www.cohostcompare.com', manager_id: managerId });
+  if (!c) return false;
+  const e = SEQUENCE[Math.min(Math.max(step, 0), SEQUENCE.length - 1)];
+  return sendEmail({ to: 'hello@cohostcompare.com', subject: `[TEST] ${e.subject(c)}`, text: e.body(c) + footer(c), cta: e.cta(c), from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });
 }

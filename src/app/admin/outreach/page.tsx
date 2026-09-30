@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin';
 import { DAILY_CAP, SEQUENCE, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
-import { addContact, approveResearched, sendNow, setStatus } from './actions';
+import { addContact, approveResearched, sendNow, setStatus, testEmail } from './actions';
 
 export const metadata: Metadata = { title: 'Outreach · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -95,8 +95,15 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <b>Preview the emails</b>
         <div className="chips">{SEQUENCE.map((_, n) => <Link key={n} className="chip" href={`/admin/outreach?preview=${n + 1}`} style={{ textDecoration: 'none', fontWeight: n === i ? 700 : 400 }}>Email {n + 1}</Link>)}</div>
+        <p className="hint" style={{ margin: 0 }}>This preview uses an example business. Real emails use each manager&apos;s own name, homes, rating and suburbs. To see the real thing, send yourself a test below.</p>
         <p style={{ margin: 0 }}><b>Subject:</b> {SEQUENCE[i].subject(sample)}</p>
-        <p style={{ margin: 0, whiteSpace: 'pre-wrap', background: 'var(--surface)', padding: 14, borderRadius: 10 }}>{SEQUENCE[i].body(sample)}{'\n\n'}[{SEQUENCE[i].cta(sample).label}]{'\n\n'}— Ben Deeley, Founder, CoHostCompare. Footer: why they&apos;re receiving it, ABN, unsubscribe link.</p>
+        <p style={{ margin: 0, whiteSpace: 'pre-wrap', background: 'var(--surface)', padding: 14, borderRadius: 10 }}>{SEQUENCE[i].body(sample)}{'\n\n'}[{SEQUENCE[i].cta(sample).label}]{'\n\n'}Cheers,{'\n'}Ben Deeley{'\n'}Founder, CoHostCompare{'\n'}(Then the small print: why they&apos;re receiving it, your ABN, how we build profiles, and the unsubscribe link.)</p>
+        <form action={testEmail} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+          <b>Send me a test:</b>
+          <select className="field" name="manager_id" required defaultValue="" style={{ maxWidth: 280 }}><option value="" disabled>Pick a manager…</option>{(managers || []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+          <select className="field" name="step" defaultValue={String(i + 1)} style={{ maxWidth: 130 }}>{SEQUENCE.map((_, n) => <option key={n} value={n + 1}>Email {n + 1}</option>)}</select>
+          <button className="btn secondary" type="submit">Send test to hello@</button>
+        </form>
       </section>
     </main>
   );

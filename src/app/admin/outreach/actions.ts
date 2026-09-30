@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
-import { sendOutreachBatch, suppressed } from '@/lib/outreach';
+import { sendOutreachBatch, sendTest, suppressed } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 
 const back = (msg: string, kind: 'done' | 'error' = 'done') => redirect(`/admin/outreach?${kind}=${encodeURIComponent(msg)}`);
@@ -57,4 +57,10 @@ export async function approveResearched(form: FormData) {
   }
   revalidatePath('/admin/outreach');
   back(`Added ${added} contact${added === 1 ? '' : 's'}${skipped ? ` (${skipped} skipped: already added, claimed, hidden or not created yet)` : ''}. Emails start with the next morning's batch.`);
+}
+
+export async function testEmail(form: FormData) {
+  await requireAdmin('/admin/outreach');
+  const ok = await sendTest(String(form.get('manager_id') || ''), Number(form.get('step') || 1) - 1);
+  back(ok ? 'Test sent to hello@cohostcompare.com. Check the links, button and wording.' : 'Couldn’t send the test. Pick a visible manager.', ok ? 'done' : 'error');
 }
