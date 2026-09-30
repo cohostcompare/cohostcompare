@@ -28,7 +28,7 @@ function footer(c: Ctx) {
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
   {
     subject: (c) => `${c.manager}'s profile on CoHostCompare`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nI'm Ben, founder of CoHostCompare, a new free site where property owners in Sydney and Melbourne compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and you only pay a small fee when an owner accepts your quote. Claim by 31 January and you get Pro free for three months.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nI'm Ben, founder of CoHostCompare, a new free site where property owners in Sydney and Melbourne compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first 4 new clients each month. Claim by 31 January and you get Pro free for three months.`,
     cta: (c) => ({ label: 'See your profile', url: `${BASE}/managers/${c.slug}` }),
   },
   {
@@ -131,7 +131,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string): Pro
     const c: Ctx = { manager: m.name, slug, first: ct.first_name, homes: null, rating: null, suburbs: [], waiting: 1, email: ct.email, source: ct.source_url };
     await sendEmail({
       to: ct.email, subject: `An owner in ${where} wants a quote from ${m.name}`,
-      text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and you only pay a small fee if the owner accepts your quote.${footer(c)}`,
+      text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and it's free.${footer(c)}`,
       cta: { label: 'See the request', url: `${BASE}/claim/${slug}` },
       from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
       replyTo: outreachReplyTo(ct.id),

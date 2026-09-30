@@ -1,14 +1,15 @@
 import 'server-only';
 import { sendEmail } from '@/lib/email';
 import { memberEmails } from '@/lib/managers';
-import { planOf, plansFor, SUCCESS_FEE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
+import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
 import { smsManager } from '@/lib/sms';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
  What happens when an owner accepts a quote:
  - Pro, Enterprise or founding trial: we introduce owner and manager straight away, in one email to both.
- - Free plan (claimed): the manager is asked to unlock the client (A$99 + GST by card, or start Pro). Once paid,
+ - Free plan (claimed): the first FREE_ACCEPTS_PER_MONTH accepted clients each month are introduced straight away.
+   After that, the manager is asked to unlock the client (A$99 + GST by card, or start Pro). Once paid,
    the same introduction goes out. If they haven't unlocked within 48 hours, the owner is told they can accept
    another quote (the manager can still unlock later).
  - Unclaimed profile: hello@ passes the details on by hand, as before.
@@ -58,9 +59,23 @@ export async function onAccepted(threadId: string) {
   const { t, req, m, emails } = x;
   const db = adminClient();
   const free = m.claimed && emails.length > 0 && planOf((await plansFor([m.id])).get(m.id)) === 'free';
-  if (!free) {
+  let used = 0;
+  if (free) {
+    const monthStart = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    const { count } = await db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', t.manager_slug).eq('status', 'accepted').gte('accepted_at', new Date(monthStart.getTime() - 11 * 3600e3).toISOString());
+    used = count ?? 0; // includes this one
+  }
+  if (!free || used <= FREE_ACCEPTS_PER_MONTH) {
     await db.from('messages').insert({ thread_id: t.id, sender: 'system', read_by_owner: true, body: `You accepted ${t.manager_name}'s quote.` });
     await introduce(t.id);
+    if (free && emails.length) {
+      await sendEmail({
+        to: emails, subject: `Free clients this month: ${Math.min(used, FREE_ACCEPTS_PER_MONTH)} of ${FREE_ACCEPTS_PER_MONTH} used`,
+        text: `${first(req.owner_name)} accepted your quote, and we've sent you both an introduction.\n\nThat's ${Math.min(used, FREE_ACCEPTS_PER_MONTH)} of the ${FREE_ACCEPTS_PER_MONTH} clients the Free plan includes this month. After that, each new client costs ${SUCCESS_FEE_TEXT} to confirm. Pro (${PRO_PRICE}) includes unlimited clients, plus SMS alerts, regional reports and insights.`,
+        cta: { label: 'See Pro', url: `${SITE}/dashboard` },
+      });
+    }
     return;
   }
   const { error } = await db.from('success_fees').insert({ manager_id: m.id, thread_id: t.id, amount: SUCCESS_FEE, status: 'awaiting_unlock', expires_at: new Date(Date.now() + UNLOCK_HOURS * 3600e3).toISOString() });
@@ -68,7 +83,7 @@ export async function onAccepted(threadId: string) {
   await db.from('messages').insert({ thread_id: t.id, sender: 'system', read_by_owner: true, body: `You accepted ${t.manager_name}'s quote. We've asked them to confirm, and we'll introduce you by email as soon as they do.` });
   await sendEmail({
     to: emails, subject: `${first(req.owner_name)} accepted your quote: confirm to get their details`,
-    text: `Good news: ${first(req.owner_name)} accepted your quote for ${req.suburb || ''} ${req.state || ''} ${req.postcode}.\n\nYou're on the Free plan, so confirm this client for ${SUCCESS_FEE_TEXT} to get the owner's full name, email, phone and address, and an introduction by email. Or start Pro and every client you win is unlocked at no extra cost.\n\nPlease confirm within ${UNLOCK_HOURS} hours. After that we'll let the owner know they can choose another manager.`,
+    text: `Good news: ${first(req.owner_name)} accepted your quote for ${req.suburb || ''} ${req.state || ''} ${req.postcode}.\n\nYou've used the ${FREE_ACCEPTS_PER_MONTH} free clients the Free plan includes this month, so confirm this one for ${SUCCESS_FEE_TEXT} to get the owner's full name, email, phone and address, and an introduction by email. Or start Pro and every client you win is unlocked at no extra cost.\n\nPlease confirm within ${UNLOCK_HOURS} hours. After that we'll let the owner know they can choose another manager.`,
     cta: { label: 'Confirm this client', url: `${SITE}/dashboard/requests/${t.id}` },
   });
   await smsManager(t.manager_slug, 'accepted', `CoHostCompare: ${first(req.owner_name)} accepted your quote for ${req.suburb || req.postcode}. Confirm within ${UNLOCK_HOURS}h to get their details: ${SITE}/dashboard/requests/${t.id}`);

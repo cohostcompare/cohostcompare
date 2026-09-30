@@ -131,7 +131,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               return (
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
-                  <span className="hint">Your profile, quote requests and replies stay free, and when an owner accepts your quote you confirm them for {SUCCESS_FEE_TEXT}. Pro ({PRO_PRICE}) confirms every client at no extra cost and adds {PRO_FEATURES.filter((f) => f.title !== 'Clients unlocked free').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
+                  <span className="hint">Your profile, quote requests and replies stay free, including 4 accepted clients a month, then {SUCCESS_FEE_TEXT} each. Pro ({PRO_PRICE}) includes unlimited clients and adds {PRO_FEATURES.filter((f) => f.title !== 'Unlimited clients').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>{billing ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary small">Start Pro</button></form> : <ProInterest managerId={m.id} />}<Link href="/managers#pricing">See plans</Link></div>
                 </div>
               );

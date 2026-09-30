@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { myManagers, requireThread } from '@/lib/managers';
-import { planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
+import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
 import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
 import { declineRequest } from '../actions';
@@ -55,7 +55,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
         {locked ? (
           <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 10 }}>
             <b>{first} accepted your quote. Confirm this client to get their details.</b>
-            <span>You&apos;re on the Free plan. Confirm for {SUCCESS_FEE_TEXT} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>
+            <span>You&apos;ve used the {FREE_ACCEPTS_PER_MONTH} free clients included in the Free plan this month. Confirm this one for {SUCCESS_FEE_TEXT} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>
             {fee?.status === 'expired' ? <span className="hint">The {UNLOCK_HOURS}-hour window has passed, so {first} has been told they can choose another manager. You can still confirm, and we&apos;ll introduce you.</span> : fee?.expires_at ? <span className="hint">Please confirm by {new Date(fee.expires_at).toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}.</span> : null}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <form action={unlockClient}><input type="hidden" name="thread" value={t.id} /><button className="btn primary">Confirm for {SUCCESS_FEE_TEXT}</button></form>

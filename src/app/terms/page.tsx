@@ -35,7 +35,7 @@ export default function Terms() {
 
       <h2>5. For managers</h2>
       <ul>
-        <li>Your profile, quote requests and replying to owners are free. On the Free plan, a fee applies to confirm an owner who accepts your quote (see section 6). Paid plans are optional.</li>
+        <li>Your profile, quote requests and replying to owners are free. The Free plan includes a set number of accepted clients each month (see section 6). Paid plans are optional.</li>
         <li>Each login is for one person. Don&apos;t share your login with others: invite colleagues from Team in your dashboard instead. We record the device and approximate location of manager sign-ins to keep accounts secure and to check plan limits.</li>
         <li>To claim a profile you must be authorised to act for that business. We may ask for evidence before approving a claim.</li>
         <li>Information you add must be accurate and not misleading, including fees, services and credentials. You must hold any licence your state requires for the services you offer.</li>
@@ -46,7 +46,7 @@ export default function Terms() {
 
       <h2 id="paid-plans">6. Paid plans for managers (Pro and Enterprise)</h2>
       <ul>
-        <li><b>Confirming a client (Free plan).</b> If you&apos;re on the Free plan when an owner accepts your quote, you can confirm them for A$99 (plus GST if we&apos;re registered for GST), paid by card. When you confirm, we share the owner&apos;s contact details and introduce you by email. If you don&apos;t confirm within 48 hours, we tell the owner they can choose another manager, and you can still confirm later. On Pro and Enterprise, including during the founding offer, clients are confirmed at no extra cost. The fee is per owner and property, and isn&apos;t refundable once the introduction is sent, unless the Australian Consumer Law requires it.</li>
+        <li><b>Accepted clients (Free plan).</b> The Free plan includes 4 accepted clients each calendar month (Sydney time), introduced at no cost. After that, when an owner accepts your quote, you can confirm them for A$99 (plus GST if we&apos;re registered for GST), paid by card. When you confirm, we share the owner&apos;s contact details and introduce you by email. If you don&apos;t confirm within 48 hours, we tell the owner they can choose another manager, and you can still confirm later. On Pro and Enterprise, including during the founding offer, clients are confirmed at no extra cost. The fee is per owner and property, and isn&apos;t refundable once the introduction is sent, unless the Australian Consumer Law requires it.</li>
         <li><b>Logins.</b> Free includes 1 login, Pro up to 5 and Enterprise unlimited.</li>
         <li><b>Optional.</b> Pro and Enterprise add tools for your business, such as benchmarks, owner demand, extra photos, regional reports, text alerts and integrations. The free features stay free if you don&apos;t subscribe.</li>
         <li><b>Neutral.</b> A paid plan never changes where you appear in results, your ratings or badges, or how quotes are compared, and owners can&apos;t see who has one.</li>

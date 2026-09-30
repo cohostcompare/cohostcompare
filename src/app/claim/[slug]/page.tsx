@@ -63,7 +63,7 @@ export default async function Claim({ params }: { params: P }) {
       )}
 
       <section className="facts-grid">
-        <div className="panel"><h3>What it costs</h3><p>Claiming, editing your profile, receiving quote requests and replying are free, with no lock-in. On the Free plan, when an owner accepts your quote you pay {SUCCESS_FEE_TEXT} to confirm them and get their details. Claim by 31 January 2027 and you get <Link href="/managers#pricing">Pro</Link> free for three months, with every client confirmed at no extra cost.</p></div>
+        <div className="panel"><h3>What it costs</h3><p>Claiming, editing your profile, receiving quote requests and replying are free, with no lock-in. The Free plan includes 4 accepted clients a month, then {SUCCESS_FEE_TEXT} each. Claim by 31 January 2027 and you get <Link href="/managers#pricing">Pro</Link> free for three months, with unlimited clients.</p></div>
         <div className="panel"><h3>Where the figures come from</h3><p>Public listing data and your own website, measured the same way for every manager. <Link href="/managers#why-listed">How we build profiles</Link></p></div>
       </section>
       <p className="hint" style={{ margin: 0 }}>Not your business, or rather not be listed? Email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> and we&apos;ll sort it out.</p>
