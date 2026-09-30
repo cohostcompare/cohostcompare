@@ -136,7 +136,7 @@ export async function newBusinesses(min = 6) {
     .map((g) => {
       const ls = [...g.listings].map((id) => byId.get(id)).filter(Boolean);
       const names = g.accounts.sort((a, b) => b.listings.size - a.listings.size).map((a) => a.name);
-      const rated = ls.filter((l) => l.num_reviews > 0 && l.rating_overall != null);
+      const rated = ls.filter((l) => l.num_reviews > 0 && Number(l.rating_overall) > 0);
       return {
         name: names.find(businessLike) || names[0], business: Boolean(names.find(businessLike)), accounts: names,
         listings: ls.length, avgRating: rated.length ? +(rated.reduce((s, l) => s + Number(l.rating_overall), 0) / rated.length).toFixed(2) : null,
