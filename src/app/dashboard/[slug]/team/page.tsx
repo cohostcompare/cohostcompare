@@ -23,7 +23,7 @@ export default async function Team({ params }: { params: Promise<{ slug: string 
     <main style={{ maxWidth: 720, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
       <Link href="/dashboard" className="hint">← Dashboard</Link>
       <h1 style={{ fontSize: 'clamp(28px,4.4vw,36px)', margin: 0 }}>Team for {m.name}</h1>
-      <p style={{ margin: 0 }}>Everyone who works on quote requests should have their own login. {planName(plan)} includes {plan === 'enterprise' ? 'unlimited logins' : `${seats} login${seats === 1 ? '' : 's'}`}{plan === 'free' ? <>. <Link href="/managers#pricing">Pro</Link> includes up to 5.</> : '.'}</p>
+      <p style={{ margin: 0 }}>Everyone who works on quote requests should have their own login. {planName(plan)} includes {plan === 'enterprise' ? 'unlimited logins' : `${seats} login${seats === 1 ? '' : 's'}`}{plan === 'free' ? <>. <Link href="/managers#pricing">Pro</Link> includes up to {SEATS.pro}.</> : '.'}</p>
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         {people.map((p) => (
           <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--line)' }}>

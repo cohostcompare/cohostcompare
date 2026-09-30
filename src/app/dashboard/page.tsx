@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
-import { eventTotals } from '@/lib/events';
+import { eventTotals, searchDemand } from '@/lib/events';
 import RequestList from '@/components/RequestList';
 import { managerThreads, todoLabel } from '@/lib/todo';
 import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, SUCCESS_FEE_TEXT } from '@/lib/pro';
@@ -39,6 +39,13 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
 
   const db = adminClient();
   const threads = await managerThreads(managers.map((m) => m.slug), 300);
+  const insight = new Map<string, { searches: number; peers: number; reports: number }>();
+  for (const m of managers) {
+    const demand = await searchDemand(m.postcodes || [], 30);
+    const { count: peers } = m.postcodes?.length ? await db.from('managers').select('id', { count: 'exact', head: true }).eq('published', true).neq('id', m.id).overlaps('postcodes', m.postcodes) : { count: 0 };
+    const { count: reports } = await db.from('suburb_reports').select('id', { count: 'exact', head: true }).contains('manager_ids', [m.id]);
+    insight.set(m.id, { searches: [...demand.values()].reduce((a, x) => a + x.count, 0), peers: peers ?? 0, reports: reports ?? 0 });
+  }
   const events = await eventTotals(managers.map((m) => m.id));
   const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
@@ -78,8 +85,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link className="btn primary" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
                 <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
-                <Link className="btn secondary" href={`/dashboard/${m.slug}/insights`}>Insights</Link>
-                <Link className="btn secondary" href="/dashboard/reports">Reports</Link>
+                <Link className="btn secondary" href="/dashboard/reports">Market reports</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
               </div>
@@ -91,11 +97,11 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 {todo.length > 8 && <Link href="/dashboard/requests?f=needs">See all {todo.length}<span className="go">→</span></Link>}
               </section>
             )}
-            <div className="dash-stats">
-              <div className="panel"><b>{ev.search.toLocaleString('en-AU')}</b><span>times you appeared in owner searches</span></div>
-              <div className="panel"><b>{ev.view.toLocaleString('en-AU')}</b><span>profile views</span></div>
-              <Link className="panel stat-link" href="/dashboard/requests?f=all"><b>{recent}</b><span>quote requests →</span></Link>
-              <div className="panel"><b>{score}%</b><span>profile complete</span></div>
+            <div className="dash-stats colour">
+              <div className="panel" style={{ '--c': '#0F5E57' } as React.CSSProperties}><b>{ev.search.toLocaleString('en-AU')}</b><span>times you appeared in owner searches</span></div>
+              <div className="panel" style={{ '--c': '#2B6CB0' } as React.CSSProperties}><b>{ev.view.toLocaleString('en-AU')}</b><span>profile views</span></div>
+              <Link className="panel stat-link" href="/dashboard/requests?f=all" style={{ '--c': '#B7791F' } as React.CSSProperties}><b>{recent}</b><span>quote requests →</span></Link>
+              <Link className="panel stat-link" href={`/dashboard/${m.slug}/edit`} style={{ '--c': score === 100 ? '#2F855A' : '#9B2C6F' } as React.CSSProperties}><b>{score}%</b><span>profile complete{score < 100 ? ' →' : ''}</span></Link>
             </div>
             <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
             {(() => {
@@ -109,11 +115,28 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
             {(() => {
               const p = pro.get(m.id);
               const plan = planOf(p);
+              const ins = insight.get(m.id)!;
+              const card = (
+                <Link href={`/dashboard/${m.slug}/insights`} className="insight-card">
+                  <div>
+                    <span className="eyebrow">{plan === 'free' ? 'Pro insights' : 'Your insights'}</span>
+                    <h2>{plan === 'free' ? 'See what owners near you are searching for' : 'How you stack up against local managers'}</h2>
+                    <p>Owner demand in your postcodes, how your fees and ratings compare with other managers covering the same areas, and your quote win rate.</p>
+                    <span className="go">{plan === 'free' ? 'See what’s inside →' : 'Open insights →'}</span>
+                  </div>
+                  <div className="peek">
+                    <div className={plan === 'free' ? 'locked' : ''}><b>{ins.searches}</b><span>owner searches in your postcodes, last 30 days</span></div>
+                    <div className={plan === 'free' ? 'locked' : ''}><b>{ins.peers}</b><span>other managers covering your postcodes</span></div>
+                    <div><b>{ins.reports}</b><span>market report{ins.reports === 1 ? '' : 's'} for your regions</span></div>
+                  </div>
+                </Link>
+              );
               if (plan !== 'free') return (
+                <>
+                {card}
                 <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
-                  <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, regional reports, SMS alerts and more photos.</span>
+                  <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, market reports, SMS alerts and more photos.</span>
                   <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
                     {bill.get(m.id)?.stripe_subscription_id && bill.get(m.id)?.stripe_customer_id ? (
                       <form action={manageBilling}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary small">Billing</button></form>
                     ) : billing && p?.pro_note === 'founding' ? (
@@ -121,13 +144,17 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                     ) : null}
                   </span>
                 </div>
+                </>
               );
               return (
+                <>
+                {card}
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
                   <span className="hint">Your profile, quote requests and replies stay free, including 4 accepted clients a month, then {SUCCESS_FEE_TEXT} each. Pro ({PRO_PRICE}) includes unlimited clients and adds {PRO_FEATURES.filter((f) => f.title !== 'Unlimited clients').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>{billing ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary small">Start Pro</button></form> : <ProInterest managerId={m.id} />}<Link href="/managers#pricing">See plans</Link></div>
                 </div>
+                </>
               );
             })()}
             {score < 100 && (

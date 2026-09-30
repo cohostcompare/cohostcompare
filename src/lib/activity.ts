@@ -69,7 +69,7 @@ export async function checkSharing() {
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com', subject: `Possible shared login${lines.length > 1 ? 's' : ''} on the Free plan`,
-      text: `These Free-plan manager logins look like they're being shared:\n\n${lines.join('\n\n')}\n\nThis can be a false alarm (mobile networks and travel move people between cities). If it looks real, a friendly note that Pro includes 5 logins usually does it. Review and clear flags on the admin page.`,
+      text: `These Free-plan manager logins look like they're being shared:\n\n${lines.join('\n\n')}\n\nThis can be a false alarm (mobile networks and travel move people between cities). If it looks real, a friendly note that Pro includes 3 logins usually does it. Review and clear flags on the admin page.`,
       cta: { label: 'Open admin', url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com'}/admin` },
     });
   }

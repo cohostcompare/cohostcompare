@@ -24,7 +24,7 @@ export async function invite(_: State, form: FormData): Promise<State> {
   const email = String(form.get('email') || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Enter a valid email address.' };
   const plan = planOf((await plansFor([m.id])).get(m.id));
-  if ((await seatsUsed(m.id)) >= SEATS[plan]) return { error: plan === 'free' ? 'The Free plan includes 1 login. Pro includes up to 5.' : `Your plan includes ${SEATS[plan]} logins, and they're all in use.` };
+  if ((await seatsUsed(m.id)) >= SEATS[plan]) return { error: plan === 'free' ? 'The Free plan includes 1 login. Pro includes up to 3.' : `Your plan includes ${SEATS[plan]} logins, and they're all in use.` };
   const { data: inv, error } = await adminClient().from('manager_invites').insert({ manager_id: m.id, email, invited_by: user.id }).select('id').single();
   if (error || !inv) return { error: 'We couldn’t send the invite. Try again in a minute.' };
   await sendEmail({

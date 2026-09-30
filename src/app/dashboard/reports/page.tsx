@@ -24,7 +24,7 @@ export default async function Reports() {
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
       <Link href="/dashboard" className="hint">← Dashboard</Link>
       <div>
-        <span className="label">Regional reports</span>
+        <span className="label">Market reports</span>
         <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Market reports for your regions</h1>
         <p className="hint" style={{ margin: '4px 0 0' }}>New reports come out at the start of each quarter, with a breakdown by suburb. Every past report stays here.</p>
       </div>
@@ -40,7 +40,7 @@ export default async function Reports() {
             {managers.length > 1 && <h2 style={{ fontSize: 22, margin: 0 }}>{m.name} <span className="hint" style={{ fontSize: 14 }}>{planName(plan)}</span></h2>}
             {!paid && (
               <div className="panel" style={{ display: 'grid', gap: 8, borderColor: 'var(--brand)' }}>
-                <b>Regional reports are part of Pro ({PRO_PRICE})</b>
+                <b>Market reports are part of Pro ({PRO_PRICE})</b>
                 <span className="hint">Each report covers nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and how many owners are asking for quotes. Here&apos;s what&apos;s ready for {m.name}&apos;s regions:</span>
                 <ProInterest managerId={m.id} />
               </div>

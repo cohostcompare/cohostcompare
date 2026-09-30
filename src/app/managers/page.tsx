@@ -73,8 +73,8 @@ export default function ForManagers() {
             <p className="hint" style={{ margin: 0 }}>For operators with homes in several regions. We&apos;re building it with our first Enterprise operators, so talk to us about what you need.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Pro, plus:</p>
             <ul className="ticks plan-ent">{ENTERPRISE_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}{f.live ? '' : <span className="soon"> Coming soon.</span>}</li>)}</ul>
-            <details>
-              <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--brand)' }}>Talk to us about Enterprise</summary>
+            <details className="ent-cta">
+              <summary>Talk to us about Enterprise →</summary>
               <div style={{ marginTop: 10 }}><InterestForm kind="enterprise" partner button="Send" noteLabel="How many homes, and which regions? (optional)" done="Thanks. We’ll be in touch by email." /></div>
             </details>
           </div>
