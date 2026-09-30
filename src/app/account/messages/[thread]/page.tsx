@@ -31,6 +31,12 @@ export default async function Thread({ params }: { params: P }) {
   if (t.quote) await adminClient().from('quote_request_managers').update({ owner_seen_at: new Date().toISOString() }).eq('id', thread).is('owner_seen_at', null);
   const req = Array.isArray(t.quote_requests) ? t.quote_requests[0] : t.quote_requests;
   const first = t.manager_name;
+  let contact: { email: string | null; phone: string | null } | null = null;
+  if (t.status === 'accepted') {
+    const { memberEmails } = await import('@/lib/managers');
+    const { data: mc } = await adminClient().from('managers').select('contact_phone').eq('slug', t.manager_slug).maybeSingle();
+    contact = { email: (await memberEmails(t.manager_slug))[0] ?? null, phone: mc?.contact_phone ?? null };
+  }
   const quoted = Boolean(t.quote && ['quoted', 'accepted'].includes(t.status));
   return (
     <main style={{ maxWidth: 760, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
@@ -86,7 +92,16 @@ export default async function Thread({ params }: { params: P }) {
           ))}
           {!(msgs || []).some((m) => m.sender !== 'system') && <p className="chat-note">No messages yet. Say hello or ask a question.</p>}
         </div>
-        <Composer thread={t.id} name={t.manager_name} />
+        {t.status === 'accepted' && contact ? (
+          <>
+            <div className="intro-done">
+              <b>You&apos;ve been introduced by email. Carry on the conversation directly with {t.manager_name}.</b>
+              <span className="contact">{contact.email ? <><a href={`mailto:${contact.email}`}>{contact.email}</a></> : null}{contact.phone ? <> · <a href={`tel:${contact.phone.replace(/\s/g, '')}`}>{contact.phone}</a></> : null}</span>
+              <span className="hint">They&apos;ll arrange the next steps with you there. This chat stays here as a record of what you discussed.</span>
+            </div>
+            <details className="chat-later"><summary>Still want to send a message here?</summary><Composer thread={t.id} name={t.manager_name} /></details>
+          </>
+        ) : <Composer thread={t.id} name={t.manager_name} />}
       </section>
       {t.status !== 'accepted' && <p className="hint" style={{ margin: 0 }}>Keep contact details in the chat for now. They&apos;re shared automatically when you accept a quote.</p>}
     </main>

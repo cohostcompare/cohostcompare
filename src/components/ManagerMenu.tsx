@@ -27,13 +27,13 @@ export default function ManagerMenu({ items }: { items: Item[] }) {
       </button>
       <div className="acct-pop" hidden={!open}>
         {items.length ? (
-          <>
-            <span className="hint" style={{ padding: '2px 10px 4px', fontWeight: 700, color: 'var(--signal)' }}>{items.length} thing{items.length === 1 ? '' : 's'} to do</span>
+          <div className="todo-box">
+            <span className="todo-title">{items.length} thing{items.length === 1 ? '' : 's'} to do</span>
             {items.slice(0, 6).map((i) => (
               <Link key={i.id} href={`/dashboard/requests/${i.id}`}>{i.label}{many ? <span className="hint">{i.manager}</span> : null}</Link>
             ))}
             {items.length > 6 && <Link href="/dashboard/requests?f=needs">See all {items.length}</Link>}
-          </>
+          </div>
         ) : <span className="hint" style={{ padding: '2px 10px 6px' }}>You&apos;re all caught up.</span>}
         <Link href="/dashboard">Dashboard<span className="hint">Requests, insights, reports and alerts</span></Link>
         <Link href="/dashboard/requests">All quote requests</Link>

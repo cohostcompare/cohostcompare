@@ -41,7 +41,7 @@ export async function managerThreads(slugs: string[], limit = 300): Promise<Thre
     const otherAccepted = (accepted || []).some((a) => a.request_id === r.request_id && a.manager_slug !== r.manager_slug);
     const todo: ThreadRow['todo'] = [];
     if (open && !otherAccepted && ['sent', 'viewed'].includes(r.status)) todo.push('quote');
-    if (last?.sender === 'owner' && !otherAccepted && r.status !== 'declined') todo.push('reply');
+    if (last?.sender === 'owner' && !otherAccepted && ['sent', 'viewed', 'quoted'].includes(r.status)) todo.push('reply'); // after an introduction they talk by email
     if (confirm.has(r.id)) todo.push('confirm');
     const stage: Stage = todo.length ? 'needs' : r.status === 'accepted' ? 'won' : otherAccepted || ['declined', 'withdrawn'].includes(r.status) ? 'lost' : 'waiting';
     const beds = Number(q.bedrooms);
