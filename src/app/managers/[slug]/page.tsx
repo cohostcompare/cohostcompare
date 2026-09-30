@@ -134,7 +134,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
         )}
-        {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>). This material incorporates aggregated estimates and modelled data derived from publicly available sources. All figures are estimates, not verified statements of fact. AirROI has not reviewed, approved or endorsed this material.</p>}
+        {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>
 
       <aside className="sticky">

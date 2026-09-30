@@ -15,9 +15,12 @@ export default function Privacy() {
       <ul>
         <li><b>Your account:</b> your email address, used to sign you in with a one-time email link. If you choose to sign in with Google or Microsoft, we receive your name and email address from them. We don&apos;t store passwords.</li>
         <li><b>Quote requests (owners):</b> your name, email, phone number (optional), the property&apos;s address and location, property type, bedrooms, what help you want, timing and any notes you add.</li>
-        <li><b>Messages and quotes:</b> messages between you and managers, and the quotes managers send.</li>
+        <li><b>Messages and quotes:</b> messages between you and managers, and the quotes managers send. If you reply to one of our emails about a conversation, we read your reply and add it to that conversation.</li>
+        <li><b>Sign-ups and enquiries:</b> the details you give when you ask about a paid plan or partnering with us.</li>
+        <li><b>Paid plans (managers):</b> billing contact and invoice details. Card details are handled by our payment provider, not stored by us.</li>
         <li><b>Managers:</b> the name, email and phone of people who claim or run a manager profile, anything they add to it (fees, services, logo and photos), and their ABN, which we check on the public Australian Business Register. We also record business contact emails that a manager publishes on its own website, to invite it to claim its profile. Every such email identifies us and has an unsubscribe link, which we honour straight away.</li>
         <li><b>Questions about the rules:</b> the questions you type into our rules tool. Don&apos;t include personal details in them.</li>
+        <li><b>Searches:</b> we count searches by postcode (with no address or person attached) to show managers how many owners search in their areas.</li>
         <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We don&apos;t use advertising trackers.</li>
         <li><b>Waitlist:</b> if you joined our waitlist, the details you gave then.</li>
       </ul>

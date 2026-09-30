@@ -41,7 +41,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
         </div>
       )}
       <p style={{ margin: '0 0 12px' }}><a href="/earnings"><b>What could this property earn? Get a free estimate →</b></a></p>
-      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are shown only where a manager publishes them. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>). This material incorporates aggregated estimates and modelled data derived from publicly available sources. All figures are estimates, not verified statements of fact. AirROI has not reviewed, approved or endorsed this material.</p>
+      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are shown only where a manager publishes them. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
     </main>
   );
 }

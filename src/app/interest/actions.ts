@@ -8,10 +8,10 @@ import { currentUser } from '@/lib/supabase/server';
 type State = { ok?: boolean; error?: string };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** One form handler for Pro interest, suburb report interest and partner enquiries. */
+/** One form handler for Pro interest, Enterprise and partner enquiries (and older suburb report sign-ups). */
 export async function interestAction(_: State, form: FormData): Promise<State> {
-  const kind = String(form.get('kind') || '') as 'pro' | 'report' | 'partner';
-  if (!['pro', 'report', 'partner'].includes(kind)) return { error: 'Something went wrong. Refresh and try again.' };
+  const kind = String(form.get('kind') || '') as 'pro' | 'report' | 'partner' | 'enterprise';
+  if (!['pro', 'report', 'partner', 'enterprise'].includes(kind)) return { error: 'Something went wrong. Refresh and try again.' };
   if (form.get('website_url')) return { ok: true }; // honeypot
   const user = await currentUser();
   const email = String(form.get('email') || user?.email || '').trim();
@@ -26,8 +26,9 @@ export async function interestAction(_: State, form: FormData): Promise<State> {
     managerId = id;
   }
   if (kind === 'partner' && (!name || !note)) return { error: 'Add your business name and what you offer.' };
+  if (kind === 'enterprise' && !name) return { error: 'Add your business name.' };
   if (!(await registerInterest({ kind, email, name, manager_id: managerId, area, note }))) return { error: 'We couldn’t save that just now. Try again in a minute.' };
-  const what = { pro: 'Pro interest', report: `Suburb report interest${area ? `: ${area}` : ''}`, partner: `Partner enquiry: ${name}` }[kind];
+  const what = { pro: 'Pro interest', report: `Suburb report interest${area ? `: ${area}` : ''}`, partner: `Partner enquiry: ${name}`, enterprise: `Enterprise enquiry: ${name}` }[kind];
   await sendEmail({ to: 'hello@cohostcompare.com', subject: what, text: `${what}\n\nEmail: ${email}${name ? `\nName: ${name}` : ''}${area ? `\nArea: ${area}` : ''}${note ? `\n\n${note}` : ''}`, replyTo: email });
   return { ok: true };
 }

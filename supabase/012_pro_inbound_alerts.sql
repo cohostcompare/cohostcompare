@@ -5,8 +5,8 @@
 alter table public.managers add column if not exists pro_until timestamptz;
 alter table public.managers add column if not exists pro_note  text;
 
--- Managers who have already claimed get six months of Pro free as founding managers.
-update public.managers set pro_until = now() + interval '6 months', pro_note = 'founding'
+-- Managers who have already claimed get three months of Pro free as founding managers.
+update public.managers set pro_until = now() + interval '3 months', pro_note = 'founding'
 where claimed and pro_until is null;
 
 -- Interest sign-ups: Pro, suburb reports, partner businesses.

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { searchDemand } from '@/lib/events';
 import { requireManager } from '@/lib/managers';
-import { FOUNDING_DEADLINE, isPro, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
+import { foundingDeadlineText, isPro, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 import ProInterest from '../../ProInterest';
 
@@ -50,7 +50,7 @@ export default async function Insights({ params }: { params: P }) {
         <p className="lede" style={{ margin: 0 }}>Pro adds tools for your business. It never changes where you appear, your ratings or how owners compare quotes.</p>
         <ul className="ticks">{PRO_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}{f.live ? '' : ' (coming soon)'}</li>)}</ul>
         <ProInterest managerId={m.id} />
-        <p className="hint" style={{ margin: 0 }}>Managers who claim before {new Date(FOUNDING_DEADLINE).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} get Pro free for six months. After that it&apos;s planned at {PRO_PRICE}, and we&apos;ll always ask before charging anything.</p>
+        <p className="hint" style={{ margin: 0 }}>Managers who claim by {foundingDeadlineText()} get Pro free for three months. After that it&apos;s {PRO_PRICE}, and we&apos;ll always ask before charging anything. Running homes in several regions? See <Link href="/managers#pricing">Enterprise</Link>.</p>
       </main>
     );
   }

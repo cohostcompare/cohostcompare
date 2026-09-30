@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import InterestForm from '@/app/interest/InterestForm';
 import DataSource from '@/components/DataSource';
 import ResultsList from '@/components/ResultsList';
 import { area, areas } from '@/lib/areas';
@@ -82,11 +81,6 @@ export default async function AreaPage({ params }: { params: P }) {
           <p style={{ margin: 0 }}>Get a free estimate of yearly booking income for your address and number of bedrooms, from area averages over the last 12 months.</p>
           <p style={{ margin: 0 }}><Link href="/earnings">Estimate my earnings →</Link></p>
         </div>
-        <div className="panel" style={{ display: 'grid', gap: 8, alignContent: 'start' }}>
-          <h2 style={{ fontSize: 20, margin: 0 }}>{a.label} suburb report</h2>
-          <p style={{ margin: 0 }}>We&apos;re putting together a detailed report on short stays in {a.label}: seasonality, nightly rates by bedrooms, how busy the market is and how manager fees compare. Leave your email and we&apos;ll let you know when it&apos;s ready.</p>
-          <InterestForm kind="report" area={a.label} button="Notify me" done={`Thanks. We’ll email you when the ${a.label} report is ready.`} />
-        </div>
       </section>
 
       {nearbyAreas.length > 0 && (
@@ -97,7 +91,7 @@ export default async function AreaPage({ params }: { params: P }) {
       )}
 
       <div style={{ margin: '0 0 24px', display: 'grid', gap: 6 }}>
-        <p className="hint" style={{ margin: 0 }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public listings over the last 12 months. Fees are shown only where a manager publishes them.{withAirbnb < managers.length ? ' Some managers cover this area according to their own website, without listing figures.' : ''}</p>
+        <p className="hint" style={{ margin: 0 }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public listings over the last 12 months. Figures are estimates. Fees are shown only where a manager publishes them.{withAirbnb < managers.length ? ' Some managers cover this area according to their own website, without listing figures.' : ''}</p>
         <DataSource />
       </div>
     </main>

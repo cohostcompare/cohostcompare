@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { interestAction } from './actions';
 
 /** Small sign-up form for suburb reports and partner enquiries. */
-export default function InterestForm({ kind, area, button, done, partner }: { kind: 'report' | 'partner'; area?: string; button: string; done: string; partner?: boolean }) {
+export default function InterestForm({ kind, area, button, done, partner, noteLabel = 'What you offer owners, and where' }: { kind: 'report' | 'partner' | 'enterprise'; area?: string; button: string; done: string; partner?: boolean; noteLabel?: string }) {
   const [state, act, pending] = useActionState(interestAction, {});
   if (state.ok) return <p className="panel" style={{ margin: 0, background: 'var(--tint)' }}>{done}</p>;
   return (
@@ -20,7 +20,7 @@ export default function InterestForm({ kind, area, button, done, partner }: { ki
       </div>
       {partner && (
         <>
-          <label style={{ display: 'grid', gap: 4, fontWeight: 600, fontSize: 14 }}>What you offer owners, and where<textarea className="field" name="note" required rows={3} maxLength={1000} /></label>
+          <label style={{ display: 'grid', gap: 4, fontWeight: 600, fontSize: 14 }}>{noteLabel}<textarea className="field" name="note" required={kind === 'partner'} rows={3} maxLength={1000} /></label>
           <div><button className="btn primary" disabled={pending}>{pending ? 'Sending…' : button}</button></div>
         </>
       )}

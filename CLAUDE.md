@@ -9,7 +9,7 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Commits on this repo are authored as Claude; the GitHub app is installed on the org.
 
 ## Services
-- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–012 so far). RLS on; server uses the secret key via `adminClient()`.
+- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–013 so far). RLS on; server uses the secret key via `adminClient()`.
 - Resend sends from hello@ (`src/lib/email.ts`, branded HTML). Supabase Auth email also goes through Resend.
 - Google Maps JS (Places API New) in the browser; AirROI API for listing data (derived, aggregated figures only, attributed "Data source: AirROI (www.airroi.com)"; never show listing-level data or Airbnb photos).
 - Anthropic API (claude-haiku-4-5) for the rules Q&A at `/api/ask-rules`, grounded only on `src/lib/rules.ts`.
@@ -27,8 +27,8 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 
 ## Revenue (keep neutral)
 - Owners never pay; manager profile, quote requests and replies are free.
-- Pro (`src/lib/pro.ts`): optional manager tools (insights at /dashboard/[slug]/insights, 24 photos). Founding managers who claim by 31 Mar 2027 get 6 months free. No billing built yet. Pro must never affect ranking, ratings, badges owners see or the comparison.
-- Partner offers for owners only on /setup, clearly labelled. Suburb reports: interest capture on area pages (AirROI ToS 5.10 safe harbour; use the full attribution in `src/components/DataSource.tsx`).
+- Plans (`src/lib/pro.ts`): Pro A$49/month + GST (insights at /dashboard/[slug]/insights, 24 photos, suburb reports for their postcodes later); Enterprise from A$249/month for multi-region operators (regions, team roles, API/webhooks, portfolio insights; built with first customers). Founding managers who claim by 31 Jan 2027 get Pro free for 3 months, no card. No billing built yet. Paid plans must never affect ranking, ratings, badges owners see or the comparison. Terms section 6 covers paid plans.
+- Partner offers for owners only on /setup, clearly labelled. Suburb reports are a paid-plan perk, not sold separately (AirROI ToS 5.10 safe harbour). AirROI must stay attributed as the data source wherever its figures appear (short line, `src/components/DataSource.tsx`).
 - No paid placement anywhere.
 
 ## Style
