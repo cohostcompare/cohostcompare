@@ -40,6 +40,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
         <h1 style={{ fontSize: 'clamp(26px,4vw,34px)', margin: '2px 0 0' }}>{first} · {req.suburb || ''} {req.state || ''} {req.postcode}</h1>
       </div>
 
+      {(() => { const people = (msgs || []).filter((x) => x.sender !== 'system'); return people[people.length - 1]?.sender === 'owner' ? <a href="#chat" className="panel" style={{ display: 'block', borderColor: 'var(--signal)', color: 'inherit', textDecoration: 'none' }}><b>{first} is waiting for your reply.</b> Jump to the chat ↓</a> : null; })()}
       {sp.unlocked && <div className="panel" style={{ background: 'var(--tint)' }}><b>Thanks, payment received.</b> We&apos;ve emailed you and {first} an introduction. It can take a minute to show here.</div>}
       {sp.billing === 'soon' && <div className="panel">Card payments are being switched on. Please try again shortly, or email hello@cohostcompare.com.</div>}
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
@@ -77,15 +78,22 @@ export default async function ManagerThread({ params, searchParams }: { params: 
         <QuoteForm thread={t.id} q={t.quote} defaults={defaults} locked={closed} plan={plan} templates={(tpl?.quote_templates as { name: string; q: unknown }[]) || []} feeText={SUCCESS_FEE_TEXT} />
       </section>
 
-      <section className="panel" style={{ display: 'grid', gap: 14 }} aria-label="Messages">
-        <h2 style={{ fontSize: 20, margin: 0 }}>Messages</h2>
-        {(msgs || []).map((x) => (
-          <div key={x.id} style={{ justifySelf: x.sender === 'manager' ? 'end' : 'start', maxWidth: '85%', display: 'grid', gap: 4 }}>
-            <span className="hint" style={{ textAlign: x.sender === 'manager' ? 'right' : 'left' }}>{WHO[x.sender] || first} · {new Date(x.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</span>
-            <div style={{ padding: '10px 14px', borderRadius: 12, whiteSpace: 'pre-wrap', background: x.sender === 'manager' ? 'var(--brand)' : x.sender === 'system' ? 'var(--surface)' : 'var(--tint)', color: x.sender === 'manager' ? 'var(--on-brand)' : 'var(--ink)', border: x.sender === 'system' ? '1px dashed var(--line-strong)' : 0 }}>{x.body}</div>
-          </div>
-        ))}
-        <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14 }}><ManagerComposer thread={t.id} /></div>
+      <section id="chat" className="panel chat" aria-label={`Chat with ${first}`}>
+        <div className="chat-head">
+          <h2>Chat with {first}</h2>
+          <span className="hint">{first} gets your message by email and replies here. Owner messages also come to you by email{t.status !== 'accepted' ? ', and their contact details are shared when they accept your quote' : ''}.</span>
+        </div>
+        <div className="chat-log">
+          {(msgs || []).map((x) => x.sender === 'system' ? (
+            <p key={x.id} className="chat-note">{/^Quote request sent\./.test(x.body) ? `${first} sent you this request` : x.body} · {new Date(x.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</p>
+          ) : (
+            <div key={x.id} className={`bubble ${x.sender === 'manager' ? 'me' : 'them'}`}>
+              <span className="who">{WHO[x.sender] || first} · {new Date(x.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</span>
+              <div>{x.body}</div>
+            </div>
+          ))}
+        </div>
+        <ManagerComposer thread={t.id} name={first} />
       </section>
 
       {!closed && (

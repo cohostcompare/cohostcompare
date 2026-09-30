@@ -72,7 +72,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (threads?.length) {
     await db.from('messages').insert(threads.map((t) => ({
       thread_id: t.id, sender: 'system', read_by_owner: true,
-      body: 'Quote request sent. The manager will reply here with a quote in our standard format.',
+      body: 'Quote request sent.',
     })));
   }
 

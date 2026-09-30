@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireManager } from '@/lib/managers';
 import { isPro, plansFor } from '@/lib/pro';
-import { auMobile, sendSms, smsOn } from '@/lib/sms';
+import { auMobile, sendSmsDetailed, smsOn } from '@/lib/sms';
 import { adminClient } from '@/lib/supabase/server';
 
 type State = { ok?: string; error?: string };
@@ -29,6 +29,6 @@ export async function testSms(_: State, form: FormData): Promise<State> {
   if (!isPro((await plansFor([m.id])).get(m.id))) return { error: 'SMS alerts are part of Pro.' };
   const { data } = await adminClient().from('managers').select('sms_mobile').eq('id', m.id).maybeSingle();
   if (!data?.sms_mobile) return { error: 'Save a mobile number first.' };
-  const ok = await sendSms(data.sms_mobile, `CoHostCompare: test alert for ${m.name}. You'll get a text like this when an owner asks you for a quote.`, { managerId: m.id, kind: 'test' });
-  return ok ? { ok: 'Test sent. It should arrive within a minute.' } : { error: 'The text didn’t send. Check the number and try again.' };
+  const r = await sendSmsDetailed(data.sms_mobile, `CoHostCompare: test alert for ${m.name}. You'll get a text like this when an owner asks you for a quote.`, { managerId: m.id, kind: 'test' });
+  return r.ok ? { ok: `Test sent to ${data.sms_mobile.replace(/^\+61/, '0')}. It should arrive within a minute.` } : { error: `The text didn’t send (${r.detail}). We’ve been told and will look into it.` };
 }

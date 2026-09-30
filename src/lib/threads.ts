@@ -2,6 +2,7 @@ import 'server-only';
 import { sendEmail } from '@/lib/email';
 import { replyHint, threadReplyTo } from '@/lib/inbound';
 import { memberEmails } from '@/lib/managers';
+import { smsManager } from '@/lib/sms';
 import { adminClient } from '@/lib/supabase/server';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
@@ -21,6 +22,7 @@ export async function postOwnerMessage(threadId: string, body: string, ownerEmai
       cta: { label: 'Reply', url: `${SITE}/dashboard/requests/${t.id}` },
       replyTo: threadReplyTo(t.id, 'm'),
     });
+    await smsManager(t.manager_slug, 'message', `CoHostCompare: new message from an owner about their quote request. Reply: ${SITE}/dashboard/requests/${t.id}`);
   } else {
     await sendEmail({
       to: 'hello@cohostcompare.com', subject: `Owner message for ${t.manager_name}`,

@@ -66,17 +66,18 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
   );
 }
 
-export function ManagerComposer({ thread }: { thread: string }) {
+export function ManagerComposer({ thread, name }: { thread: string; name: string }) {
   const [state, action, pending] = useActionState(sendManagerMessage, {});
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state?.ok) ref.current?.reset(); }, [state]);
   return (
-    <form ref={ref} action={action} style={{ display: 'grid', gap: 10 }}>
+    <form ref={ref} action={action} className="chat-compose">
       <input type="hidden" name="thread" value={thread} />
-      <label htmlFor="mmsg" className="label">Message the owner</label>
-      <textarea id="mmsg" className="field" name="body" rows={3} maxLength={4000} placeholder="Ask about the property, or explain your quote…" />
+      <label htmlFor="mmsg" className="sr-only">Message {name}</label>
+      <textarea id="mmsg" className="field" name="body" rows={2} maxLength={4000} placeholder={`Write a message to ${name}…`}
+        onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit(); }} />
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button className="btn secondary" type="submit" disabled={pending}>{pending ? 'Sending…' : 'Send message'}</button>
+        <button className="btn primary" type="submit" disabled={pending}>{pending ? 'Sending…' : 'Send'}</button>
         {state?.error && <span role="alert" style={{ color: 'var(--signal)' }}>{state.error}</span>}
         {state?.ok && <span className="hint">Sent.</span>}
       </div>

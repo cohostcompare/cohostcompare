@@ -61,32 +61,60 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
             <span className="hint">{r.property_type}, {r.bedrooms === 0 ? 'studio' : `${r.bedrooms} bed`} · sent to {(r.quote_request_managers || []).length} manager{(r.quote_request_managers || []).length === 1 ? '' : 's'}</span>
           </div>
           {(() => {
-            const quoted = (r.quote_request_managers || []).filter((m) => m.quote && ['quoted', 'accepted'].includes(m.status));
-            if (!quoted.length) return null;
+            const all = r.quote_request_managers || [];
+            const quoted = all.filter((m) => m.quote && ['quoted', 'accepted'].includes(m.status));
+            const waiting = all.filter((m) => !(m.quote && ['quoted', 'accepted'].includes(m.status)));
+            const unreadOf = (m: Thread) => (m.messages || []).filter((x) => !x.read_by_owner && x.sender === 'manager').length;
             return (
-              <div style={{ padding: '14px 20px 4px', display: 'grid', gap: 8 }}>
-                <b>{quoted.length === 1 ? 'Your quote so far' : `Compare your ${quoted.length} quotes`}</b>
-                <QuoteTable quotes={quoted.map((m): QuoteCol => ({ name: m.manager_name, href: `/account/messages/${m.id}`, q: m.quote as Quote, accepted: m.status === 'accepted', nearby: nearby.get(r.id)?.get(m.manager_slug) }))} />
-                <span className="hint">Open a manager below to ask questions or accept their quote.</span>
+              <div style={{ padding: '16px 20px 18px', display: 'grid', gap: 14 }}>
+                {quoted.length > 0 && (
+                  <>
+                    <b>{quoted.length === 1 ? '1 quote received' : `${quoted.length} quotes received, side by side`}</b>
+                    <div className="qcards">
+                      {quoted.map((m) => {
+                        const q = m.quote as Quote;
+                        const u = unreadOf(m);
+                        return (
+                          <div key={m.id} className={`qcard${m.status === 'accepted' ? ' won' : ''}`}>
+                            <b className="qname">{m.manager_name}</b>
+                            {m.status === 'accepted' && <span className="qtag">Accepted</span>}
+                            <div className="qfee">{q.feePct}%{q.gst ? ' + GST' : ''}<span>management fee</span></div>
+                            <ul>
+                              <li>{q.setupFee ? `A$${q.setupFee.toLocaleString('en-AU')} setup` : 'No setup fee'}</li>
+                              <li>{q.minTermMonths ? `${q.minTermMonths}-month minimum` : 'No lock-in'}</li>
+                              {nearby.get(r.id)?.get(m.manager_slug)?.homes ? <li>{nearby.get(r.id)!.get(m.manager_slug)!.homes} homes nearby</li> : null}
+                            </ul>
+                            {u ? <span className="hint" style={{ color: 'var(--signal)', fontWeight: 700 }}>{u} new message{u === 1 ? '' : 's'}</span> : null}
+                            <Link className="btn primary small" href={`/account/messages/${m.id}`}>{m.status === 'accepted' ? 'Open' : 'Review and accept'}</Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {quoted.length > 1 && (
+                      <details className="qdetails">
+                        <summary>Compare every detail side by side</summary>
+                        <QuoteTable quotes={quoted.map((m): QuoteCol => ({ name: m.manager_name, href: `/account/messages/${m.id}`, q: m.quote as Quote, accepted: m.status === 'accepted', nearby: nearby.get(r.id)?.get(m.manager_slug) }))} />
+                      </details>
+                    )}
+                  </>
+                )}
+                {waiting.length > 0 && (
+                  <div style={{ display: 'grid', gap: 0 }}>
+                    <b style={{ marginBottom: 4 }}>{quoted.length ? 'Still waiting on' : 'Waiting for quotes from'}</b>
+                    {waiting.map((m) => {
+                      const u = unreadOf(m);
+                      return (
+                        <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: '1px solid var(--line)', padding: '10px 0', flexWrap: 'wrap' }}>
+                          <span><b>{m.manager_name}</b> <span className="hint">· {STATUS[m.status] || m.status}{u ? ` · ${u} new message${u === 1 ? '' : 's'}` : ''}</span></span>
+                          <Link className="btn secondary small" href={`/account/messages/${m.id}`}>{u ? 'Read message' : 'Message them'}</Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })()}
-          <div style={{ display: 'grid', gap: 6, padding: '4px 20px 16px' }}>
-            {(r.quote_request_managers || []).map((m) => {
-              const msgs = [...(m.messages || [])].sort((a, b) => a.created_at.localeCompare(b.created_at));
-              const last = msgs[msgs.length - 1];
-              const unread = msgs.filter((x) => !x.read_by_owner && x.sender === 'manager').length;
-              return (
-                <a key={m.id} href={`/account/messages/${m.id}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '2px 12px', borderTop: '1px solid var(--line)', paddingTop: 10, color: 'inherit', textDecoration: 'none' }}>
-                  <span style={{ fontWeight: unread ? 700 : 600, color: 'var(--brand)' }}>{m.manager_name}{unread ? ` · ${unread} new` : ''}</span>
-                  <span className="hint" style={m.status === 'quoted' ? { color: 'var(--signal)', fontWeight: 700 } : undefined}>{STATUS[m.status] || m.status}</span>
-                  <span className="hint" style={{ gridColumn: '1 / -1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {last ? `${last.sender === 'owner' ? 'You: ' : ''}${last.body}` : 'No messages yet'}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
         </section>
       ))}
     </main>

@@ -43,6 +43,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       await db.from('manager_members').upsert({ manager_id: m.id, user_id: uid, role: 'owner' });
       return new NextResponse(`ok: test profile ${m.id}, member ${email}`, { headers });
     }
+    if (job === 'sms-log') {
+      const { data, error } = await adminClient().from('sms_log').select('to_mobile, kind, ok, detail, created_at').order('created_at', { ascending: false }).limit(10);
+      if (error) return new NextResponse(`error: ${error.message}`, { headers });
+      const env = `username ${process.env.CLICKSEND_USERNAME ? 'set' : 'MISSING'} | key ${process.env.CLICKSEND_API_KEY ? 'set' : 'MISSING'} | SMS_FROM ${process.env.SMS_FROM ? process.env.SMS_FROM.trim().replace(/\d(?=\d{3})/g, '•') : 'MISSING'}`;
+      return new NextResponse(`${env}\n` + (data || []).map((r) => `${r.created_at} | ${r.kind} | ${r.ok ? 'ok' : 'FAILED'} | ${r.detail} | to ${String(r.to_mobile).replace(/\d(?=\d{3})/g, '•')}`).join('\n'), { headers });
+    }
     if (job === 'report-status') {
       const { data, error } = await adminClient().from('suburb_reports').select('area_slug, period, created_at, notified_at, data->market->homes, data->seasonality').order('created_at', { ascending: false }).limit(40);
       if (error) return new NextResponse(`error: ${error.message}`, { headers });

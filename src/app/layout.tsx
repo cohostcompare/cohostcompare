@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next';
 import Link from 'next/link';
 import './globals.css';
 import AccountMenu from '@/components/AccountMenu';
+import ManagerMenu from '@/components/ManagerMenu';
 import SiteMenu, { NavLink, NavMore } from '@/components/SiteMenu';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -20,6 +21,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await currentUser().catch(() => null);
   const isManager = user ? Boolean((await adminClient().from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id).then((r) => r.count, () => 0))) : false;
   let unread = 0;
+  const todos = isManager && user ? await (await import('@/lib/todo')).todosForUser(user.id) : [];
+  const { todoLabel } = await import('@/lib/todo');
   if (user) {
     try {
       const db = adminClient();
@@ -52,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
                   <NavLink href="/managers" exact><span className="wide-only">For managers</span><span className="narrow-only">How it works for managers</span></NavLink>
-                  <Link className="btn secondary small" href="/dashboard">{isManager ? 'Manager dashboard' : 'Manager portal'}</Link>
+                  {isManager ? <ManagerMenu items={todos.map((t) => ({ id: t.id, label: todoLabel(t), manager: t.manager_name }))} /> : <Link className="btn secondary small" href="/dashboard">Manager portal</Link>}
                 </div>
                 {isAdminEmail(user?.email) && <div className="menu-group admin"><Link className="admin-link" href="/admin">Admin</Link></div>}
             </SiteMenu>

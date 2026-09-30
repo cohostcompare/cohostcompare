@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
 import { eventTotals } from '@/lib/events';
+import RequestList from '@/components/RequestList';
+import { managerThreads, todoLabel } from '@/lib/todo';
 import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, SUCCESS_FEE_TEXT } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ProInterest from './ProInterest';
@@ -14,10 +16,6 @@ export const dynamic = 'force-dynamic';
 
 type SP = Promise<{ claimed?: string; pro?: string; billing?: string }>;
 
-const STATUS: Record<string, [string, string]> = {
-  sent: ['New', 'var(--signal)'], viewed: ['Needs your quote', 'var(--signal)'], quoted: ['Quote sent', 'var(--brand)'],
-  accepted: ['Accepted', 'var(--brand)'], declined: ['Declined', 'var(--muted)'], withdrawn: ['Withdrawn', 'var(--muted)'],
-};
 
 export default async function Dashboard({ searchParams }: { searchParams: SP }) {
   const user = await currentUser();
@@ -40,12 +38,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   }
 
   const db = adminClient();
-  const { data: threads } = await db
-    .from('quote_request_managers')
-    .select('id, manager_slug, status, created_at, messages(sender, read_by_manager), quote_requests(owner_name, suburb, state, postcode, property_type, bedrooms, start_timing)')
-    .in('manager_slug', managers.map((m) => m.slug))
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const threads = await managerThreads(managers.map((m) => m.slug), 300);
   const events = await eventTotals(managers.map((m) => m.id));
   const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
@@ -54,7 +47,6 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   const { data: billRows } = await db.from('managers').select('id, stripe_customer_id, stripe_subscription_id').in('id', managers.map((m) => m.id)); // needs 016
   const bill = new Map((billRows || []).map((b) => [b.id, b]));
   const billing = stripeOn();
-  const { data: waiting } = await db.from('success_fees').select('thread_id, manager_id').in('manager_id', managers.map((m) => m.id)).in('status', ['awaiting_unlock', 'expired']);
   const { data: freshReports } = await db.from('suburb_reports').select('id, area_label, manager_ids').overlaps('manager_ids', managers.map((m) => m.id)).gte('created_at', new Date(Date.now() - 21 * 86400e3).toISOString()); // needs 014
 
   return (
@@ -63,8 +55,8 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
       {sp.billing === 'soon' && <div className="panel">Card payments are being switched on. Please try again shortly, or email hello@cohostcompare.com.</div>}
       {sp.claimed && <div className="panel" style={{ background: 'var(--tint)' }}><b>You&apos;re in.</b> Start by adding your fees, services and logo so owners can compare you properly.</div>}
       {managers.map((m) => {
-        const mine = (threads || []).filter((t) => t.manager_slug === m.slug);
-        const open = mine.filter((t) => t.status === 'sent' || t.status === 'viewed').length;
+        const mine = threads.filter((t) => t.manager_slug === m.slug);
+        const todo = mine.filter((t) => t.todo.length);
         const g = (m.gated || {}) as Record<string, unknown>;
         const checks: [string, boolean][] = [
           ['A short tagline', Boolean(m.tagline)], ['An about section (a few sentences)', (m.about || '').length >= 80],
@@ -75,7 +67,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
         ];
         const score = Math.round((checks.filter(([, ok]) => ok).length / checks.length) * 100);
         const ev = events.get(m.id) || { view: 0, search: 0 };
-        const recent = (threads || []).filter((t) => t.manager_slug === m.slug && new Date(t.created_at).getTime() >= since).length;
+        const recent = threads.filter((t) => t.manager_slug === m.slug && new Date(t.created_at).getTime() >= since).length;
         return (
           <section key={m.id} style={{ display: 'grid', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
@@ -92,18 +84,20 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
               </div>
             </div>
+            {todo.length > 0 && (
+              <section className="panel todo-panel" aria-label="Needs your attention">
+                <h2>Needs your attention ({todo.length})</h2>
+                {todo.slice(0, 8).map((t) => <Link key={t.id} href={`/dashboard/requests/${t.id}`}>{todoLabel(t)}<span className="go">Open →</span></Link>)}
+                {todo.length > 8 && <Link href="/dashboard/requests?f=needs">See all {todo.length}<span className="go">→</span></Link>}
+              </section>
+            )}
             <div className="dash-stats">
               <div className="panel"><b>{ev.search.toLocaleString('en-AU')}</b><span>times you appeared in owner searches</span></div>
               <div className="panel"><b>{ev.view.toLocaleString('en-AU')}</b><span>profile views</span></div>
-              <div className="panel"><b>{recent}</b><span>quote requests</span></div>
+              <Link className="panel stat-link" href="/dashboard/requests?f=all"><b>{recent}</b><span>quote requests →</span></Link>
               <div className="panel"><b>{score}%</b><span>profile complete</span></div>
             </div>
             <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
-            {(waiting || []).filter((w) => w.manager_id === m.id).map((w) => (
-              <Link key={w.thread_id} href={`/dashboard/requests/${w.thread_id}`} className="panel" style={{ display: 'block', borderColor: 'var(--signal)', color: 'inherit', textDecoration: 'none' }}>
-                <b>An owner accepted your quote.</b> Confirm them to get their details and an introduction →
-              </Link>
-            ))}
             {(() => {
               const fresh = (freshReports || []).filter((r) => (r.manager_ids as string[]).includes(m.id));
               return fresh.length ? (
@@ -147,25 +141,12 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}>{label}</li>)}</ul>
               </div>
             )}
-            <div className="panel" style={{ display: 'grid', gap: 0, padding: 0, overflow: 'hidden' }}>
-              <div style={{ background: 'var(--tint)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <b>Quote requests</b><span className="hint">{open ? `${open} waiting for your quote` : `${mine.length} total`}</span>
+            <div id="requests" style={{ display: 'grid', gap: 8, scrollMarginTop: 96 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
+                <h2 style={{ fontSize: 22, margin: 0 }}>Quote requests</h2>
+                <Link href="/dashboard/requests">Open full list →</Link>
               </div>
-              {!mine.length ? (
-                <p style={{ margin: 0, padding: '14px 18px', color: 'var(--muted)' }}>No quote requests yet. We&apos;ll email you when one arrives.</p>
-              ) : mine.map((t) => {
-                const r = (Array.isArray(t.quote_requests) ? t.quote_requests[0] : t.quote_requests) as Record<string, any> | null; // eslint-disable-line @typescript-eslint/no-explicit-any
-                const unread = (t.messages || []).filter((x: { sender: string; read_by_manager: boolean }) => x.sender === 'owner' && !x.read_by_manager).length;
-                const [label, colour] = STATUS[t.status] || [t.status, 'var(--muted)'];
-                return (
-                  <Link key={t.id} href={`/dashboard/requests/${t.id}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '2px 12px', borderTop: '1px solid var(--line)', padding: '12px 18px', color: 'inherit', textDecoration: 'none' }}>
-                    <b>{String(r?.owner_name || 'Owner').split(' ')[0]} · {r?.suburb || ''} {r?.state || ''} {r?.postcode}{unread ? <span style={{ color: 'var(--signal)' }}> · {unread} new message{unread === 1 ? '' : 's'}</span> : null}</b>
-                    <span style={{ fontWeight: 700, color: colour, fontSize: 14 }}>{label}</span>
-                    <span className="hint">{r?.property_type}, {Number(r?.bedrooms) === 0 ? 'studio' : `${r?.bedrooms} bed`} · {String(r?.start_timing || '').toLowerCase()}</span>
-                    <span className="hint">{new Date(t.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>
-                  </Link>
-                );
-              })}
+              <RequestList rows={mine.slice(0, 12)} active={todo.length ? 'needs' : 'all'} base="/dashboard/requests" />
             </div>
           </section>
         );
