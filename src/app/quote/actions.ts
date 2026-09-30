@@ -54,7 +54,9 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   };
 
   const db = adminClient();
-  const { data: req, error } = await db.from('quote_requests').insert(row).select('id').single();
+  // lat/lng need 008_owner_reminders.sql; fall back gracefully if it hasn't been run yet.
+  let { data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng }).select('id').single();
+  if (error && /lat|lng|column/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert(row).select('id').single());
   if (error || !req) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
   const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
     managers.map((m) => ({ request_id: req.id, manager_slug: m.slug, manager_name: m.name })),

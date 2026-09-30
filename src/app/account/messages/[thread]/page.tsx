@@ -28,6 +28,7 @@ export default async function Thread({ params }: { params: P }) {
   // Mark manager messages as read by the owner.
   await adminClient().from('messages').update({ read_by_owner: true }).eq('thread_id', thread).eq('read_by_owner', false);
 
+  if (t.quote) await adminClient().from('quote_request_managers').update({ owner_seen_at: new Date().toISOString() }).eq('id', thread).is('owner_seen_at', null);
   const req = Array.isArray(t.quote_requests) ? t.quote_requests[0] : t.quote_requests;
   return (
     <main style={{ maxWidth: 760, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>

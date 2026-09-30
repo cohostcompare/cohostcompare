@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import QuoteTable from '@/components/QuoteTable';
+import QuoteTable, { type QuoteCol } from '@/components/QuoteTable';
+import { managersNear } from '@/lib/data';
 import type { Quote } from '@/lib/quotes';
-import { currentUser, userClient } from '@/lib/supabase/server';
+import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'My account', robots: { index: false } };
 
@@ -22,10 +23,27 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
   if (!user) redirect('/signin?next=/account');
   const sp = await searchParams;
   const s = await userClient();
-  const { data: requests } = await s
+  type Thread = { id: string; manager_name: string; manager_slug: string; status: string; quote: unknown; messages: { sender: string; body: string; created_at: string; read_by_owner: boolean }[] };
+  type Req = { id: string; created_at: string; address: string | null; postcode: string; bedrooms: number; property_type: string; lat?: number | null; lng?: number | null; quote_request_managers: Thread[] };
+  const { data: rawRequests } = await s
     .from('quote_requests')
-    .select('id, created_at, address, postcode, bedrooms, property_type, quote_request_managers(id, manager_name, manager_slug, status, quote, messages(sender, body, created_at, read_by_owner))')
+    .select('*, quote_request_managers(id, manager_name, manager_slug, status, quote, messages(sender, body, created_at, read_by_owner))')
     .order('created_at', { ascending: false });
+  const requests = rawRequests as Req[] | null;
+
+  // Track record near each property (from our listing data), for the comparison table.
+  const nearby = new Map<string, Map<string, { homes: number; rating: number | null }>>();
+  const quotedIds: string[] = [];
+  for (const r of requests || []) {
+    const qs = (r.quote_request_managers || []).filter((m) => m.quote && ['quoted', 'accepted'].includes(m.status));
+    quotedIds.push(...qs.map((m) => m.id));
+    if (qs.length && r.lat != null && r.lng != null) {
+      const near = await managersNear(Number(r.lat), Number(r.lng));
+      nearby.set(r.id, new Map(near.map((n) => [n.slug, { homes: n.nearby, rating: n.nearbyRating }])));
+    }
+  }
+  // Seeing the comparison counts as having reviewed those quotes (stops reminder emails). Needs 008; errors ignored.
+  if (quotedIds.length) await adminClient().from('quote_request_managers').update({ owner_seen_at: new Date().toISOString() }).in('id', quotedIds).is('owner_seen_at', null);
 
   return (
     <main style={{ maxWidth: 820, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
@@ -53,7 +71,7 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
             return (
               <div style={{ padding: '14px 20px 4px', display: 'grid', gap: 8 }}>
                 <b>{quoted.length === 1 ? 'Your quote so far' : `Compare your ${quoted.length} quotes`}</b>
-                <QuoteTable quotes={quoted.map((m) => ({ name: m.manager_name, href: `/account/messages/${m.id}`, q: m.quote as Quote, accepted: m.status === 'accepted' }))} />
+                <QuoteTable quotes={quoted.map((m): QuoteCol => ({ name: m.manager_name, href: `/account/messages/${m.id}`, q: m.quote as Quote, accepted: m.status === 'accepted', nearby: nearby.get(r.id)?.get(m.manager_slug) }))} />
                 <span className="hint">Open a manager below to ask questions or accept their quote.</span>
               </div>
             );

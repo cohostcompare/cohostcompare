@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email';
 import { requireThread } from '@/lib/managers';
 import { parseQuote } from '@/lib/quotes';
+import { notifyIfAllReplied } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
 
 async function origin() {
@@ -21,12 +22,16 @@ export async function sendQuote(_: unknown, form: FormData): Promise<{ error?: s
   const first = !thread.quote;
   const { error } = await db.from('quote_request_managers').update({ quote: q, status: 'quoted', quoted_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', thread.id);
   if (error) { console.error(error); return { error: "We couldn't save your quote. Try again in a minute." }; }
+  // A new or changed quote counts as unseen again (columns from 008; ignore if not run yet).
+  await db.from('quote_request_managers').update({ owner_seen_at: null, owner_reminded_at: null }).eq('id', thread.id);
   await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} ${first ? 'sent' : 'updated'} their quote: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.` });
+  const site = await origin();
+  if (first && await notifyIfAllReplied(thread.request_id, site)) { revalidatePath(`/dashboard/requests/${thread.id}`); return { ok: true }; }
   await sendEmail({
     to: req.owner_email,
     subject: `${thread.manager_name} ${first ? 'sent you a quote' : 'updated their quote'}`,
-    text: `Hi ${String(req.owner_name || '').split(' ')[0] || 'there'},\n\n${thread.manager_name} has ${first ? 'sent a quote' : 'updated their quote'} for ${req.suburb || `postcode ${req.postcode}`}: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup fee` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.\n\nCompare it side by side with your other quotes in your inbox.\n\nThe CoHostCompare team`,
-    cta: { label: 'Compare quotes', url: `${await origin()}/account` },
+    text: `Hi ${String(req.owner_name || '').split(' ')[0] || 'there'},\n\n${thread.manager_name} has ${first ? 'sent a quote' : 'updated their quote'} for ${req.suburb || `postcode ${req.postcode}`}: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup fee` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.\n\nSign in to see the full quote, compare it side by side with any others, ask questions or accept it.\n\nThe CoHostCompare team`,
+    cta: { label: 'Review the quote', url: `${site}/account` },
   });
   revalidatePath(`/dashboard/requests/${thread.id}`);
   return { ok: true };
@@ -57,6 +62,7 @@ export async function declineRequest(form: FormData) {
   await db.from('quote_request_managers').update({ status: 'declined', updated_at: new Date().toISOString() }).eq('id', thread.id);
   const reason = String(form.get('reason') || '').trim().slice(0, 500);
   await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} can’t take on this property.${reason ? ` They said: “${reason}”` : ''}` });
+  if (await notifyIfAllReplied(thread.request_id, await origin())) { revalidatePath(`/dashboard/requests/${thread.id}`); return; }
   await sendEmail({
     to: req.owner_email,
     subject: `${thread.manager_name} can’t take on your property`,
