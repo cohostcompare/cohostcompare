@@ -27,12 +27,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
-            <nav className="nav"><Link href="/managers">For managers</Link>{isAdminEmail(user?.email) && <Link href="/admin">Admin</Link>}{isManager && <Link href="/dashboard">Dashboard</Link>}{user ? <Link href="/account">Inbox</Link> : <Link href="/signin">Sign in</Link>}</nav>
+            <details className="menu">
+              <summary aria-label="Menu"><span /><span /><span /></summary>
+              <nav className="menu-body" aria-label="Main">
+                <div className="menu-group owners">
+                  <Link href="/">Compare managers</Link>
+                  <Link href="/how-it-works">How it works</Link>
+                  <Link href="/why-cohostcompare">Why CoHostCompare</Link>
+                  <Link href="/rules">Rules by state</Link>
+                  {user ? <Link className="btn secondary small" href="/account">My inbox</Link> : <Link className="btn primary small" href="/signin">Sign in or sign up</Link>}
+                </div>
+                <div className="menu-group managers">
+                  <span className="menu-label">For managers</span>
+                  <Link href="/managers">How it works for managers</Link>
+                  <Link className="btn secondary small" href="/dashboard">{isManager ? 'Manager dashboard' : 'Manager portal'}</Link>
+                  {isAdminEmail(user?.email) && <Link className="admin-link" href="/admin">Admin</Link>}
+                </div>
+              </nav>
+            </details>
           </header>
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare</span>
-            <span><Link href="/privacy">Privacy</Link> · Made in Sydney · hello@cohostcompare.com</span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-cohostcompare">Why CoHostCompare</Link> · <Link href="/rules">Rules by state</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link></span>
+            <span>Made in Sydney · hello@cohostcompare.com</span>
           </footer>
         </div>
       </body>

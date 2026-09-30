@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { siteDomain } from '@/lib/claims';
 import { adminClient } from '@/lib/supabase/server';
-import { approve, reject, requestInfo } from './actions';
+import { approve, infoReceived, reject, requestInfo } from './actions';
 
 export const metadata: Metadata = { title: 'Admin · Claims', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -15,8 +15,8 @@ type Claim = {
   managers: { name: string; slug: string; website: string | null } | { name: string; slug: string; website: string | null }[] | null;
 };
 
-const LABEL: Record<string, string> = { pending: 'Needs review', info_requested: 'Waiting on info', approved: 'Approved', rejected: 'Rejected' };
-const COLOUR: Record<string, string> = { pending: 'var(--signal)', info_requested: 'var(--brand)', approved: 'var(--muted)', rejected: 'var(--muted)' };
+const LABEL: Record<string, string> = { pending: 'Needs review', info_requested: 'Waiting on their reply', info_received: 'Reply received: review', approved: 'Approved', rejected: 'Rejected' };
+const COLOUR: Record<string, string> = { pending: 'var(--signal)', info_requested: 'var(--brand)', info_received: 'var(--signal)', approved: 'var(--muted)', rejected: 'var(--muted)' };
 const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
 
 export default async function Claims({ searchParams }: { searchParams: SP }) {
@@ -26,7 +26,7 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
   let q = adminClient().from('manager_claims')
     .select('id, email, name, role_title, phone, status, method, created_at, decided_at, admin_note, info_request, managers(name, slug, website)')
     .order('created_at', { ascending: false }).limit(200);
-  if (show === 'open') q = q.in('status', ['pending', 'info_requested']);
+  if (show === 'open') q = q.in('status', ['pending', 'info_requested', 'info_received']);
   const { data } = await q;
   const claims = (data || []) as Claim[];
 
@@ -36,6 +36,7 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
         <div>
           <Link href="/admin" className="hint">← Admin</Link>
           <h1 style={{ fontSize: 34, margin: '4px 0 0' }}>Profile claims</h1>
+          <p className="hint" style={{ margin: '4px 0 0' }}>Claimants&apos; email replies go to hello@. When one arrives, click <b>Mark reply received</b> so it&apos;s back in the review queue (and the 24-hour reminder applies).</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Link className={`btn ${show === 'open' ? 'primary' : 'secondary'}`} href="/admin/claims">Open</Link>
@@ -49,7 +50,7 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
         const m = Array.isArray(c.managers) ? c.managers[0] : c.managers;
         const dom = siteDomain(m?.website ?? null);
         const emailDom = c.email.split('@')[1];
-        const open = c.status === 'pending' || c.status === 'info_requested';
+        const open = ['pending', 'info_requested', 'info_received'].includes(c.status);
         return (
           <section key={c.id} className="panel" style={{ display: 'grid', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -81,6 +82,13 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
                   <input className="field" name="note" placeholder="Private note (optional), e.g. confirmed on LinkedIn" style={{ flex: '1 1 260px', minHeight: 40 }} />
                   <button className="btn primary" type="submit">Approve</button>
                 </form>
+                {c.status === 'info_requested' && (
+                  <form action={infoReceived} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <input className="field" name="note" placeholder="What they sent (optional), e.g. LinkedIn link" style={{ flex: '1 1 260px', minHeight: 40 }} />
+                    <button className="btn secondary" type="submit">Mark reply received</button>
+                  </form>
+                )}
                 <details>
                   <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Ask for more information</summary>
                   <form action={requestInfo} style={{ display: 'grid', gap: 8, marginTop: 8 }}>

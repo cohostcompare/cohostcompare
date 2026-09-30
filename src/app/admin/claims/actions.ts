@@ -88,3 +88,18 @@ export async function requestInfo(form: FormData) {
   revalidatePath('/admin/claims');
   redirect(failed ? `/admin/claims?error=${encodeURIComponent(failed.slice(0, 200))}` : '/admin/claims?done=1');
 }
+
+export async function infoReceived(form: FormData) {
+  let failed = '';
+  try {
+    await requireAdmin('/admin/claims');
+    const c = await load(String(form.get('id')));
+    const { error: upErr } = await adminClient().from('manager_claims').update({ status: 'info_received', admin_note: String(form.get('note') || '') || null }).eq('id', c.id);
+    if (upErr) throw new Error(`Couldn't update the claim: ${upErr.message}`);
+  } catch (e) {
+    if ((e as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw e;
+    failed = e instanceof Error ? e.message : String(e);
+  }
+  revalidatePath('/admin/claims');
+  redirect(failed ? `/admin/claims?error=${encodeURIComponent(failed.slice(0, 200))}` : '/admin/claims?done=1');
+}

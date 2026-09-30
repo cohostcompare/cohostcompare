@@ -34,6 +34,12 @@ export async function submitClaim(_: unknown, form: FormData): Promise<{ error?:
   if (auto) {
     await approveClaim(claim.id);
     await sendEmail({
+      to: 'hello@cohostcompare.com',
+      subject: `Claimed (auto-approved): ${m.name}`,
+      text: `${name}${role ? ` (${role})` : ''} <${user.email}>${phone ? `, ${phone}` : ''} claimed ${m.name}. Their email matched the business website (${m.website}), so it was approved automatically. No action needed.`,
+      cta: { label: 'View claims', url: `${origin}/admin/claims?show=all` },
+    });
+    await sendEmail({
       to: user.email,
       subject: `You now manage ${m.name} on CoHostCompare`,
       text: `Hi ${name},\n\nYour work email matched ${m.name}'s website, so your claim was approved straight away.\n\nIn your dashboard you can add your fees, services, logo and photos, and reply to owners' quote requests.\n\nThe CoHostCompare team`,

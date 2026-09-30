@@ -15,7 +15,7 @@ export default async function Admin() {
     return (await q).count ?? 0;
   };
   const [openClaims, managers, claimed, requests, owners] = await Promise.all([
-    count('manager_claims', (q) => q.in('status', ['pending', 'info_requested'])),
+    count('manager_claims', (q) => q.in('status', ['pending', 'info_requested', 'info_received'])),
     count('managers', (q) => q.eq('published', true)),
     count('managers', (q) => q.eq('claimed', true)),
     count('quote_requests'),
