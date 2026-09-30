@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
-import SiteMenu from '@/components/SiteMenu';
+import SiteMenu, { NavLink } from '@/components/SiteMenu';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -22,23 +22,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" />
       </head>
       <body>
-        <div className="wrap wide">
-          <header className="top">
+        <div className="site-header">
+          <header className="top wrap wide">
             <Link className="logo" href="/" aria-label="CoHostCompare home">
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
             <SiteMenu>
                 <div className="menu-group owners">
-                  <Link href="/">Compare managers</Link>
-                  <Link href="/how-it-works">How it works</Link>
-                  <Link href="/why-cohostcompare">Why CoHostCompare</Link>
-                  <Link href="/rules">Rules by state</Link>
+                  <NavLink href="/" also={['/search', '/managers/']}>Compare managers</NavLink>
+                  <NavLink href="/how-it-works">How it works</NavLink>
+                  <NavLink href="/why-us">Why use us</NavLink>
+                  <NavLink href="/rules">Rules by state</NavLink>
                   {user ? <Link className="btn secondary small" href="/account">My inbox</Link> : <Link className="btn primary small" href="/signin">Sign in or sign up</Link>}
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
-                  <Link href="/managers"><span className="wide-only">For managers</span><span className="narrow-only">How it works for managers</span></Link>
+                  <NavLink href="/managers" exact><span className="wide-only">For managers</span><span className="narrow-only">How it works for managers</span></NavLink>
                   <Link className="btn secondary small" href="/dashboard">{isManager ? 'Manager dashboard' : 'Manager portal'}</Link>
                   {isAdminEmail(user?.email) && <Link className="admin-link" href="/admin">Admin</Link>}
                 </div>
@@ -49,7 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-cohostcompare">Why CoHostCompare</Link> · <Link href="/rules">Rules by state</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link></span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/rules">Rules by state</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link></span>
             <span>Made in Sydney · hello@cohostcompare.com</span>
           </footer>
         </div>

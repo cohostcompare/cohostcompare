@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -25,4 +26,11 @@ export default function SiteMenu({ children }: { children: React.ReactNode }) {
       <nav id="main-menu" className="menu-body" aria-label="Main">{children}</nav>
     </div>
   );
+}
+
+/** A main-menu link that highlights when you're on its page. */
+export function NavLink({ href, exact, also = [], children }: { href: string; exact?: boolean; also?: string[]; children: React.ReactNode }) {
+  const path = usePathname() || '/';
+  const on = href === '/' || exact ? path === href || also.some((a) => path.startsWith(a)) : path.startsWith(href) || also.some((a) => path.startsWith(a));
+  return <Link href={href} className={`nav-link${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined}>{children}</Link>;
 }

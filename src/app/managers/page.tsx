@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ManagerSignup from '@/components/ManagerSignup';
+import Photo from '@/components/Photo';
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
@@ -11,7 +12,7 @@ const faqs: [string, string][] = [
   ['Why do you show my fees?', 'Owners compare on fees first. We show a fee band publicly and the full breakdown only to signed-in owners, in the same format for every manager, so you are compared fairly.'],
   ['Where do the ratings come from?', 'From the guest reviews on your public listings, combined across your portfolio. You can link listings we have missed from your dashboard.'],
   ['Can I pay to rank higher?', 'You can pay to be featured, and featured results are always labelled. You can never pay to change your rating or your place in rated results.'],
-  ['How do quote requests work?', 'An owner describes their property once and sends it to up to five managers. You reply with a quote in a standard format. Their contact details are shared when you accept.'],
+  ['How do quote requests work?', 'An owner describes their property once and sends it to up to five managers. You reply with a quote in a standard format. The owner’s contact details are shared with you if they accept your quote.'],
 ];
 
 export default function ForManagers() {
@@ -29,6 +30,13 @@ export default function ForManagers() {
           </ul>
         </div>
         <ManagerSignup />
+      </section>
+      <section className="band split">
+        <Photo name="making" ratio="3 / 2" sizes="(max-width: 880px) 100vw, 540px" />
+        <div style={{ display: 'grid', gap: 12 }}>
+          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Spend your time on homes, not sales calls</h2>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Owners arrive having already compared you on the numbers that matter. You get the property details up front, reply with a quote in a few minutes, and the owner accepts or asks questions in one place.</p>
+        </div>
       </section>
       <section style={{ borderTop: '1px solid var(--line)', paddingBlock: 48, maxWidth: 760 }}>
         <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 20px' }}>Questions managers ask</h2>

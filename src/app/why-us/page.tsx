@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Photo from '@/components/Photo';
 
 export const metadata: Metadata = {
-  title: 'Why CoHostCompare',
+  title: 'Why use us',
   description: 'A neutral, transparent way to compare short-term rental managers: every manager, every platform, real performance data and no pay-to-rank.',
 };
 
@@ -15,13 +16,16 @@ const POINTS: [string, string][] = [
   ['Your details stay yours', 'Managers see your property details and first name. Your email and phone number go only to the manager whose quote you accept.'],
 ];
 
-export default function Why() {
+export default function WhyUs() {
   return (
-    <main style={{ maxWidth: 900, paddingBlock: '16px 64px', display: 'grid', gap: 28 }}>
-      <header style={{ display: 'grid', gap: 10 }}>
-        <span className="label" style={{ color: 'var(--brand)' }}>Neutral and transparent</span>
-        <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Why CoHostCompare</h1>
-        <p className="lede">Choosing who looks after your property is a big decision. You should be able to compare every option on the same terms.</p>
+    <main style={{ maxWidth: 1000, paddingBlock: '16px 64px', display: 'grid', gap: 28 }}>
+      <header className="split">
+        <div style={{ display: 'grid', gap: 10 }}>
+          <span className="label" style={{ color: 'var(--brand)' }}>Neutral and transparent</span>
+          <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Why use us</h1>
+          <p className="lede">Handing over the keys to your property is a big decision. You should be able to compare every option on the same terms.</p>
+        </div>
+        <Photo name="keys" ratio="3 / 2" eager sizes="(max-width: 880px) 100vw, 440px" />
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
         {POINTS.map(([t, d]) => (

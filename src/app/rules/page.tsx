@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AskRules from '@/components/AskRules';
+import Photo from '@/components/Photo';
 import { RULES, RULES_CHECKED } from '@/lib/rules';
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function Rules() {
   return (
     <main style={{ maxWidth: 880, paddingBlock: '16px 64px', display: 'grid', gap: 24 }}>
+      <Photo name="yarra" ratio="21 / 8" eager sizes="(max-width: 880px) 100vw, 880px" />
       <header style={{ display: 'grid', gap: 10 }}>
         <span className="label" style={{ color: 'var(--brand)' }}>Rules by state</span>
         <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Short-term rental rules in Australia</h1>
@@ -24,7 +26,7 @@ export default function Rules() {
       </nav>
 
       {RULES.map((r) => (
-        <section key={r.code} id={r.code} className="panel" style={{ display: 'grid', gap: 10, scrollMarginTop: 16 }}>
+        <section key={r.code} id={r.code} className="panel" style={{ display: 'grid', gap: 10, scrollMarginTop: 96 }}>
           <h2 style={{ fontSize: 24, margin: 0 }}>{r.name}</h2>
           <p style={{ margin: 0, fontWeight: 500 }}>{r.summary}</p>
           <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
