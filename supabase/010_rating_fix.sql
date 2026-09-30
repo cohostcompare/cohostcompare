@@ -1,14 +1,15 @@
 -- CoHostCompare: ignore "no rating yet" in averages (run once in Supabase: SQL Editor -> New query -> Run)
 -- Airbnb only shows a rating after a few reviews; the data reports those listings as 0, which dragged averages down.
+-- Same for homes with no bookings or rates yet (new or inactive listings): left out of occupancy, rate and revenue averages.
 
 create or replace view public.manager_stats as
 select m.id as manager_id,
        count(l.*)                                   as property_count,
        round(avg(l.rating_overall) filter (where l.num_reviews > 0 and l.rating_overall > 0), 2) as avg_rating,
        coalesce(sum(l.num_reviews), 0)              as review_count,
-       round(avg(l.ttm_occupancy), 3)               as avg_occupancy,
-       round(avg(l.ttm_avg_rate), 0)                as avg_nightly_rate,
-       round(avg(l.ttm_revenue), 0)                 as avg_revenue,
+       round(avg(l.ttm_occupancy) filter (where l.ttm_occupancy > 0), 3) as avg_occupancy,
+       round(avg(l.ttm_avg_rate) filter (where l.ttm_avg_rate > 0), 0) as avg_nightly_rate,
+       round(avg(l.ttm_revenue) filter (where l.ttm_revenue > 0), 0) as avg_revenue,
        array_agg(distinct l.locality) filter (where l.locality is not null) as localities,
        max(l.fetched_at)                            as data_as_of
 from public.managers m
