@@ -23,6 +23,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
     }
+    if (job === 'report-status') {
+      const { data, error } = await adminClient().from('suburb_reports').select('area_slug, period, created_at, notified_at, data->market->homes, data->seasonality').order('created_at', { ascending: false }).limit(40);
+      if (error) return new NextResponse(`error: ${error.message}`, { headers });
+      return new NextResponse(`COUNT ${data?.length}\n` + (data || []).map((r: Record<string, unknown>) => `${r.area_slug} | ${r.period} | homes ${r.homes} | seasonality ${r.seasonality ? 'yes' : 'no'} | notified ${r.notified_at ? 'yes' : 'no'}`).join('\n'), { headers });
+    }
     if (job === 'reports') {
       const { runReports } = await import('@/lib/reports');
       const r = await runReports(Number(p.get('n') || 8));
