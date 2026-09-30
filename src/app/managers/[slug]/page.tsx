@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
+import ProfileQuote from './ProfileQuote';
 import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
 import { currentUser } from '@/lib/supabase/server';
 
@@ -37,7 +38,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const areas = await managerAreas(m.slug);
 
   return (
-    <main className="profile">
+    <main className="profile" style={{ paddingBottom: 120 }}>
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
@@ -119,13 +120,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
       </div>
 
       <aside className="sticky">
-        <div className="panel" style={{ display: 'grid', gap: 12 }}>
-          <div className="label">Interested?</div>
-          <p style={{ margin: 0 }}>Describe your property once and get a quote in a standard format you can compare with other managers.</p>
-          <Link className="btn primary" href={`/quote?${q.toString()}`}>Request a quote</Link>
-          <p className="hint" style={{ margin: 0 }}>Contact details are shared once {m.name} accepts your request.</p>
-        </div>
-        <Link href={back.toString() ? `/search?${back.toString()}` : '/'} className="hint">← Back to managers near you</Link>
+        <ProfileQuote slug={m.slug} name={m.name} query={back.toString()} />
       </aside>
     </main>
   );

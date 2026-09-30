@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import SiteMenu from '@/components/SiteMenu';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -21,15 +22,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" />
       </head>
       <body>
-        <div className="wrap">
+        <div className="wrap wide">
           <header className="top">
             <Link className="logo" href="/" aria-label="CoHostCompare home">
               <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><path className="solid" d="M3 16 L12 8 L21 16 V28 H3 Z" /><path className="outline" d="M13 16 L22 8 L31 16 V28 H13 Z" /></svg>
               CoHostCompare
             </Link>
-            <details className="menu">
-              <summary aria-label="Menu"><span /><span /><span /></summary>
-              <nav className="menu-body" aria-label="Main">
+            <SiteMenu>
                 <div className="menu-group owners">
                   <Link href="/">Compare managers</Link>
                   <Link href="/how-it-works">How it works</Link>
@@ -39,13 +38,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
-                  <Link href="/managers">How it works for managers</Link>
+                  <Link href="/managers"><span className="wide-only">For managers</span><span className="narrow-only">How it works for managers</span></Link>
                   <Link className="btn secondary small" href="/dashboard">{isManager ? 'Manager dashboard' : 'Manager portal'}</Link>
                   {isAdminEmail(user?.email) && <Link className="admin-link" href="/admin">Admin</Link>}
                 </div>
-              </nav>
-            </details>
+            </SiteMenu>
           </header>
+        </div>
+        <div className="wrap">
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare</span>
