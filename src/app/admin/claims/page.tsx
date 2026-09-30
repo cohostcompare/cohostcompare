@@ -8,7 +8,7 @@ import { approve, reject, requestInfo } from './actions';
 export const metadata: Metadata = { title: 'Admin · Claims', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-type SP = Promise<{ show?: string }>;
+type SP = Promise<{ show?: string; error?: string; done?: string }>;
 type Claim = {
   id: string; email: string; name: string; role_title: string | null; phone: string | null; status: string; method: string | null;
   created_at: string; decided_at: string | null; admin_note: string | null; info_request: string | null;
@@ -21,7 +21,8 @@ const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric'
 
 export default async function Claims({ searchParams }: { searchParams: SP }) {
   await requireAdmin('/admin/claims');
-  const show = (await searchParams).show === 'all' ? 'all' : 'open';
+  const sp = await searchParams;
+  const show = sp.show === 'all' ? 'all' : 'open';
   let q = adminClient().from('manager_claims')
     .select('id, email, name, role_title, phone, status, method, created_at, decided_at, admin_note, info_request, managers(name, slug, website)')
     .order('created_at', { ascending: false }).limit(200);
@@ -41,6 +42,8 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
           <Link className={`btn ${show === 'all' ? 'primary' : 'secondary'}`} href="/admin/claims?show=all">All</Link>
         </div>
       </div>
+      {sp.error && <div className="panel" role="alert" style={{ borderColor: 'var(--signal)' }}><b>That didn&apos;t work:</b> {sp.error}</div>}
+      {sp.done && <div className="panel" style={{ background: 'var(--tint)' }}>Done.</div>}
       {!claims.length && <div className="panel">{show === 'open' ? 'Nothing to review.' : 'No claims yet.'}</div>}
       {claims.map((c) => {
         const m = Array.isArray(c.managers) ? c.managers[0] : c.managers;
