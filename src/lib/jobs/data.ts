@@ -152,15 +152,16 @@ export async function seedManagers() {
   const groups = cluster(await loadListings());
   const report: Any[] = []; const rows: Any[] = [];
   for (const s of SEED) {
-    const g = groups.find((grp) => grp.accounts.some((a) => s.match.includes(norm(a.name))));
-    if (!g) { report.push({ slug: s.slug, matched: false }); continue; }
+    const g = s.match?.length ? groups.find((grp) => grp.accounts.some((a) => s.match.includes(norm(a.name)))) : null;
+    // Businesses found by web research (e.g. not on Airbnb) have no listing data: they cover their declared postcodes.
+    if (!g && !s.webOnly) { report.push({ slug: s.slug, matched: false }); continue; }
     rows.push({
       slug: s.slug, name: s.name, tagline: s.tagline || null, about: s.about || null,
-      airbnb_host_ids: g.accounts.map((a) => a.id), website: s.website || null, cities: s.cities || [], platforms: s.platforms || ['Airbnb'], services: s.services || [],
+      airbnb_host_ids: g ? g.accounts.map((a) => a.id) : [], website: s.website || null, ...(s.postcodes ? { postcodes: s.postcodes } : {}), cities: s.cities || [], platforms: s.platforms || ['Airbnb'], services: s.services || [],
       fee_min: s.fee_min ?? null, fee_max: s.fee_max ?? null, fee_note: s.fee_note || null, licensed_agent: s.licensed_agent ?? null,
       gated: s.gated || {}, sources: s.sources || [], published: Boolean(s.published), updated_at: new Date().toISOString(),
     });
-    report.push({ slug: s.slug, matched: true, accounts: g.accounts.length, listings: g.listings.size });
+    report.push({ slug: s.slug, matched: Boolean(g), accounts: g?.accounts.length ?? 0, listings: g?.listings.size ?? 0 });
   }
   // Never re-publish a manager an admin has hidden, and never overwrite a profile its manager has claimed and edited.
   const { data: existing } = await adminClient().from('managers').select('slug, published, claimed');
