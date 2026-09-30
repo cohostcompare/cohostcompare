@@ -35,7 +35,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
                 <div className="meta">
                   {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
-                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> homes tracked</span>}
+                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> Airbnb homes tracked</span>}
                 </div>
                 <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
               </div>

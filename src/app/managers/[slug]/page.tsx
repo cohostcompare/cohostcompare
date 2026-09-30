@@ -54,7 +54,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
 
         {hasData ? (
           <div className="panel stats">
-            <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">homes tracked</div></div>
+            <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">Airbnb homes tracked</div></div>
             {m.avgRating != null && <div className="stat"><div className="n">{m.avgRating.toFixed(2)} ★</div><div className="t">average guest rating</div></div>}
             {!!m.reviewCount && <div className="stat"><div className="n">{m.reviewCount.toLocaleString('en-AU')}</div><div className="t">guest reviews</div></div>}
             {m.avgNightlyRate != null && <div className="stat"><div className="n">A${Math.round(m.avgNightlyRate)}</div><div className="t">average nightly rate</div></div>}

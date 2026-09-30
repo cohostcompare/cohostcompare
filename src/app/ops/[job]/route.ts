@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { newBusinesses } from '@/lib/jobs/data';
+import { newBusinesses, seedManagers } from '@/lib/jobs/data';
 import { adminClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
@@ -22,6 +22,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
     if (job === 'managers') {
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
+    }
+    if (job === 'seed') {
+      const r = await seedManagers();
+      return new NextResponse(`saved ${r.saved}, claimed untouched ${r.skippedClaimed}, unmatched ${r.report.filter((x: { matched: boolean; webOnly?: boolean }) => !x.matched && !x.webOnly).map((x: { slug: string }) => x.slug).join(', ') || 'none'}`, { headers });
     }
     if (job === 'qa') {
       // Automatic checks on every published profile; prints only the problems.
