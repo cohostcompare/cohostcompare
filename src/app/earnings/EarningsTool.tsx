@@ -22,14 +22,37 @@ export default function EarningsTool() {
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      <div className="panel" style={{ display: 'grid', gap: 14 }}>
-        <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14, maxWidth: 220 }}>Bedrooms
-          <select className="field" value={beds} onChange={(e) => { const b = Number(e.target.value); setBeds(b); if (place) run(place, b); }}>
-            <option value={0}>Studio</option>{[1, 2, 3, 4].map((b) => <option key={b} value={b}>{b} bedroom{b > 1 ? 's' : ''}</option>)}<option value={5}>5 or more</option>
-          </select>
-        </label>
-        <label className="label" htmlFor="earn-addr">Property address or suburb</label>
-        <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} buttonLabel={pending ? 'Working it out…' : 'Estimate earnings'} />
+      <div className="panel earn-tool">
+        <div className="earn-form">
+          <h2>Get your estimate</h2>
+          <fieldset className="beds">
+            <legend>Bedrooms</legend>
+            <div className="seg" role="radiogroup" aria-label="Bedrooms">
+              {[0, 1, 2, 3, 4, 5].map((b) => (
+                <button key={b} type="button" role="radio" aria-checked={beds === b} className={beds === b ? 'on' : ''}
+                  onClick={() => { setBeds(b); if (place) run(place, b); }}>{b === 0 ? 'Studio' : b === 5 ? '5+' : b}</button>
+              ))}
+            </div>
+          </fieldset>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label className="label" htmlFor="earn-addr">Property address or suburb</label>
+            <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} buttonLabel={pending ? 'Working it out…' : 'Estimate earnings'} />
+          </div>
+          <ul className="earn-trust">
+            <li>Free to use</li>
+            <li>No account or sign-up</li>
+            <li>No contact details asked for</li>
+          </ul>
+        </div>
+        <aside className="earn-preview" aria-label="What the estimate shows">
+          <span className="label">You&apos;ll see</span>
+          <ul>
+            <li><b>Yearly booking revenue</b><span>a likely range for your home</span></li>
+            <li><b>Nights booked</b><span>the area average</span></li>
+            <li><b>Typical nightly rate</b><span>for your number of bedrooms</span></li>
+            <li><b>What you&apos;d keep</b><span>after a typical management fee</span></li>
+          </ul>
+        </aside>
       </div>
 
       {res && 'error' in res && <p role="alert" className="panel" style={{ margin: 0, color: 'var(--signal)' }}>{res.error}</p>}
