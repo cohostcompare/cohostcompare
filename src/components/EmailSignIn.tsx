@@ -40,7 +40,7 @@ export default function EmailSignIn({ next = '/account', intro }: { next?: strin
       </label>
       <button className="btn primary" type="submit" disabled={state === 'sending'}>{state === 'sending' ? 'Sending…' : 'Email me a sign-in link'}</button>
       {error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{error}</p>}
-      <p className="hint" style={{ margin: 0 }}>No password needed. Free for owners. See our <a href="/privacy">privacy policy</a>.</p>
+      <p className="hint" style={{ margin: 0 }}>No password needed. Free for owners. By continuing you agree to our <a href="/terms">terms</a> and <a href="/privacy">privacy policy</a>.</p>
     </form>
   );
 }

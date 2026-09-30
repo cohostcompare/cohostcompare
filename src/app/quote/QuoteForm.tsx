@@ -122,7 +122,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
         {pending ? 'Sending…' : checking ? 'Checking coverage…' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
-      <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept.</p>
+      <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept. By sending, you agree to our <a href="/terms">terms</a>.</p>
     </form>
   );
 }

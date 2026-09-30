@@ -6,19 +6,28 @@ import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rule
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Short-term rental rules by state',
+  title: 'Ask about short-stay rules',
   description: 'Plain-English guide to Airbnb and short-term rental rules in each Australian state: registration, night caps, levies and strata rules.',
 };
 
-export default function Rules() {
+type SP = Promise<{ q?: string }>;
+
+export default async function Rules({ searchParams }: { searchParams: SP }) {
+  const { q } = await searchParams;
   return (
-    <main style={{ maxWidth: 880, paddingBlock: '16px 64px', display: 'grid', gap: 24 }}>
-      <Photo name="yarra" ratio="21 / 8" eager sizes="(max-width: 880px) 100vw, 880px" />
-      <header style={{ display: 'grid', gap: 10 }}>
-        <span className="label" style={{ color: 'var(--brand)' }}>Rules by state</span>
-        <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Short-term rental rules in Australia</h1>
-        <p className="lede">Registration, night caps, levies and strata rules, state by state, in plain English. Every point is checked against official government and council sources, last on {RULES_CHECKED}.</p>
-        <p className="hint" style={{ margin: 0 }}>This is general information, not legal advice. Rules change and councils add their own, so check with your council, and your strata or owners corporation, before you list.</p>
+    <main style={{ maxWidth: 1000, paddingBlock: '16px 64px', display: 'grid', gap: 24 }}>
+      <section className="ask-hero">
+        <Photo name="yarra" ratio="auto" eager sizes="(max-width: 880px) 100vw, 1000px" />
+        <div className="ask-hero-body">
+          <span className="label">Short-stay rules, answered</span>
+          <h1>Ask anything about Airbnb and short-stay rules</h1>
+          <p>Registration, night caps, levies, strata bans and council permits, in any state. Get a plain-English answer in seconds, with the official source.</p>
+          <AskRules initial={(q || '').slice(0, 400)} />
+        </div>
+      </section>
+      <header style={{ display: 'grid', gap: 8 }}>
+        <h2 style={{ fontSize: 'clamp(26px,4vw,34px)', margin: 0 }}>Or browse the rules by state</h2>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>Every point is checked against official government and council sources, last on {RULES_CHECKED}. This is general information, not legal advice: rules change and councils add their own, so check with your council, and your strata or owners corporation, before you list.</p>
       </header>
 
       {rulesAgeDays() > RULES_STALE_DAYS && (
@@ -26,7 +35,6 @@ export default function Rules() {
           <b>Heads up:</b> this guide was last checked {rulesAgeDays()} days ago and is due for review. Confirm anything important using the official sources linked under each state.
         </p>
       )}
-      <AskRules />
 
       <nav aria-label="States" className="chips">
         {RULES.map((r) => <a key={r.code} className="chip" href={`#${r.code}`} style={{ textDecoration: 'none' }}>{r.name}</a>)}

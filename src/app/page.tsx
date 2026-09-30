@@ -54,7 +54,7 @@ export default function Home() {
 
       <section className="band">
         <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Starting in Sydney and Melbourne</h2>
-        <p className="lede" style={{ marginBottom: 24 }}>We&apos;re mapping every manager running short-term rentals in both cities, from Bondi to Brunswick. More cities soon.</p>
+        <p className="lede" style={{ marginBottom: 24 }}>We&apos;re mapping every manager running short-term rentals in both cities, from Bondi to Brunswick. More cities soon. <Link href="/areas">Browse by area →</Link></p>
         <div className="cities">
           <div className="city">
             <Photo name="sydney" ratio="16 / 10" sizes="(max-width: 880px) 100vw, 540px" />
@@ -65,7 +65,18 @@ export default function Home() {
             <div className="over"><b>Melbourne</b><span>Factor in Victoria&apos;s 7.5% short stay levy.</span></div>
           </div>
         </div>
-        <p style={{ margin: '18px 0 0' }}><Link href="/rules">Check the rules in your state →</Link></p>
+      </section>
+
+      <section className="ask-cta" aria-label="Ask about short-stay rules">
+        <div>
+          <h2 style={{ fontSize: 'clamp(22px,3vw,28px)', margin: '0 0 4px' }}>Not sure what&apos;s allowed where you are?</h2>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Ask anything about registration, night caps, levies or strata rules, and get a plain-English answer with the official source.</p>
+        </div>
+        <form action="/rules" method="get">
+          <label htmlFor="home-ask" className="sr-only">Your question</label>
+          <input id="home-ask" className="field" name="q" placeholder="e.g. Can my strata ban Airbnb?" style={{ minWidth: 260, background: 'var(--panel)' }} />
+          <button className="btn primary" type="submit">Ask</button>
+        </form>
       </section>
 
       <section className="band split">

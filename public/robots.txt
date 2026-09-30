@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /email/
-
-Sitemap: https://www.cohostcompare.com/sitemap.xml

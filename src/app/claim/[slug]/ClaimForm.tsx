@@ -20,7 +20,7 @@ export default function ClaimForm({ slug, name, email, instant }: { slug: string
       <label style={L}>Phone (optional, helps us verify you)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
       <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <input type="checkbox" name="authorised" style={{ width: 18, height: 18, marginTop: 3, accentColor: 'var(--brand)' }} />
-        <span>I work for {name} and I&apos;m authorised to manage its profile.</span>
+        <span>I work for {name}, I&apos;m authorised to manage its profile, and I agree to the <a href="/terms">terms for managers</a>.</span>
       </label>
       <button className="btn primary" type="submit" disabled={pending}>{pending ? 'Submitting…' : instant ? 'Claim and open my dashboard' : 'Submit my claim'}</button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}

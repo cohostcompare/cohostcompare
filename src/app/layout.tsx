@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import Link from 'next/link';
 import './globals.css';
 import AccountMenu from '@/components/AccountMenu';
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
   title: { default: 'CoHostCompare', template: '%s · CoHostCompare' },
   description: 'Compare every short-term rental manager for your property: fees side by side, every platform, verified ratings.',
   icons: { icon: '/favicon.svg' },
+  openGraph: { type: 'website', siteName: 'CoHostCompare', locale: 'en_AU' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -43,8 +46,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <NavLink href="/" also={['/search', '/managers/']}>Compare managers</NavLink>
                   <NavLink href="/how-it-works">How it works</NavLink>
                   <NavLink href="/why-us">Why use us</NavLink>
-                  <NavLink href="/rules">Rules by state</NavLink>
-                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <Link className="btn primary small" href="/signin">Sign in or sign up free</Link>}
+                  <NavLink href="/rules"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>Ask about rules</NavLink>
+                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <Link className="btn primary small" href="/signin">Sign in or sign up</Link>}
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
@@ -59,10 +62,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/rules">Rules by state</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link></span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/rules">Ask about rules</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
             <span>Made in Sydney · hello@cohostcompare.com</span>
           </footer>
         </div>
+        <Analytics />
       </body>
     </html>
   );

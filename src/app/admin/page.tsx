@@ -24,14 +24,14 @@ export default async function Admin() {
   const { data: recent } = await db.from('quote_requests').select('id, created_at, owner_name, owner_email, address, quote_request_managers(manager_name)').order('created_at', { ascending: false }).limit(20);
 
   const tiles: [string, number, string?][] = [
-    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners],
+    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'],
   ];
   return (
     <main style={{ maxWidth: 960, paddingBlock: '16px 64px', display: 'grid', gap: 18 }}>
       <h1 style={{ fontSize: 34, margin: 0 }}>Admin</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12 }}>
         {tiles.map(([label, n, href]) => {
-          const inner = <><div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 30, color: label === 'Claims to review' && n ? 'var(--signal)' : 'var(--ink)' }}>{n}</div><div className="hint">{label}</div></>;
+          const inner = <><div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: n < 0 ? 22 : 30, color: label === 'Claims to review' && n ? 'var(--signal)' : 'var(--ink)' }}>{n < 0 ? 'Open →' : n}</div><div className="hint">{label}</div></>;
           return href ? <Link key={label} href={href} className="panel" style={{ textDecoration: 'none', color: 'inherit' }}>{inner}</Link> : <div key={label} className="panel">{inner}</div>;
         })}
       </div>
