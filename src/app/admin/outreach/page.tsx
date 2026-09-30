@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { DAILY_CAP, SEQUENCE, type Ctx } from '@/lib/outreach';
+import { DAILY_CAP, SEQUENCE, outreachOn, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
 import { addContact, approveResearched, sendNow, setStatus, testEmail } from './actions';
@@ -35,6 +35,7 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
         <h1 style={{ fontSize: 34, margin: 0 }}>Manager outreach</h1>
         <p className="hint" style={{ margin: '4px 0 0' }}>Five emails over about 24 days inviting unclaimed managers to claim their profile. Sent automatically each morning, up to {DAILY_CAP} a day. Stops when they claim, unsubscribe or you mark them as replied (their replies land in hello@). Only add addresses a business publishes on its own website.</p>
       </div>
+      {!outreachOn() && <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>Outreach is paused.</b> No emails go to managers (including the instant &ldquo;an owner wants a quote&rdquo; email) until OUTREACH_ENABLED is set to 1 in Vercel. Approved contacts stay queued. Test emails to hello@ still work.</div>}
       {error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>Run supabase/009_launch_features.sql first. ({error.message})</div>}
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}

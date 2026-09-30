@@ -12,6 +12,8 @@ import { adminClient } from '@/lib/supabase/server';
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
 const GAPS_DAYS = [3, 4, 7, 10]; // after emails 1-4
 export const DAILY_CAP = Number(process.env.OUTREACH_DAILY_CAP || 30);
+/** Master switch: nothing is sent to managers unless OUTREACH_ENABLED=1 in Vercel. */
+export const outreachOn = () => process.env.OUTREACH_ENABLED === '1';
 
 export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; suburbs: string[]; waiting: number; email: string; source: string };
 
@@ -85,6 +87,7 @@ async function send(c: Ctx, i: number) {
 
 /** Sends the next due email to up to `limit` contacts (respecting the daily cap). */
 export async function sendOutreachBatch(limit = DAILY_CAP) {
+  if (!outreachOn()) return { sent: 0, note: 'Outreach is paused' };
   const db = adminClient();
   const since = new Date(Date.now() - 86400e3).toISOString();
   const { count: sentToday } = await db.from('outreach_contacts').select('id', { count: 'exact', head: true }).gte('last_sent_at', since);
@@ -115,6 +118,7 @@ export async function sendOutreachBatch(limit = DAILY_CAP) {
 
 /** When an owner requests a quote from an unclaimed manager, tell that manager's outreach contacts straight away. */
 export async function notifyUnclaimedOfRequest(slug: string, where: string): Promise<number> {
+  if (!outreachOn()) return 0;
   const db = adminClient();
   const { data: m } = await db.from('managers').select('id, name, claimed').eq('slug', slug).maybeSingle();
   if (!m || m.claimed) return 0;
