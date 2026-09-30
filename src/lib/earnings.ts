@@ -37,7 +37,8 @@ async function store(key: string, data: unknown) {
 }
 async function underDailyCap() {
   const since = new Date(Date.now() - 86400e3).toISOString();
-  const { count } = await adminClient().from('market_cache').select('key', { count: 'exact', head: true }).like('key', 'mk:%').gte('fetched_at', since);
+  const { count, error } = await adminClient().from('market_cache').select('key', { count: 'exact', head: true }).like('key', 'mk:%').gte('fetched_at', since);
+  if (error) return false; // no cache table yet (run 009): never call AirROI uncached
   return (count ?? 0) < DAILY_NEW_MARKETS;
 }
 async function airroi(path: string, init?: RequestInit) {

@@ -47,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <NavLink href="/how-it-works">How it works</NavLink>
                   <NavLink href="/why-us">Why use us</NavLink>
                   <NavLink href="/rules"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>Ask about rules</NavLink>
-                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <><NavLink href="/signin" exact>Sign in</NavLink><Link className="btn primary small" href="/signin?mode=signup">Create free account</Link></>}
+                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <><NavLink href="/signin" exact>Sign in</NavLink><Link className="btn primary small" href="/signin?mode=signup">Join free</Link></>}
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
