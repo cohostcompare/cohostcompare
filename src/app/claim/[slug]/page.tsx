@@ -62,7 +62,7 @@ export default async function Claim({ params }: { params: P }) {
       )}
 
       <section className="facts-grid">
-        <div className="panel"><h3>What it costs</h3><p>Nothing. Claiming, editing your profile and replying to owners are free, with no lead fees and no lock-in. Claim by 31 January 2027 and you also get <Link href="/managers#pricing">Pro</Link> free for three months.</p></div>
+        <div className="panel"><h3>What it costs</h3><p>Claiming, editing your profile, receiving quote requests and replying are free, with no lock-in. On the Free plan you pay a A$199 + GST success fee only when an owner accepts your quote. Claim by 31 January 2027 and you get <Link href="/managers#pricing">Pro</Link> free for three months, with no success fees.</p></div>
         <div className="panel"><h3>Where the figures come from</h3><p>Public listing data and your own website, measured the same way for every manager. <Link href="/managers#why-listed">How we build profiles</Link></p></div>
       </section>
       <p className="hint" style={{ margin: 0 }}>Not your business, or rather not be listed? Email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> and we&apos;ll sort it out.</p>
@@ -70,7 +70,7 @@ export default async function Claim({ params }: { params: P }) {
 
       <aside className="sticky" style={{ display: 'grid', gap: 12 }}>
       {m.claimed && existing?.status !== 'approved' ? (
-        <div className="panel">This profile has already been claimed. If that wasn&apos;t you or your team, email <b>hello@cohostcompare.com</b>.</div>
+        <div className="panel">This profile has already been claimed. If you work there, ask your colleague to invite you from <b>Team</b> in their dashboard. If that wasn&apos;t you or your team, email <b>hello@cohostcompare.com</b>.</div>
       ) : existing?.status === 'approved' ? (
         <div className="panel" style={{ background: 'var(--tint)' }}>You manage this profile. <Link href="/dashboard">Open your dashboard</Link></div>
       ) : existing?.status === 'info_requested' || existing?.status === 'info_received' ? (

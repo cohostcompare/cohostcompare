@@ -20,9 +20,9 @@ export default function SuburbReport({ r }: { r: ReportData }) {
   return (
     <article className="report" style={{ display: 'grid', gap: 22 }}>
       <header style={{ display: 'grid', gap: 4 }}>
-        <span className="label" style={{ color: 'var(--brand)' }}>Suburb report · {r.periodLabel}</span>
+        <span className="label" style={{ color: 'var(--brand)' }}>{r.suburbs ? 'Regional report' : 'Suburb report'} · {r.periodLabel}</span>
         <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Short stays in {r.area.label}</h1>
-        <p className="hint" style={{ margin: 0 }}>Airbnb homes within {r.area.radiusKm} km of central {r.area.label}, {r.area.city}. Figures cover the 12 months to {r.asOf ? new Date(r.asOf).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) : 'the latest data'}.</p>
+        <p className="hint" style={{ margin: 0 }}>{r.suburbs ? `Airbnb homes in and around ${r.suburbs.map((x) => x.label).join(', ')}, ${r.area.city}.` : `Airbnb homes within ${r.area.radiusKm} km of central ${r.area.label}, ${r.area.city}.`} Figures cover the 12 months to {r.asOf ? new Date(r.asOf).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) : 'the latest data'}.</p>
       </header>
 
       <section className="dash-stats">
@@ -32,6 +32,19 @@ export default function SuburbReport({ r }: { r: ReportData }) {
         <div className="panel"><b>{pc(m.occupancy)}</b><span>typical Airbnb occupancy</span></div>
         <div className="panel"><b>{m.rating != null ? `${m.rating.toFixed(2)} ★` : '–'}</b><span>typical guest rating</span></div>
       </section>
+
+      {r.suburbs && r.suburbs.length > 1 && (
+        <section style={{ display: 'grid', gap: 8 }}>
+          <h2 style={{ fontSize: 22, margin: 0 }}>By suburb</h2>
+          <div className="panel" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="rtable">
+              <thead><tr><th>Area</th><th>Homes</th><th>Nightly rate</th><th>Yearly revenue</th><th>Occupancy</th><th>Rating</th><th>Managers</th></tr></thead>
+              <tbody>{r.suburbs.map((x) => <tr key={x.slug}><td><Link href={`/areas/${x.slug}`}>{x.label}</Link></td><td>{x.homes}</td><td>{x.homes >= 5 ? money(x.nightly) : '–'}</td><td>{x.homes >= 5 ? money(x.revenue) : '–'}</td><td>{x.homes >= 5 ? pc(x.occupancy) : '–'}</td><td>{x.homes >= 5 && x.rating ? `${x.rating.toFixed(2)} ★` : '–'}</td><td>{x.managers}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <p className="hint" style={{ margin: 0 }}>Areas can overlap at the edges, so suburb homes may add up to more than the regional total.</p>
+        </section>
+      )}
 
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>By number of bedrooms</h2>
@@ -62,7 +75,7 @@ export default function SuburbReport({ r }: { r: ReportData }) {
 
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>Managers and fees</h2>
-        <p style={{ margin: 0 }}>{r.managers.count} managers run homes near {r.area.label}. {m.professional != null ? `About ${pc(m.professional)} of homes are run by professional hosts or managers.` : ''} {r.managers.withFees ? `Of the ${r.managers.withFees} that publish a fee, the midpoint is ${r.managers.feeMedian?.toFixed(1)}% (range ${r.managers.feeLow}% to ${r.managers.feeHigh}%).` : 'Few managers here publish their fees.'}</p>
+        <p style={{ margin: 0 }}>{r.managers.count} managers run homes {r.suburbs ? 'in' : 'near'} {r.area.label}. {m.professional != null ? `About ${pc(m.professional)} of homes are run by professional hosts or managers.` : ''} {r.managers.withFees ? `Of the ${r.managers.withFees} that publish a fee, the midpoint is ${r.managers.feeMedian?.toFixed(1)}% (range ${r.managers.feeLow}% to ${r.managers.feeHigh}%).` : 'Few managers here publish their fees.'}</p>
         {r.managers.top.length > 0 && (
           <div className="panel" style={{ padding: 0, overflowX: 'auto' }}>
             <table className="rtable">
@@ -75,7 +88,7 @@ export default function SuburbReport({ r }: { r: ReportData }) {
 
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>Owners looking for a manager</h2>
-        <p style={{ margin: 0 }}>{r.owners.requests90d == null ? 'Owner activity will show here once there is enough of it.' : `${r.owners.requests90d} owner${r.owners.requests90d === 1 ? '' : 's'} near ${r.area.label} asked for quotes on CoHostCompare in the last 90 days.`}{r.owners.quotedFeeMedian != null ? ` The typical fee quoted to them was ${r.owners.quotedFeeMedian.toFixed(1)}%.` : ''}</p>
+        <p style={{ margin: 0 }}>{r.owners.requests90d == null ? 'Owner activity will show here once there is enough of it.' : `${r.owners.requests90d} owner${r.owners.requests90d === 1 ? '' : 's'} ${r.suburbs ? 'in' : 'near'} ${r.area.label} asked for quotes on CoHostCompare in the last 90 days.`}{r.owners.quotedFeeMedian != null ? ` The typical fee quoted to them was ${r.owners.quotedFeeMedian.toFixed(1)}%.` : ''}</p>
       </section>
 
       {r.rules && (

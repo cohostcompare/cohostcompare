@@ -17,7 +17,12 @@ export const ENTERPRISE_PRICE = 'from A$400 a month + GST';
 export const ENTERPRISE_PRICE_SHORT = 'A$400';
 /** Launch pricing: managers who subscribe during launch keep their price for this long. */
 export const PRICE_LOCK_MONTHS = 12;
-export const PRO_FOLLOW_LIMIT = 5; // extra report areas a Pro manager can follow
+/** Free plan: a success fee only when an owner accepts the manager's quote. None on Pro or Enterprise. */
+export const SUCCESS_FEE = 199;
+export const SUCCESS_FEE_TEXT = 'A$199 + GST';
+/** Logins per plan. */
+export const SEATS: Record<'free' | 'pro' | 'enterprise', number> = { free: 1, pro: 5, enterprise: 1000 };
+export const PRO_FOLLOW_LIMIT = 2; // extra report regions a Pro manager can follow
 export const foundingDeadlineText = () => new Date(`${FOUNDING_DEADLINE}T12:00:00+10:00`).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export type Feature = { title: string; body: string; live: boolean };
@@ -27,17 +32,20 @@ export const PRO_FEATURES: Feature[] = [
   { title: 'Owner demand', body: 'How many owners searched in each of your postcodes over the last 30 days, and which areas are growing.', live: true },
   { title: 'Quote results', body: 'Your quote win rate and how your quotes compare on fees, without showing any other manager’s quote.', live: true },
   { title: 'More photos', body: 'Up to 24 photos on your profile instead of 12.', live: true },
-  { title: 'Suburb reports', body: 'Quarterly short-stay market reports for your areas, plus up to 5 more you choose: seasonality, nightly rates and revenue by bedrooms, demand and how fees compare, with every past report kept.', live: true },
+  { title: 'Regional reports', body: 'Quarterly short-stay market reports for your regions, plus 2 more you choose, broken down by suburb: seasonality, nightly rates and revenue by bedrooms, demand and how fees compare. Every past report is kept.', live: true },
   { title: 'SMS alerts', body: 'A text message the moment an owner asks you for a quote or accepts yours.', live: true },
-  { title: 'Saved replies', body: 'Reusable quote notes and message templates.', live: false },
+  { title: 'No success fees', body: `Keep every client you win. On Free, a ${'A$199 + GST'} fee applies when an owner accepts your quote.`, live: true },
+  { title: 'Team logins', body: 'Up to 5 people from your business, each with their own login.', live: true },
+  { title: 'Quote templates', body: 'Save your standard fees, terms and inclusions and fill in a quote in one click.', live: true },
 ];
 
 export const ENTERPRISE_FEATURES: Feature[] = [
   { title: 'Every region, one account', body: 'All your offices, brands and regions under one login, with each quote request routed to the right regional team.', live: false },
-  { title: 'Team roles', body: 'Unlimited team logins, with regional managers who see only their own areas.', live: false },
+  { title: 'Unlimited team logins', body: 'Everyone in your business gets their own login.', live: true },
+  { title: 'Regional team roles', body: 'Regional managers who see only their own areas.', live: false },
   { title: 'API and webhooks', body: 'Quote requests, messages and quote outcomes sent straight into your CRM or property management system, or through Zapier.', live: false },
   { title: 'Portfolio insights', body: 'Benchmarks and owner demand across every region side by side, with CSV exports.', live: false },
-  { title: 'Suburb reports for every region', body: 'Quarterly reports for every area we cover, not just five extra.', live: true },
+  { title: 'Reports for every region', body: 'Quarterly reports for every region we cover.', live: true },
   { title: 'Regional quote templates', body: 'Different standard fees, inclusions and terms for each region, ready to send.', live: false },
   { title: 'Priority support', body: 'A named contact, help setting up every profile, and a quarterly review of your results.', live: false },
 ];

@@ -118,7 +118,10 @@ export async function runDaily() {
   const outreach = await sendOutreachBatch().catch((e) => ({ sent: 0, note: String(e) }));
   const { runReports } = await import('@/lib/reports');
   const reports = await runReports().catch((e) => ({ made: 0, notified: 0, note: String(e) }));
-  const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(reports.made ? [`Suburb reports: made ${reports.made}, emailed ${reports.notified} managers.`] : [])];
+  const { checkSharing } = await import('@/lib/activity');
+  const sharing = await checkSharing().catch(() => [] as string[]);
+  const { data: fees } = await (await import('@/lib/supabase/server')).adminClient().from('success_fees').select('id', { count: 'exact' }).eq('status', 'owed');
+  const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(fees?.length ? [`Success fees to invoice: ${fees.length} (see admin).`] : []), ...(sharing.length ? [`Possible shared logins: ${sharing.length} (emailed separately).`] : []), ...(reports.made ? [`Regional reports: made ${reports.made}, emailed ${reports.notified} managers.`] : [])];
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com',

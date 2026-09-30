@@ -20,7 +20,7 @@ export function AlertsForm({ slug, mobile, sms, reports, pro }: { slug: string; 
         </label>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input type="checkbox" name="reports" defaultChecked={reports} />
-          <span>Email me when a new suburb report for my areas is ready</span>
+          <span>Email me when a new regional report for my regions is ready</span>
         </label>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn primary" disabled={pending}>{pending ? 'Saving…' : 'Save'}</button>

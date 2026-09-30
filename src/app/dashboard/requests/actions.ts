@@ -7,6 +7,7 @@ import { requireThread } from '@/lib/managers';
 import { parseQuote } from '@/lib/quotes';
 import { notifyIfAllReplied } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
+import { isPro, plansFor } from '@/lib/pro';
 import { threadReplyTo } from '@/lib/inbound';
 import { postManagerMessage } from '@/lib/threads';
 
@@ -64,4 +65,23 @@ export async function declineRequest(form: FormData) {
     cta: { label: 'Open my inbox', url: `${await origin()}/account` },
   });
   revalidatePath(`/dashboard/requests/${thread.id}`);
+}
+
+/** Pro: save the quote form as a reusable template (max 10 per business). */
+export async function saveTemplate(_: unknown, form: FormData): Promise<{ error?: string; ok?: string }> {
+  const { thread } = await requireThread(String(form.get('thread') || ''));
+  const name = String(form.get('template_name') || '').trim().slice(0, 60);
+  if (!name) return { error: 'Give the template a name.' };
+  const db = adminClient();
+  const { data: m } = await db.from('managers').select('id, quote_templates').eq('slug', thread.manager_slug).single();
+  if (!m) return { error: 'Something went wrong.' };
+  if (!isPro((await plansFor([m.id])).get(m.id))) return { error: 'Quote templates are part of Pro.' };
+  const q = parseQuote(form);
+  if ('error' in q) return q;
+  const { estNightlyRate: _r, estOccupancyPct: _o, ...rest } = q as Record<string, unknown>; // property-specific estimates aren't saved
+  const list = ((m.quote_templates as { name: string }[]) || []).filter((t) => t.name !== name);
+  const { error } = await db.from('managers').update({ quote_templates: [...list, { name, q: rest }].slice(-10) }).eq('id', m.id);
+  if (error) return { error: 'We couldn’t save the template.' };
+  revalidatePath(`/dashboard/requests/${thread.id}`);
+  return { ok: `Saved “${name}”.` };
 }

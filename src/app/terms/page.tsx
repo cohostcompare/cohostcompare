@@ -35,7 +35,8 @@ export default function Terms() {
 
       <h2>5. For managers</h2>
       <ul>
-        <li>Your profile, quote requests and replying to owners are free, with no lead fees. Paid plans are optional (see section 6).</li>
+        <li>Your profile, quote requests and replying to owners are free. On the Free plan, a success fee applies when an owner accepts your quote (see section 6). Paid plans are optional.</li>
+        <li>Each login is for one person. Don&apos;t share your login with others: invite colleagues from Team in your dashboard instead. We record the device and approximate location of manager sign-ins to keep accounts secure and to check plan limits.</li>
         <li>To claim a profile you must be authorised to act for that business. We may ask for evidence before approving a claim.</li>
         <li>Information you add must be accurate and not misleading, including fees, services and credentials. You must hold any licence your state requires for the services you offer.</li>
         <li>You must only upload logos and photos you own or have permission to use, and you give us a licence to display them on the site for as long as they&apos;re on your profile.</li>
@@ -45,7 +46,9 @@ export default function Terms() {
 
       <h2 id="paid-plans">6. Paid plans for managers (Pro and Enterprise)</h2>
       <ul>
-        <li><b>Optional.</b> Pro and Enterprise add tools for your business, such as benchmarks, owner demand, extra photos, suburb reports and integrations. The free features stay free if you don&apos;t subscribe.</li>
+        <li><b>Success fee (Free plan).</b> If you&apos;re on the Free plan when an owner accepts your quote through CoHostCompare, you agree to pay a success fee of A$199 plus GST for that owner. We&apos;ll email you a tax invoice, payable within 14 days. There&apos;s no success fee on Pro or Enterprise, including during the founding offer. The fee applies once per owner and property, whatever you then agree with the owner, and it doesn&apos;t apply to profiles that haven&apos;t been claimed.</li>
+        <li><b>Logins.</b> Free includes 1 login, Pro up to 5 and Enterprise unlimited.</li>
+        <li><b>Optional.</b> Pro and Enterprise add tools for your business, such as benchmarks, owner demand, extra photos, regional reports, text alerts and integrations. The free features stay free if you don&apos;t subscribe.</li>
         <li><b>Neutral.</b> A paid plan never changes where you appear in results, your ratings or badges, or how quotes are compared, and owners can&apos;t see who has one.</li>
         <li><b>Founding offer.</b> If you claim your profile by 31 January 2027, you get Pro free for three months from the day your claim is approved. You don&apos;t need to give card details, and the free period ends automatically. We&apos;ll only charge you if you choose to subscribe.</li>
         <li><b>Prices and invoices.</b> Prices are shown on the site in Australian dollars and exclude GST unless stated. We&apos;ll send you a tax invoice for every payment. Enterprise pricing and terms may be set out in a written order form or agreement, which takes priority over these terms if they differ.</li>
@@ -54,7 +57,7 @@ export default function Terms() {
         <li><b>Launch pricing.</b> If you subscribe while launch prices are shown on the site, your price for that plan is fixed for 12 months from your first payment.</li>
         <li><b>Changes.</b> We&apos;ll give you at least 30 days&apos; notice by email before a price rise or before removing a significant paid feature, and you can cancel before it takes effect. If we remove a significant feature you&apos;ve paid for in advance, we&apos;ll refund the unused part of that period on request.</li>
         <li><b>Unpaid accounts.</b> If a payment fails and isn&apos;t fixed within 14 days, we may move your account back to the free plan.</li>
-        <li><b>Insights and reports.</b> Benchmarks, owner demand figures and suburb reports are estimates based on activity on our site and third-party data (data source: AirROI). They&apos;re for your own business use. Don&apos;t publish, resell or pass them on, except that you can share them within your business and with your own clients if you name CoHostCompare and AirROI as the sources. Other managers&apos; individual quotes are never shown.</li>
+        <li><b>Insights and reports.</b> Benchmarks, owner demand figures and regional reports are estimates based on activity on our site and third-party data (data source: AirROI). They&apos;re for your own business use. Don&apos;t publish, resell or pass them on, except that you can share them within your business and with your own clients if you name CoHostCompare and AirROI as the sources. Other managers&apos; individual quotes are never shown.</li>
         <li><b>SMS alerts.</b> If you turn on text alerts, we&apos;ll text the mobile you give us about quote requests and accepted quotes only. You can turn them off at any time. Delivery depends on phone networks, so check your dashboard or email too.</li>
         <li><b>API and integrations (Enterprise).</b> Keep your API keys secure and use the API only for your own business. Owner information you receive through the API or integrations is covered by the same rules as in section 5, including privacy law. We may set usage limits, and we may suspend API access if it&apos;s misused or puts the site at risk.</li>
       </ul>

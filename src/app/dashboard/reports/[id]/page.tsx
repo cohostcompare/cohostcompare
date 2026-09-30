@@ -8,7 +8,7 @@ import { reportsFor, type ReportData } from '@/lib/reports';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import PrintButton from './PrintButton';
 
-export const metadata: Metadata = { title: 'Suburb report', robots: { index: false } };
+export const metadata: Metadata = { title: 'Regional report', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 export default async function Report({ params }: { params: Promise<{ id: string }> }) {

@@ -2,14 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ProInterest from '@/app/dashboard/ProInterest';
-import { areas } from '@/lib/areas';
 import { myManagers } from '@/lib/managers';
 import { planName, PRO_FOLLOW_LIMIT, PRO_PRICE } from '@/lib/pro';
-import { periodLabel, reportsFor } from '@/lib/reports';
+import { allRegions, periodLabel, reportsFor } from '@/lib/reports';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import { setFollow } from './actions';
 
-export const metadata: Metadata = { title: 'Suburb reports', robots: { index: false } };
+export const metadata: Metadata = { title: 'Regional reports', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 export default async function Reports() {
@@ -19,15 +18,15 @@ export default async function Reports() {
   if (!managers.length) redirect('/dashboard');
   const { data: prefs } = await adminClient().from('managers').select('id, report_follow').in('id', managers.map((m) => m.id)); // needs 014
   const follows = new Map((prefs || []).map((p) => [p.id, (p.report_follow as string[]) || []]));
-  const allAreas = await areas();
+  const allAreas = (await allRegions()).map((r) => ({ slug: r.slug, label: r.label }));
 
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
       <Link href="/dashboard" className="hint">← Dashboard</Link>
       <div>
-        <span className="label">Suburb reports</span>
-        <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Market reports for your areas</h1>
-        <p className="hint" style={{ margin: '4px 0 0' }}>New reports come out at the start of each quarter, and every past report stays here.</p>
+        <span className="label">Regional reports</span>
+        <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Market reports for your regions</h1>
+        <p className="hint" style={{ margin: '4px 0 0' }}>New reports come out at the start of each quarter, with a breakdown by suburb. Every past report stays here.</p>
       </div>
       {await Promise.all(managers.map(async (m) => {
         const follow = follows.get(m.id) || [];
@@ -41,13 +40,13 @@ export default async function Reports() {
             {managers.length > 1 && <h2 style={{ fontSize: 22, margin: 0 }}>{m.name} <span className="hint" style={{ fontSize: 14 }}>{planName(plan)}</span></h2>}
             {!paid && (
               <div className="panel" style={{ display: 'grid', gap: 8, borderColor: 'var(--brand)' }}>
-                <b>Suburb reports are part of Pro ({PRO_PRICE})</b>
-                <span className="hint">Each report covers nightly rates and revenue by bedrooms, seasonality, how busy the market is, how manager fees compare and how many owners are asking for quotes. Here&apos;s what&apos;s ready for {m.name}&apos;s areas:</span>
+                <b>Regional reports are part of Pro ({PRO_PRICE})</b>
+                <span className="hint">Each report covers nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and how many owners are asking for quotes. Here&apos;s what&apos;s ready for {m.name}&apos;s regions:</span>
                 <ProInterest managerId={m.id} />
               </div>
             )}
             {!rows.length ? (
-              <p className="panel" style={{ margin: 0 }}>No reports for your areas yet. Reports cover areas where you run homes that we track{plan === 'pro' ? ', plus any areas you follow below' : ''}. The next ones come out at the start of the quarter.</p>
+              <p className="panel" style={{ margin: 0 }}>No reports for your regions yet. Reports cover regions where you run homes that we track{plan === 'pro' ? ', plus any regions you follow below' : ''}. The next ones come out at the start of the quarter.</p>
             ) : (
               <div className="panel report-list">
                 {[...byArea.entries()].map(([slug, reps]) => (
@@ -62,14 +61,14 @@ export default async function Reports() {
             )}
             {plan === 'pro' && (
               <details className="panel">
-                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Follow more areas ({follow.length} of {PRO_FOLLOW_LIMIT})</summary>
+                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Follow more regions ({follow.length} of {PRO_FOLLOW_LIMIT})</summary>
                 <form action={setFollow} style={{ display: 'grid', gap: 10, marginTop: 10 }}>
                   <input type="hidden" name="slug" value={m.slug} />
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 6 }}>
                     {allAreas.map((a) => <label key={a.slug} style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 14 }}><input type="checkbox" name="area" value={a.slug} defaultChecked={follow.includes(a.slug)} />{a.label}</label>)}
                   </div>
-                  <span className="hint">Pick up to {PRO_FOLLOW_LIMIT}. Enterprise includes every area.</span>
-                  <div><button className="btn primary small">Save areas</button></div>
+                  <span className="hint">Pick up to {PRO_FOLLOW_LIMIT}. Enterprise includes every region.</span>
+                  <div><button className="btn primary small">Save regions</button></div>
                 </form>
               </details>
             )}

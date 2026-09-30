@@ -29,12 +29,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       return new NextResponse(JSON.stringify(r), { headers });
     }
     if (job === 'report-preview') {
-      const { areas } = await import('@/lib/areas');
-      const { buildReport } = await import('@/lib/reports');
-      const a = (await areas()).find((x) => x.slug === p.get('area'));
-      if (!a) return new NextResponse('no such area', { headers });
+      const { allRegions, buildReport } = await import('@/lib/reports');
+      const regions = await allRegions();
+      const a = regions.find((x) => x.slug === p.get('region'));
+      if (!a) return new NextResponse(`regions: ${regions.map((r) => `${r.slug} (${r.areas.length})`).join(', ')}`, { headers });
       const { data } = await buildReport(a);
-      return new NextResponse(`homes ${data.market.homes} | nightly ${data.market.nightly} | revenue ${data.market.revenue} | occ ${data.market.occupancy} | seasonality ${data.seasonality ? data.seasonality.map((m) => `${m.month}:${m.occupancy?.toFixed(2)}/${m.nightly}`).join(' ') : 'none'} | managers ${data.managers.count} fee ${data.managers.feeMedian}`, { headers });
+      return new NextResponse(`homes ${data.market.homes} | nightly ${data.market.nightly} | revenue ${data.market.revenue} | occ ${data.market.occupancy} | seasonality ${data.seasonality ? data.seasonality.map((m) => `${m.month}:${m.occupancy?.toFixed(2)}/${m.nightly}`).join(' ') : 'none'} | managers ${data.managers.count} fee ${data.managers.feeMedian} | suburbs ${(data.suburbs || []).map((x) => `${x.label}:${x.homes}`).join(', ')}`, { headers });
     }
     if (job === 'seed') {
       const r = await seedManagers();

@@ -42,7 +42,7 @@ export default function HowItWorks() {
           <p>Searching, comparing, requesting quotes and messaging managers are all free for owners, with no card needed and no obligation to accept a quote.</p>
         </div>
       </section>
-      <p className="hint" style={{ margin: 0 }}>How we stay free: owners never pay. Managers can pay for optional tools for their own business, and we may show clearly labelled partner offers, such as insurance or photography, on separate pages. None of it changes a rating, where a manager appears or how quotes are compared.</p>
+      <p className="hint" style={{ margin: 0 }}>How we stay free: owners never pay. Managers can pay for optional tools for their own business or a small fee when they win a client, and we may show clearly labelled partner offers, such as insurance or photography, on separate pages. None of it changes a rating, where a manager appears or how quotes are compared.</p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <Link className="btn primary" href="/">Compare managers near you</Link>
         <Link className="btn secondary" href="/rules">Check the rules in your state</Link>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
+import { setFeeStatus, setFlagStatus } from './actions';
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,10 @@ export default async function Admin() {
     db.from('error_events').select('sig, route, message, count, last_seen_at').order('last_seen_at', { ascending: false }).limit(10),
     db.from('inbound_emails').select('email_id, from_email, subject, outcome, created_at').order('created_at', { ascending: false }).limit(10),
   ]);
+  const [{ data: fees }, { data: flags }] = await Promise.all([
+    db.from('success_fees').select('id, amount, status, created_at, managers(name)').in('status', ['owed', 'invoiced']).order('created_at', { ascending: false }).limit(50), // needs 015
+    db.from('account_flags').select('id, user_id, reason, created_at, managers(name)').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
+  ]);
   const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
   const tiles: [string, number, string?][] = [
     ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'], ['Manager outreach', -1, '/admin/outreach'],
@@ -48,6 +53,30 @@ export default async function Admin() {
           <div key={r.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8, display: 'grid', gap: 2 }}>
             <span><b>{r.owner_name}</b> <span className="hint">{r.owner_email} · {new Date(r.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</span></span>
             <span className="hint">{r.address} → {(r.quote_request_managers || []).map((m: { manager_name: string }) => m.manager_name).join(', ')}</span>
+          </div>
+        ))}
+      </section>
+      <section className="panel" style={{ display: 'grid', gap: 8 }}>
+        <b>Success fees to invoice (Free plan, A$ ex GST)</b>
+        {!fees?.length ? <span className="hint">None owed.</span> : fees.map((f) => (
+          <div key={f.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span><b>{(f.managers as unknown as { name: string } | null)?.name}</b> · ${f.amount} · {f.status} <span className="hint">{when(f.created_at)}</span></span>
+            {['invoiced', 'paid', 'waived'].filter((x) => x !== f.status).map((x) => (
+              <form key={x} action={setFeeStatus}><input type="hidden" name="id" value={f.id} /><input type="hidden" name="status" value={x} /><button className="linkish">Mark {x}</button></form>
+            ))}
+          </div>
+        ))}
+      </section>
+      <section className="panel" style={{ display: 'grid', gap: 8 }}>
+        <b>Possible shared logins (Free plan)</b>
+        {!flags?.length ? <span className="hint">None flagged.</span> : flags.map((f) => (
+          <div key={f.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8, display: 'grid', gap: 4 }}>
+            <span><b>{(f.managers as unknown as { name: string } | null)?.name}</b> <span className="hint">{when(f.created_at)}</span></span>
+            <span className="hint">{f.reason}</span>
+            <span style={{ display: 'flex', gap: 12 }}>
+              <form action={setFlagStatus}><input type="hidden" name="id" value={f.id} /><input type="hidden" name="status" value="ok" /><button className="linkish">Looks fine</button></form>
+              <form action={setFlagStatus}><input type="hidden" name="id" value={f.id} /><input type="hidden" name="status" value="actioned" /><button className="linkish">Contacted them</button></form>
+            </span>
           </div>
         ))}
       </section>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { myManagers, requireThread } from '@/lib/managers';
+import { planOf, plansFor, SUCCESS_FEE_TEXT } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 import { declineRequest } from '../actions';
 import { ManagerComposer, QuoteForm } from './Forms';
@@ -21,6 +22,8 @@ export default async function ManagerThread({ params }: { params: P }) {
   const m = (await myManagers(user.id)).find((x) => x.slug === t.manager_slug)!;
   const g = (m.gated || {}) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   const defaults = { feePct: m.fee_min ?? undefined, gst: String(m.fee_note || '').includes('GST'), setupFee: g.setupFee ?? undefined, minTermMonths: g.minTermMonths ?? undefined, noticeDays: g.noticeDays ?? undefined, cleaning: g.cleaningPassedOn === true ? 'guests' : g.cleaningPassedOn === false ? 'owner' : undefined, linenIncluded: g.linenIncluded, included: g.inclusions || [] };
+  const plan = planOf((await plansFor([m.id])).get(m.id));
+  const { data: tpl } = await db.from('managers').select('quote_templates').eq('id', m.id).maybeSingle(); // needs 015
   const accepted = t.status === 'accepted';
   const closed = ['accepted', 'declined', 'withdrawn'].includes(t.status);
   const first = String(req.owner_name || 'Owner').split(' ')[0];
@@ -54,7 +57,7 @@ export default async function ManagerThread({ params }: { params: P }) {
       <section className="panel" style={{ display: 'grid', gap: 12 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>{t.quote ? 'Your quote' : 'Send your quote'}</h2>
         {closed && !accepted && <p className="hint" style={{ margin: 0 }}>This request is closed.</p>}
-        <QuoteForm thread={t.id} q={t.quote} defaults={defaults} locked={closed} />
+        <QuoteForm thread={t.id} q={t.quote} defaults={defaults} locked={closed} plan={plan} templates={(tpl?.quote_templates as { name: string; q: unknown }[]) || []} feeText={SUCCESS_FEE_TEXT} />
       </section>
 
       <section className="panel" style={{ display: 'grid', gap: 14 }} aria-label="Messages">

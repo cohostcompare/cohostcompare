@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
 import { eventTotals } from '@/lib/events';
-import { planName, planOf, plansFor, PRO_FEATURES } from '@/lib/pro';
+import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, SUCCESS_FEE_TEXT } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ProInterest from './ProInterest';
 
@@ -22,6 +22,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   if (!user) redirect('/signin?next=/dashboard');
   const sp = await searchParams;
   const managers = await myManagers(user.id);
+  if (managers.length) { const { recordActivity } = await import('@/lib/activity'); await recordActivity(user.id); }
 
   if (!managers.length) {
     return (
@@ -80,6 +81,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/insights`}>Insights</Link>
                 <Link className="btn secondary" href="/dashboard/reports">Reports</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
+                <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
               </div>
             </div>
             <div className="dash-stats">
@@ -93,7 +95,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               const fresh = (freshReports || []).filter((r) => (r.manager_ids as string[]).includes(m.id));
               return fresh.length ? (
                 <Link href="/dashboard/reports" className="panel" style={{ display: 'block', background: 'var(--tint)', color: 'inherit', textDecoration: 'none' }}>
-                  <b>New suburb report{fresh.length > 1 ? 's' : ''}:</b> {fresh.slice(0, 3).map((r) => r.area_label).join(', ')}{fresh.length > 3 ? ` and ${fresh.length - 3} more` : ''} →
+                  <b>New regional report{fresh.length > 1 ? 's' : ''}:</b> {fresh.slice(0, 3).map((r) => r.area_label).join(', ')}{fresh.length > 3 ? ` and ${fresh.length - 3} more` : ''} →
                 </Link>
               ) : null;
             })()}
@@ -102,14 +104,14 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               const plan = planOf(p);
               if (plan !== 'free') return (
                 <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
-                  <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, suburb reports, SMS alerts and more photos.</span>
+                  <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, regional reports, SMS alerts and more photos.</span>
                   <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
                 </div>
               );
               return (
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
-                  <span className="hint">Your profile, quote requests and replies stay free. Pro adds tools for you, and never changes where you appear or what owners see: {PRO_FEATURES.map((f) => f.title.toLowerCase()).join(', ')}.</span>
+                  <span className="hint">Your profile, quote requests and replies stay free, with a {SUCCESS_FEE_TEXT} success fee only when an owner accepts your quote. Pro ({PRO_PRICE}) has no success fees and adds {PRO_FEATURES.filter((f) => f.title !== 'No success fees').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}><ProInterest managerId={m.id} /><Link href="/managers#pricing">See plans</Link></div>
                 </div>
               );

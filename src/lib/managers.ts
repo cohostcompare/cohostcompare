@@ -30,6 +30,8 @@ export async function requireManager(slug: string, next: string) {
   const mine = await myManagers(user.id);
   const m = mine.find((x) => x.slug === slug);
   if (!m) redirect('/dashboard');
+  const { recordActivity } = await import('@/lib/activity');
+  await recordActivity(user.id);
   return { user, manager: m };
 }
 

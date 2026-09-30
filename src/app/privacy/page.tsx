@@ -20,6 +20,7 @@ export default function Privacy() {
         <li><b>Paid plans (managers):</b> billing contact and invoice details. Card details are handled by our payment provider, not stored by us.</li>
         <li><b>Managers:</b> the name, email and phone of people who claim or run a manager profile, anything they add to it (fees, services, logo and photos), and their ABN, which we check on the public Australian Business Register. We also record business contact emails that a manager publishes on its own website, to invite it to claim its profile. Every such email identifies us and has an unsubscribe link, which we honour straight away.</li>
         <li><b>Questions about the rules:</b> the questions you type into our rules tool. Don&apos;t include personal details in them.</li>
+        <li><b>Manager sign-ins:</b> for manager accounts, the day, device type, approximate city (from your IP address) and a scrambled version of your IP address, to keep accounts secure and check that logins aren&apos;t shared. We delete these after 12 months.</li>
         <li><b>Searches:</b> we count searches by postcode (with no address or person attached) to show managers how many owners search in their areas.</li>
         <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We don&apos;t use advertising trackers.</li>
         <li><b>Waitlist:</b> if you joined our waitlist, the details you gave then.</li>
