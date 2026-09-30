@@ -1,4 +1,4 @@
-/* Stock photos from Unsplash (free for commercial use under the Unsplash License; credit given as a courtesy).
+/* Stock photos from Unsplash (free for commercial use under the Unsplash License; no credit required).
    Served from Unsplash's image CDN at the size each layout needs. No landmarks with image-use restrictions. */
 export const PHOTOS = {
   bondi: { id: 'photo-1689834680023-34882df43a7c', alt: 'Aerial view of Bondi Beach in Sydney, with homes and apartments along the shore', by: 'Rilla Paris' },
@@ -13,7 +13,7 @@ export const PHOTOS = {
 export type PhotoName = keyof typeof PHOTOS;
 const src = (id: string, w: number) => `https://images.unsplash.com/${id}?auto=format&fit=crop&q=70&w=${w}`;
 
-export default function Photo({ name, ratio = '4 / 3', sizes = '(max-width: 880px) 100vw, 50vw', eager, credit = true, style }: {
+export default function Photo({ name, ratio = '4 / 3', sizes = '(max-width: 880px) 100vw, 50vw', eager, credit = false, style }: {
   name: PhotoName; ratio?: string; sizes?: string; eager?: boolean; credit?: boolean; style?: React.CSSProperties;
 }) {
   const p = PHOTOS[name];

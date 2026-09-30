@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import AccountMenu from '@/components/AccountMenu';
 import SiteMenu, { NavLink } from '@/components/SiteMenu';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -15,6 +16,15 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser().catch(() => null);
   const isManager = user ? Boolean((await adminClient().from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id).then((r) => r.count, () => 0))) : false;
+  let unread = 0;
+  if (user) {
+    try {
+      const db = adminClient();
+      const { data: ts } = await db.from('quote_request_managers').select('id, quote_requests!inner(owner_id)').eq('quote_requests.owner_id', user.id);
+      const ids = (ts || []).map((t) => t.id);
+      if (ids.length) unread = (await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids).eq('read_by_owner', false).neq('sender', 'owner')).count ?? 0;
+    } catch { /* badge is optional */ }
+  }
   return (
     <html lang="en-AU">
       <head>
@@ -34,14 +44,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <NavLink href="/how-it-works">How it works</NavLink>
                   <NavLink href="/why-us">Why use us</NavLink>
                   <NavLink href="/rules">Rules by state</NavLink>
-                  {user ? <Link className="btn secondary small" href="/account">My inbox</Link> : <Link className="btn primary small" href="/signin">Sign in or sign up</Link>}
+                  {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <Link className="btn primary small" href="/signin">Sign in or sign up free</Link>}
                 </div>
                 <div className="menu-group managers">
                   <span className="menu-label">For managers</span>
                   <NavLink href="/managers" exact><span className="wide-only">For managers</span><span className="narrow-only">How it works for managers</span></NavLink>
                   <Link className="btn secondary small" href="/dashboard">{isManager ? 'Manager dashboard' : 'Manager portal'}</Link>
-                  {isAdminEmail(user?.email) && <Link className="admin-link" href="/admin">Admin</Link>}
                 </div>
+                {isAdminEmail(user?.email) && <div className="menu-group admin"><Link className="admin-link" href="/admin">Admin</Link></div>}
             </SiteMenu>
           </header>
         </div>

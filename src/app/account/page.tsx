@@ -1,22 +1,17 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import QuoteTable, { type QuoteCol } from '@/components/QuoteTable';
 import { managersNear } from '@/lib/data';
 import type { Quote } from '@/lib/quotes';
 import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
 
-export const metadata: Metadata = { title: 'My account', robots: { index: false } };
+export const metadata: Metadata = { title: 'Owner portal', robots: { index: false } };
 
 type SP = Promise<{ sent?: string }>;
 
 const STATUS: Record<string, string> = { sent: 'Waiting for a reply', viewed: 'Viewed by the manager', quoted: 'Quote received, ready to compare', accepted: 'Accepted', declined: 'Declined', withdrawn: 'Withdrawn' };
 
-async function signOut() {
-  'use server';
-  const s = await userClient();
-  await s.auth.signOut();
-  redirect('/');
-}
 
 export default async function Account({ searchParams }: { searchParams: SP }) {
   const user = await currentUser();
@@ -49,11 +44,11 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
     <main style={{ maxWidth: 820, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
         <div>
+          <span className="label" style={{ color: 'var(--brand)' }}>Owner portal</span>
           <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Inbox</h1>
-          <span className="hint">Each quote request is grouped by property, with a conversation per manager. </span>
-          <span className="hint">{user.email}</span>
+          <span className="hint">Your quote requests, grouped by property, with quotes and a conversation for each manager.</span>
         </div>
-        <form action={signOut}><button className="btn secondary" type="submit">Sign out</button></form>
+        <Link className="btn secondary" href="/">New search</Link>
       </div>
       {sp.sent && <div className="panel" style={{ background: 'var(--tint)' }}><b>Request sent to {sp.sent} manager{sp.sent === '1' ? '' : 's'}.</b> We&apos;ve emailed you a copy. Open a manager below to message them; quotes and replies appear here.</div>}
       {!requests?.length ? (

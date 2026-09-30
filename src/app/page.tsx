@@ -21,14 +21,35 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="band">
-        <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 24px' }}>How it works</h2>
-        <ol style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 24, paddingLeft: 20, margin: 0 }}>
-          <li><b>Enter your address.</b><br /><span style={{ color: 'var(--muted)' }}>See every manager who covers it, plus how each performs near you.</span></li>
-          <li><b>Compare side by side.</b><br /><span style={{ color: 'var(--muted)' }}>Fees, properties managed, platforms and verified guest ratings.</span></li>
-          <li><b>Request quotes in one go.</b><br /><span style={{ color: 'var(--muted)' }}>Describe your property once and get comparable quotes back from up to five managers.</span></li>
+      <section className="steps" aria-labelledby="how">
+        <div className="steps-head">
+          <span className="label">How it works</span>
+          <h2 id="how">Three steps. Up to five quotes. Zero sales calls.</h2>
+        </div>
+        <ol>
+          <li>
+            <span className="num">01</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <h3>Search</h3>
+            <p>Type your address. See every manager running homes near you, not just the ones who advertise.</p>
+          </li>
+          <li>
+            <span className="num">02</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+            <h3>Compare</h3>
+            <p>Fees, guest ratings, homes nearby and platforms, side by side, from the same data for everyone.</p>
+          </li>
+          <li>
+            <span className="num">03</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+            <h3>Choose</h3>
+            <p>Describe your property once. Get quotes back in one format, ask questions, and accept the best fit.</p>
+          </li>
         </ol>
-        <p style={{ margin: '20px 0 0' }}><Link href="/how-it-works">More on how it works →</Link></p>
+        <div className="steps-foot">
+          <span><b>$0</b> for owners, always</span>
+          <Link className="btn secondary" href="/how-it-works">See the details →</Link>
+        </div>
       </section>
 
       <section className="band">

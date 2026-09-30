@@ -66,6 +66,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
               <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
             </div>
+            <p className="hint" style={{ margin: 0 }}>Would you rather not be listed? Email <a href={`mailto:hello@cohostcompare.com?subject=${encodeURIComponent(`Remove ${m.name}`)}`}>hello@cohostcompare.com</a> from your business email and we&apos;ll remove this page.</p>
           </div>
         )}
 
