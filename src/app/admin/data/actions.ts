@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
 import { runSweep, seedManagers } from '@/lib/jobs/data';
+import { HOTSPOTS } from '@/lib/jobs/areas';
 import { adminClient } from '@/lib/supabase/server';
 
 const back = (msg: string, kind: 'done' | 'error' = 'done') => redirect(`/admin/data?${kind}=${encodeURIComponent(msg)}`);
@@ -30,6 +31,30 @@ export async function addPresetAreas() {
   if (error) back(error.message, 'error');
   revalidatePath('/admin/data');
   back(`Added up to ${PRESET.length} Sydney and Melbourne areas.`);
+}
+
+export async function addHotspots() {
+  await requireAdmin('/admin/data');
+  const { error } = await adminClient().from('sweep_cells').upsert(HOTSPOTS.map(([id, label, lat, lng, r]) => ({ id, label, lat, lng, radius_miles: r ?? 2 })), { onConflict: 'id', ignoreDuplicates: true });
+  if (error) back(error.message, 'error');
+  revalidatePath('/admin/data');
+  back(`Added up to ${HOTSPOTS.length} NSW and Victorian holiday areas.`);
+}
+
+/** Works through unfinished areas until about 50 seconds pass or the budget runs out. */
+export async function sweepMany() {
+  await requireAdmin('/admin/data');
+  const started = Date.now();
+  let calls = 0, stored = 0, areas = 0; let note = '';
+  try {
+    while (Date.now() - started < 45000) {
+      const r = await runSweep(undefined, 10, 50000 - (Date.now() - started));
+      if ('message' in r) { note = String(r.message); break; }
+      calls += r.calls; stored += r.stored; areas++;
+    }
+  } catch (e) { note = String((e as Error).message); }
+  revalidatePath('/admin/data');
+  back(`Fetched ${stored} listings across ${areas} area${areas === 1 ? '' : 's'} with ${calls} calls (US$${(calls * 0.5).toFixed(2)}). ${note || 'Click again to continue.'}`);
 }
 
 export async function addArea(form: FormData) {

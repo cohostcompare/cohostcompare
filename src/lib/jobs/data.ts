@@ -25,14 +25,33 @@ export function listingRow(l: Any) {
 export const AIRROI_CALL_USD = 0.5;
 
 /** Pages through AirROI for one sweep area. Costs AIRROI_CALL_USD per call. Disabled unless AIRROI_SWEEP_ENABLED=1. */
+/** Spend so far against AIRROI_BUDGET_USD. The tally starts when a budget amount is first used, so a new amount starts fresh. */
+export async function sweepBudget() {
+  const budget = Number(process.env.AIRROI_BUDGET_USD || 0);
+  const db = adminClient();
+  const { data: cells } = await db.from('sweep_cells').select('calls_used');
+  const total = (cells || []).reduce((s, c) => s + (c.calls_used || 0), 0);
+  if (!budget) return { budget: 0, spent: 0, left: 0, total };
+  const key = `budget:${budget}`;
+  const { data: row } = await db.from('market_cache').select('data').eq('key', key).maybeSingle();
+  let baseline = (row?.data as { baselineCalls?: number } | null)?.baselineCalls;
+  if (baseline == null) { baseline = total; await db.from('market_cache').upsert({ key, data: { baselineCalls: total, startedAt: new Date().toISOString() } }); }
+  const spent = (total - baseline) * AIRROI_CALL_USD;
+  return { budget, spent, left: Math.max(0, budget - spent), total };
+}
+
 export async function runSweep(cellId?: string, maxCalls = 20, budgetMs = 45000) {
   if (process.env.AIRROI_SWEEP_ENABLED !== '1') throw new Error('Fetching is switched off to protect your AirROI credit. Ask Claude before switching it back on.');
+  const b = await sweepBudget();
+  const affordable = Math.floor(b.left / AIRROI_CALL_USD);
+  if (affordable <= 0) throw new Error(b.budget ? `Budget of US$${b.budget} used up (US$${b.spent.toFixed(2)} spent).` : 'Set AIRROI_BUDGET_USD in Vercel first.');
+  maxCalls = Math.min(maxCalls, affordable);
   const db = adminClient();
   const started = Date.now();
   const q = db.from('sweep_cells').select('*');
   const { data: cells } = cellId ? await q.eq('id', cellId).limit(1) : await q.eq('done', false).order('id').limit(1);
   const cell = cells?.[0];
-  if (!cell) return { message: 'Every sweep area is finished.' };
+  if (!cell) return { message: 'Every sweep area is finished.', finished: true };
   let offset = cell.next_offset as number, calls = 0, stored = 0, done = cell.done as boolean;
   // Only professionally managed homes (that's who we profile), and at most AREA_CAP calls per area.
   const AREA_CAP = Number(process.env.AIRROI_AREA_CAP || 10);

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { newBusinesses } from '@/lib/jobs/data';
+import { newBusinesses, sweepBudget } from '@/lib/jobs/data';
 import { adminClient } from '@/lib/supabase/server';
-import { addArea, addPresetAreas, runSeed, sweepNext } from './actions';
+import { addArea, addHotspots, addPresetAreas, runSeed, sweepMany, sweepNext } from './actions';
 
 export const metadata: Metadata = { title: 'Data · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,8 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
   ]);
   const calls = (cells || []).reduce((s, c) => s + (c.calls_used || 0), 0);
   const open = (cells || []).filter((c) => !c.done).length;
+  const budget = await sweepBudget().catch(() => null);
+  const enabled = process.env.AIRROI_SWEEP_ENABLED === '1';
   const found = sp.find ? await newBusinesses(6).catch(() => null) : null;
 
   return (
@@ -35,9 +37,10 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <b>Fetch listings</b>
-        <p className="hint" style={{ margin: 0 }}>Fetching is switched off. AirROI charges US$0.50 per call (10 listings each), so a full sweep would cost thousands. Claude will switch it back on only for a planned, budgeted run (4 calls = US$2 per click).</p>
+        <p className="hint" style={{ margin: 0 }}>AirROI charges US$0.50 per call (10 listings). We fetch only professionally managed homes, at most 10 calls (US$5) per area. {enabled ? (budget?.budget ? <>Budget <b>US${budget.budget}</b>: <b>US${budget.spent.toFixed(2)}</b> spent, <b>US${budget.left.toFixed(2)}</b> left.</> : 'Set AIRROI_BUDGET_USD in Vercel to start.') : 'Fetching is switched off (AIRROI_SWEEP_ENABLED isn’t 1).'}</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <form action={sweepNext}><button className="btn primary" type="submit" disabled={process.env.AIRROI_SWEEP_ENABLED !== '1'}>Fetch the next area (US$2)</button></form>
+          <form action={sweepMany}><button className="btn primary" type="submit" disabled={!enabled || !budget?.left}>Fetch remaining areas (keeps within budget)</button></form>
+          <form action={addHotspots}><button className="btn secondary" type="submit">Add NSW and VIC holiday areas</button></form>
           <form action={addPresetAreas}><button className="btn secondary" type="submit">Add all Sydney and Melbourne areas</button></form>
           <form action={runSeed}><button className="btn secondary" type="submit">Update researched profiles</button></form>
           <Link className="btn secondary" href="/admin/data?find=1">Find businesses without a profile</Link>

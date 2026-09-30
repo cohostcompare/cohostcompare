@@ -23,16 +23,13 @@ export default function EarningsTool() {
   return (
     <div style={{ display: 'grid', gap: 18 }}>
       <div className="panel" style={{ display: 'grid', gap: 14 }}>
+        <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14, maxWidth: 220 }}>Bedrooms
+          <select className="field" value={beds} onChange={(e) => { const b = Number(e.target.value); setBeds(b); if (place) run(place, b); }}>
+            <option value={0}>Studio</option>{[1, 2, 3, 4].map((b) => <option key={b} value={b}>{b} bedroom{b > 1 ? 's' : ''}</option>)}<option value={5}>5 or more</option>
+          </select>
+        </label>
         <label className="label" htmlFor="earn-addr">Property address or suburb</label>
-        <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} />
-        <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}>
-          <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 }}>Bedrooms
-            <select className="field" value={beds} onChange={(e) => { const b = Number(e.target.value); setBeds(b); if (place) run(place, b); }} style={{ minWidth: 160 }}>
-              <option value={0}>Studio</option>{[1, 2, 3, 4].map((b) => <option key={b} value={b}>{b} bedroom{b > 1 ? 's' : ''}</option>)}<option value={5}>5 or more</option>
-            </select>
-          </label>
-          <button className="btn primary" type="button" onClick={() => run(place, beds)} disabled={pending}>{pending ? 'Working it out…' : 'Estimate earnings'}</button>
-        </div>
+        <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} buttonLabel={pending ? 'Working it out…' : 'Estimate earnings'} />
       </div>
 
       {res && 'error' in res && <p role="alert" className="panel" style={{ margin: 0, color: 'var(--signal)' }}>{res.error}</p>}
