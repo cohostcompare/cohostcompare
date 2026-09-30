@@ -26,9 +26,9 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
   useEffect(() => {
     let live = true;
     setCoveredSlugs(null);
-    if (located) checkCoverage(addr.lat!, addr.lng!, managers.map((m) => m.slug)).then((c) => { if (live) setCoveredSlugs(c); });
+    if (located) checkCoverage(addr.lat!, addr.lng!, managers.map((m) => m.slug), addr.postcode).then((c) => { if (live) setCoveredSlugs(c); });
     return () => { live = false; };
-  }, [addr.lat, addr.lng, located, managers]);
+  }, [addr.lat, addr.lng, addr.postcode, located, managers]);
   const checking = located && coveredSlugs === null;
   const uncovered = located && coveredSlugs ? active.filter((m) => !coveredSlugs.includes(m.slug)) : [];
   const covered = located && coveredSlugs ? active.filter((m) => coveredSlugs.includes(m.slug)) : [];

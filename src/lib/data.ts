@@ -93,9 +93,20 @@ export async function publicManager(slug: string): Promise<PublicManager | null>
 }
 
 /** Which of these managers cover a point (homes within COVER_KM). */
-export async function coveringSlugs(lat: number, lng: number, slugs: string[]): Promise<Set<string>> {
-  const near = await managersNear(lat, lng);
+export async function coveringSlugs(lat: number, lng: number, slugs: string[], postcode?: string): Promise<Set<string>> {
+  const near = await managersForArea(lat, lng, postcode);
   return new Set(near.filter((m) => slugs.includes(m.slug)).map((m) => m.slug));
+}
+
+/**
+ * Managers covering a point: those running homes nearby (from listing data), plus managers who declare the
+ * postcode as a service area (e.g. businesses found by web research, or a claimed manager's own areas).
+ */
+export async function managersForArea(lat: number, lng: number, postcode?: string): Promise<NearbyManager[]> {
+  const near = await managersNear(lat, lng);
+  if (!postcode || !/^\d{4}$/.test(postcode)) return near;
+  const declared = (await managersForPostcode(postcode)).filter((m) => !near.some((n) => n.slug === m.slug));
+  return [...near, ...declared];
 }
 
 /** Owner-only details. Call only after confirming the visitor is signed in. */

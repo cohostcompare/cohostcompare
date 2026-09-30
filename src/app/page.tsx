@@ -70,7 +70,7 @@ export default function Home() {
 
       <section className="ask-cta" aria-label="Ask about short-stay rules">
         <div>
-          <h2 style={{ fontSize: 'clamp(22px,3vw,28px)', margin: '0 0 4px' }}>Not sure what&apos;s allowed where you are?</h2>
+          <h2 style={{ fontSize: 'clamp(22px,3vw,28px)', margin: '0 0 4px' }}>What are the short-stay rules in your area?</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>Ask anything about registration, night caps, levies or strata rules, and get a plain-English answer with the official source.</p>
         </div>
         <form action="/rules" method="get">

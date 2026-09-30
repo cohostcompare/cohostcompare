@@ -34,12 +34,15 @@ export async function runSweep(cellId?: string, maxCalls = 20, budgetMs = 45000)
   const cell = cells?.[0];
   if (!cell) return { message: 'Every sweep area is finished.' };
   let offset = cell.next_offset as number, calls = 0, stored = 0, done = cell.done as boolean;
-  while (!done && calls < Math.min(maxCalls, 50) && Date.now() - started < budgetMs) {
+  // Only professionally managed homes (that's who we profile), and at most AREA_CAP calls per area.
+  const AREA_CAP = Number(process.env.AIRROI_AREA_CAP || 10);
+  if (cell.calls_used >= AREA_CAP) done = true;
+  while (!done && calls < Math.min(maxCalls, 50, AREA_CAP - cell.calls_used) && Date.now() - started < budgetMs) {
     const r = await fetch('https://api.airroi.com/listings/search/radius', {
       method: 'POST',
       headers: { 'x-api-key': (process.env.AIRROI_API_KEY || '').trim(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitude: cell.lat, longitude: cell.lng, radius_miles: Number(cell.radius_miles), currency: 'native',
-        filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: 10, offset } }),
+        filter: { room_type: { eq: 'entire_home' }, professional_management: { eq: true } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: 10, offset } }),
     });
     calls++;
     const data = await r.json();

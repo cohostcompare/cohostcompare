@@ -29,7 +29,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (!/^\d{4}$/.test(postcode)) return { error: "Enter your property's 4-digit postcode." };
   const lat = Number(form.get('lat')), lng = Number(form.get('lng'));
   if (!form.get('lat') || !form.get('lng') || !Number.isFinite(lat) || !Number.isFinite(lng)) return { error: 'Pick the property address from the suggestions so we can check which managers cover it.' };
-  const covering = await coveringSlugs(lat, lng, managers.map((m) => m.slug));
+  const covering = await coveringSlugs(lat, lng, managers.map((m) => m.slug), postcode);
   const notCovering = managers.filter((m) => !covering.has(m.slug));
   if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} run homes near this address. Remove them or search again for this address.` };
   if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
@@ -90,9 +90,14 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
   const { data: tRows } = await db.from('quote_request_managers').select('id, manager_slug').eq('request_id', req.id);
   const { notifyUnclaimedOfRequest } = await import('@/lib/outreach');
+  const noContact: string[] = [];
   for (const t of tRows || []) {
     const to = await memberEmails(t.manager_slug);
-    if (!to.length) { await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim()).catch(() => {}); continue; }
+    if (!to.length) {
+      const n = await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim()).catch(() => 0);
+      if (!n) noContact.push(managers.find((m) => m.slug === t.manager_slug)?.name || t.manager_slug);
+      continue;
+    }
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
@@ -104,7 +109,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   await sendEmail({
     to: 'hello@cohostcompare.com',
     subject: `New quote request: ${postcode}, ${managers.map((m) => m.name).join(', ')}`,
-    text: `Owner: ${name} <${user.email}>${row.owner_phone ? `, ${row.owner_phone}` : ''}\nManagers: ${managers.map((m) => `${m.name}${m.demo ? ' (DEMO)' : ''}`).join(', ')}\n\n${summary}\n\nRequest id: ${req.id}`,
+    text: `${noContact.length ? `ACTION: no contact email on file for ${noContact.join(', ')}, so they haven't been told. Add one at /admin/outreach and they'll be invited automatically.\n\n` : ''}Owner: ${name} <${user.email}>${row.owner_phone ? `, ${row.owner_phone}` : ''}\nManagers: ${managers.map((m) => `${m.name}${m.demo ? ' (DEMO)' : ''}`).join(', ')}\n\n${summary}\n\nRequest id: ${req.id}`,
     replyTo: user.email,
   });
 

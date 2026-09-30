@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import AddressSearch from '@/components/AddressSearch';
 import ResultsList from '@/components/ResultsList';
-import { COVER_KM, managersForPostcode, managersNear } from '@/lib/data';
+import { COVER_KM, managersForArea, managersForPostcode } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Managers near you', robots: { index: false } };
 
@@ -12,7 +12,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
   const postcode = /^\d{4}$/.test(sp.postcode || '') ? sp.postcode! : '';
   const lat = Number(sp.lat), lng = Number(sp.lng);
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng) && sp.lat && sp.lng;
-  const managers = hasPoint ? await managersNear(lat, lng) : postcode ? await managersForPostcode(postcode) : [];
+  const managers = hasPoint ? await managersForArea(lat, lng, postcode) : postcode ? await managersForPostcode(postcode) : [];
   const q = new URLSearchParams();
   if (postcode) q.set('postcode', postcode);
   for (const k of ['street', 'suburb', 'state', 'lat', 'lng'] as const) if (sp[k]) q.set(k, sp[k]!);

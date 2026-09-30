@@ -3,7 +3,7 @@ import { Analytics } from '@vercel/analytics/next';
 import Link from 'next/link';
 import './globals.css';
 import AccountMenu from '@/components/AccountMenu';
-import SiteMenu, { NavLink } from '@/components/SiteMenu';
+import SiteMenu, { NavLink, NavMore } from '@/components/SiteMenu';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -44,9 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteMenu>
                 <div className="menu-group owners">
                   <NavLink href="/" also={['/search', '/managers/']}>Compare managers</NavLink>
-                  <NavLink href="/how-it-works">How it works</NavLink>
-                  <NavLink href="/why-us">Why use us</NavLink>
-                  <NavLink href="/rules"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>Ask about rules</NavLink>
+                  <NavMore label="How it works" items={[{ href: '/how-it-works', label: 'How it works' }, { href: '/why-us', label: 'Why use us' }, { href: '/areas', label: 'Browse by area' }]} />
+                  <NavLink href="/earnings" highlight><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>What could I earn?</NavLink>
+                  <NavLink href="/rules"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" /><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" /><path d="M9 8h7M9 12h5" /></svg>Rules in my area</NavLink>
                   {user ? <AccountMenu email={user.email || ''} unread={unread} /> : <><NavLink href="/signin" exact>Sign in</NavLink><Link className="btn primary small" href="/signin?mode=signup">Join free</Link></>}
                 </div>
                 <div className="menu-group managers">
@@ -62,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare · ABN 52 679 120 059</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/rules">Ask about rules</Link> · <Link href="/earnings">Earnings estimate</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
             <span>Made in Sydney · hello@cohostcompare.com</span>
           </footer>
         </div>

@@ -19,7 +19,7 @@ export const unsubscribeUrl = (email: string, api = false) => `${BASE}${api ? '/
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 
 function footer(c: Ctx) {
-  return `\n\n—\nBen Deeley\nFounder, CoHostCompare\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. To stop these emails: ${unsubscribeUrl(c.email)}`;
+  return `\n\n—\nBen Deeley\nFounder, CoHostCompare\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
 }
 
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
@@ -107,10 +107,11 @@ export async function sendOutreachBatch(limit = DAILY_CAP) {
 }
 
 /** When an owner requests a quote from an unclaimed manager, tell that manager's outreach contacts straight away. */
-export async function notifyUnclaimedOfRequest(slug: string, where: string) {
+export async function notifyUnclaimedOfRequest(slug: string, where: string): Promise<number> {
   const db = adminClient();
   const { data: m } = await db.from('managers').select('id, name, claimed').eq('slug', slug).maybeSingle();
-  if (!m || m.claimed) return;
+  if (!m || m.claimed) return 0;
+  let sent = 0;
   const { data: contacts } = await db.from('outreach_contacts').select('*').eq('manager_id', m.id).in('status', ['active', 'finished', 'paused']);
   for (const ct of contacts || []) {
     if (await suppressed(ct.email)) continue;
@@ -122,7 +123,9 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string) {
       from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
       headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     });
+    sent++;
   }
+  return sent;
 }
 
 export async function unsubscribe(email: string) {

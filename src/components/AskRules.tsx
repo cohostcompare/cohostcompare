@@ -30,7 +30,7 @@ export default function AskRules({ initial = '' }: { initial?: string }) {
     <div className="ask" aria-label="Ask about short-stay rules">
       <form onSubmit={(e) => { e.preventDefault(); ask(q); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <label htmlFor="ask" className="sr-only">Your question</label>
-        <input id="ask" className="field" value={q} onChange={(e) => setQ(e.target.value)} maxLength={400} placeholder="e.g. Can I rent my Bondi apartment on Airbnb all year?" style={{ flex: '1 1 320px', background: 'var(--panel)', minHeight: 54, fontSize: 17 }} />
+        <input id="ask" className="field" value={q} onChange={(e) => setQ(e.target.value)} maxLength={400} placeholder="e.g. What are the Airbnb rules for my apartment in Bondi?" style={{ flex: '1 1 320px', background: 'var(--panel)', minHeight: 54, fontSize: 17 }} />
         <button className="btn primary" type="submit" disabled={busy} style={{ minHeight: 54, paddingInline: 24 }}>{busy ? 'Checking…' : 'Get an answer'}</button>
       </form>
       {!res && !busy && (

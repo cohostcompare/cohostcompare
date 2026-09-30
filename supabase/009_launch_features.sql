@@ -38,3 +38,6 @@ create table if not exists public.email_suppressions (
 );
 alter table public.email_suppressions enable row level security;
 revoke all on public.email_suppressions from anon, authenticated;
+
+-- Make the new tables visible to the website straight away
+notify pgrst, 'reload schema';

@@ -63,7 +63,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
 
         {!m.claimed && (
           <div className="claimbox">
-            <p style={{ margin: 0 }}>This profile is built from public information, including estimates from {m.name}&apos;s public listings, and is refreshed regularly.</p>
+            <p style={{ margin: 0 }}>This profile is built from public information, including estimates from {m.name}&apos;s public listings, and is refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link></p>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
               <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>

@@ -6,7 +6,7 @@ import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rule
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Ask about short-stay rules',
+  title: 'Short-term rental rules in your area',
   description: 'Plain-English guide to Airbnb and short-term rental rules in each Australian state: registration, night caps, levies and strata rules.',
 };
 
@@ -19,9 +19,9 @@ export default async function Rules({ searchParams }: { searchParams: SP }) {
       <section className="ask-hero">
         <Photo name="yarra" ratio="auto" eager sizes="(max-width: 880px) 100vw, 1000px" />
         <div className="ask-hero-body">
-          <span className="label">Short-stay rules, answered</span>
-          <h1>Ask anything about Airbnb and short-stay rules</h1>
-          <p>Registration, night caps, levies, strata bans and council permits, in any state. Get a plain-English answer in seconds, with the official source.</p>
+          <span className="label">Short-term rental rules guide</span>
+          <h1>What are the short-stay rules where your property is?</h1>
+          <p>Airbnb and short-term rental laws differ by state, council and building. Ask about your suburb or situation: registration, night caps, levies, strata bans or permits. You&apos;ll get a plain-English answer in seconds, with the official source.</p>
           <AskRules initial={(q || '').slice(0, 400)} />
         </div>
       </section>
