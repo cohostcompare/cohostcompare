@@ -5,7 +5,9 @@ import AreaMap from '@/components/AreaMap';
 import TrustBadges from '@/components/TrustBadges';
 import ProfileQuote from './ProfileQuote';
 import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
-import { currentUser } from '@/lib/supabase/server';
+import { bump } from '@/lib/events';
+import { isAdminEmail } from '@/lib/admin';
+import { adminClient, currentUser } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +30,9 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   if (!m) notFound();
   const sp = await searchParams;
   const user = await currentUser();
+  // Don't count the manager's own team or admins looking at the profile.
+  const own = user ? (await adminClient().from('manager_members').select('user_id', { count: 'exact', head: true }).eq('manager_id', m.id).eq('user_id', user.id)).count : 0;
+  if (!own && !isAdminEmail(user?.email)) await bump([m.id], 'view');
   const g = user ? await gatedDetails(m.slug) : null;
   const lat = Number(sp.lat), lng = Number(sp.lng);
   const near = user && sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? (await managersNear(lat, lng)).find((x) => x.slug === m.slug) : undefined;

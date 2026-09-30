@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
+import { eventTotals } from '@/lib/events';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Manager dashboard', robots: { index: false } };
@@ -40,6 +41,10 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
     .in('manager_slug', managers.map((m) => m.slug))
     .order('created_at', { ascending: false })
     .limit(200);
+  const events = await eventTotals(managers.map((m) => m.id));
+  const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
+  const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
+  const since = Date.now() - 30 * 86400e3;
 
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
@@ -47,7 +52,17 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
       {managers.map((m) => {
         const mine = (threads || []).filter((t) => t.manager_slug === m.slug);
         const open = mine.filter((t) => t.status === 'sent' || t.status === 'viewed').length;
-        const missing = [m.fee_min == null && 'fees', !m.services.length && 'services', !m.logo_url && 'logo', !m.photos.length && 'photos'].filter(Boolean) as string[];
+        const g = (m.gated || {}) as Record<string, unknown>;
+        const checks: [string, boolean][] = [
+          ['A short tagline', Boolean(m.tagline)], ['An about section (a few sentences)', (m.about || '').length >= 80],
+          ['Your management fee', m.fee_min != null], ['Minimum term and notice period', g.minTermMonths != null && g.noticeDays != null],
+          ['The services you offer', m.services.length > 0], ['Every platform you list on', (m.platforms || []).length > 1],
+          ['Your logo', Boolean(m.logo_url)], ['At least 3 photos of homes you manage', m.photos.length >= 3],
+          ['A phone number for owners who accept your quote', Boolean(m.contact_phone)], ['Your ABN, for the Verified business badge', verified.has(m.id)],
+        ];
+        const score = Math.round((checks.filter(([, ok]) => ok).length / checks.length) * 100);
+        const ev = events.get(m.id) || { view: 0, search: 0 };
+        const recent = (threads || []).filter((t) => t.manager_slug === m.slug && new Date(t.created_at).getTime() >= since).length;
         return (
           <section key={m.id} style={{ display: 'grid', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
@@ -60,9 +75,22 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
               </div>
             </div>
-            {missing.length > 0 && (
-              <div className="panel" style={{ borderColor: 'var(--signal)' }}>
-                Your profile is missing <b>{missing.join(', ')}</b>. Profiles with fees and photos get more quote requests. <Link href={`/dashboard/${m.slug}/edit`}>Add them now</Link>
+            <div className="dash-stats">
+              <div className="panel"><b>{ev.search.toLocaleString('en-AU')}</b><span>times you appeared in owner searches</span></div>
+              <div className="panel"><b>{ev.view.toLocaleString('en-AU')}</b><span>profile views</span></div>
+              <div className="panel"><b>{recent}</b><span>quote requests</span></div>
+              <div className="panel"><b>{score}%</b><span>profile complete</span></div>
+            </div>
+            <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
+            {score < 100 && (
+              <div className="panel" style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <b>Finish your profile</b>
+                  <Link className="btn secondary small" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
+                </div>
+                <div className="meter" aria-hidden="true"><span style={{ width: `${score}%` }} /></div>
+                <p className="hint" style={{ margin: 0 }}>Owners compare fees, terms and photos first, so complete profiles get asked for more quotes.</p>
+                <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}>{label}</li>)}</ul>
               </div>
             )}
             <div className="panel" style={{ display: 'grid', gap: 0, padding: 0, overflow: 'hidden' }}>

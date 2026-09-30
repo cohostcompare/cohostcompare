@@ -2,6 +2,7 @@ export type Platform = 'Airbnb' | 'Booking.com' | 'Stayz' | 'Vrbo' | 'Direct';
 
 /** What anyone can see on a manager's profile. */
 export type PublicManager = {
+  id: string;
   slug: string;
   name: string;
   tagline: string;

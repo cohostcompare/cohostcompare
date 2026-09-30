@@ -294,3 +294,11 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .ticks li { position: relative; padding-left: 26px; }
 .ticks li::before { content: "+"; position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 99px; background: var(--tint); color: var(--brand); font-weight: 800; font-size: 13px; display: grid; place-items: center; line-height: 1; margin-top: 3px; }
 .ticks li.done::before { content: "✓"; background: var(--brand); color: var(--on-brand); }
+
+/* manager dashboard */
+.dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.dash-stats .panel { display: grid; gap: 2px; padding: 16px 18px; }
+.dash-stats b { font-family: var(--display); font-size: 30px; line-height: 1.1; }
+.dash-stats span { font-size: 13px; color: var(--muted); }
+.meter { height: 10px; border-radius: 99px; background: var(--tint); overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--brand); border-radius: 99px; }

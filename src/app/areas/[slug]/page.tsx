@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import ResultsList from '@/components/ResultsList';
 import { area } from '@/lib/areas';
 import { COVER_KM, managersNear } from '@/lib/data';
+import { bump } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 type P = Promise<{ slug: string }>;
@@ -22,6 +23,7 @@ export default async function AreaPage({ params }: { params: P }) {
   const a = await area((await params).slug);
   if (!a) notFound();
   const managers = await managersNear(a.lat, a.lng);
+  await bump(managers.map((m) => m.id), 'search');
   const q = new URLSearchParams({ lat: String(a.lat), lng: String(a.lng), suburb: a.label });
   return (
     <main>
