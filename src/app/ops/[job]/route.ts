@@ -23,6 +23,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
     }
+    if (job === 'qa') {
+      // Automatic checks on every published profile; prints only the problems.
+      const db = adminClient();
+      const { data: ms } = await db.from('managers').select('slug, name, cities, tagline, about, website, published, claimed, postcodes, airbnb_host_ids').eq('published', true).order('name');
+      const rows: { host_id: string | null; cohost_ids: string[] | null; rating_overall: number | null; num_reviews: number | null; ttm_occupancy: number | null }[] = [];
+      for (let f = 0; ; f += 1000) {
+        const { data } = await db.from('str_listings').select('host_id, cohost_ids, rating_overall, num_reviews, ttm_occupancy').range(f, f + 999);
+        rows.push(...(data || [])); if (!data || data.length < 1000) break;
+      }
+      const dom = (u: string | null) => { try { return u ? new URL(u).hostname.replace(/^www\./, '') : null; } catch { return null; } };
+      const domains = new Map<string, string[]>();
+      const out: string[] = [];
+      for (const m of ms || []) {
+        const ids = new Set(m.airbnb_host_ids || []);
+        const ls = ids.size ? rows.filter((l) => (l.host_id && ids.has(l.host_id)) || (l.cohost_ids || []).some((c) => ids.has(c))) : [];
+        const rated = ls.filter((l) => (l.num_reviews || 0) > 0 && Number(l.rating_overall) > 0);
+        const rating = rated.length ? rated.reduce((a, l) => a + Number(l.rating_overall), 0) / rated.length : null;
+        const occ = ls.filter((l) => Number(l.ttm_occupancy) > 0);
+        const occAvg = occ.length ? occ.reduce((a, l) => a + Number(l.ttm_occupancy), 0) / occ.length : null;
+        const f: string[] = [];
+        if (!m.tagline) f.push('no tagline'); else if (m.tagline.length > 80) f.push(`long tagline (${m.tagline.length})`);
+        if (!m.about || m.about.length < 40) f.push('thin about');
+        if (/[()|]/.test(m.name)) f.push('odd name');
+        if (!(m.cities || []).length) f.push('no region');
+        if (ids.size && !ls.length) f.push('linked accounts have no listings');
+        if (!ids.size && !(m.postcodes || []).length) f.push('no listings and no postcodes: never appears in searches');
+        if (rating != null && rating < 4.3) f.push(`low rating ${rating.toFixed(2)} (${rated.length} rated homes)`);
+        if (ls.length && rated.length < 3) f.push(`only ${rated.length} rated homes`);
+        if (occAvg != null && occAvg < 0.35) f.push(`low occupancy ${Math.round(occAvg * 100)}%`);
+        if (!m.website) f.push('no website');
+        const d = dom(m.website); if (d) domains.set(d, [...(domains.get(d) || []), m.slug]);
+        if (f.length) out.push(`${m.slug} (${ls.length} homes): ${f.join('; ')}`);
+      }
+      const dups = [...domains.entries()].filter(([, v]) => v.length > 1).map(([d, v]) => `shared website ${d}: ${v.join(', ')}`);
+      return new NextResponse(`PUBLISHED ${(ms || []).length}, WITH ISSUES ${out.length}\n${out.join('\n')}\n${dups.join('\n')}`, { headers });
+    }
     if (job === 'profiles') {
       const db = adminClient();
       const [{ data: ms }, { data: st }] = await Promise.all([
