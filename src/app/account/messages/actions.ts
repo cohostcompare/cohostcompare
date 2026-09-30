@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { memberEmails } from '@/lib/managers';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
+import { postOwnerMessage } from '@/lib/threads';
 
 export async function sendOwnerMessage(_: unknown, form: FormData): Promise<{ error?: string; ok?: boolean }> {
   const user = await currentUser();
@@ -19,24 +20,7 @@ export async function sendOwnerMessage(_: unknown, form: FormData): Promise<{ er
   const { data: thread } = await s.from('quote_request_managers').select('id, manager_name, request_id').eq('id', threadId).single();
   if (!thread) return { error: "We couldn't find that conversation." };
 
-  const { error } = await adminClient().from('messages').insert({ thread_id: thread.id, sender: 'owner', body, read_by_owner: true });
-  if (error) { console.error(error); return { error: "Your message didn't send. Try again." }; }
-
-  const managerEmails = await memberEmails((await adminClient().from('quote_request_managers').select('manager_slug').eq('id', thread.id).single()).data?.manager_slug || '');
-  const h = await headers();
-  if (managerEmails.length) {
-    await sendEmail({
-      to: managerEmails,
-      subject: `New message from an owner`,
-      text: `An owner wrote about their quote request:\n\n${body}\n\nReply in your dashboard so everything stays in one place.`,
-      cta: { label: 'Reply', url: `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}/dashboard/requests/${thread.id}` },
-    });
-  } else await sendEmail({
-    to: 'hello@cohostcompare.com',
-    subject: `Owner message for ${thread.manager_name}`,
-    text: `From: ${user.email}\nTo manager: ${thread.manager_name}\nThread: ${thread.id}\n\n${body}`,
-    replyTo: user.email ?? undefined,
-  });
+  if (!(await postOwnerMessage(thread.id, body, user.email ?? null))) return { error: "Your message didn't send. Try again." };
 
   revalidatePath(`/account/messages/${thread.id}`);
   return { ok: true };

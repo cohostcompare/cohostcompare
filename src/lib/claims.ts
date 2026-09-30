@@ -38,5 +38,7 @@ export async function approveClaim(claimId: string) {
   await db.from('manager_claims').update({ status: 'approved', decided_at: new Date().toISOString() }).eq('id', c.id);
   await db.from('manager_members').upsert({ manager_id: c.manager_id, user_id: c.user_id, role: 'owner' });
   await db.from('managers').update({ claimed: true, updated_at: new Date().toISOString() }).eq('id', c.manager_id);
+  const { grantFoundingPro } = await import('@/lib/pro');
+  await grantFoundingPro(c.manager_id);
 }
 

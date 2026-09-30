@@ -7,6 +7,8 @@ import { requireThread } from '@/lib/managers';
 import { parseQuote } from '@/lib/quotes';
 import { notifyIfAllReplied } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
+import { threadReplyTo } from '@/lib/inbound';
+import { postManagerMessage } from '@/lib/threads';
 
 async function origin() {
   const h = await headers();
@@ -32,6 +34,7 @@ export async function sendQuote(_: unknown, form: FormData): Promise<{ error?: s
     subject: `${thread.manager_name} ${first ? 'sent you a quote' : 'updated their quote'}`,
     text: `Hi ${String(req.owner_name || '').split(' ')[0] || 'there'},\n\n${thread.manager_name} has ${first ? 'sent a quote' : 'updated their quote'} for ${req.suburb || `postcode ${req.postcode}`}: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup fee` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.\n\nSign in to see the full quote, compare it side by side with any others, ask questions or accept it.\n\nThe CoHostCompare team`,
     cta: { label: 'Review the quote', url: `${site}/account` },
+    replyTo: threadReplyTo(thread.id, 'o'),
   });
   revalidatePath(`/dashboard/requests/${thread.id}`);
   return { ok: true };
@@ -42,16 +45,7 @@ export async function sendManagerMessage(_: unknown, form: FormData): Promise<{ 
   const body = String(form.get('body') || '').trim();
   if (!body) return { error: 'Write a message first.' };
   if (body.length > 4000) return { error: 'Keep messages under 4,000 characters.' };
-  const db = adminClient();
-  const { error } = await db.from('messages').insert({ thread_id: thread.id, sender: 'manager', body, read_by_manager: true });
-  if (error) { console.error(error); return { error: "Your message didn't send. Try again." }; }
-  if (thread.status === 'sent') await db.from('quote_request_managers').update({ status: 'viewed' }).eq('id', thread.id);
-  await sendEmail({
-    to: req.owner_email,
-    subject: `New message from ${thread.manager_name}`,
-    text: `${thread.manager_name} wrote:\n\n${body}\n\nReply in your inbox so everything stays in one place.`,
-    cta: { label: 'Reply', url: `${await origin()}/account/messages/${thread.id}` },
-  });
+  if (!(await postManagerMessage(thread.id, body))) return { error: "Your message didn't send. Try again." };
   revalidatePath(`/dashboard/requests/${thread.id}`);
   return { ok: true };
 }

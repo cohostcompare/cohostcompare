@@ -43,7 +43,7 @@ export default function EarningsTool() {
             <div><b>{money(res.mid * 0.8)}</b><span>kept after a 20% management fee, before cleaning and other costs</span></div>
             {res.activeListings ? <div><b>{res.activeListings.toLocaleString('en-AU')}</b><span>active short-stay listings in the area</span></div> : null}
           </div>
-          <p className="hint" style={{ margin: 0 }}>An estimate from area averages over the last 12 months, adjusted for bedrooms. Your home&apos;s actual earnings depend on its location, presentation, pricing and local rules. Data source: AirROI (www.airroi.com).</p>
+          <p className="hint" style={{ margin: 0 }}>An estimate from area averages over the last 12 months, adjusted for bedrooms. Your home&apos;s actual earnings depend on its location, presentation, pricing and local rules. Data source: AirROI (www.airroi.com). This material incorporates aggregated estimates and modelled data derived from publicly available sources. All figures are estimates, not verified statements of fact. AirROI has not reviewed, approved or endorsed this material.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {q && <Link className="btn primary" href={`/search?${q.toString()}`}>Compare managers near this address</Link>}
             <Link className="btn secondary" href="/rules">Check the rules first</Link>

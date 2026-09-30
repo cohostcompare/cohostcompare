@@ -1,6 +1,7 @@
 import 'server-only';
 import { sign } from '@/lib/claims';
 import { sendEmail } from '@/lib/email';
+import { outreachReplyTo } from '@/lib/inbound';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
@@ -15,7 +16,7 @@ export const DAILY_CAP = Number(process.env.OUTREACH_DAILY_CAP || 30);
 /** Master switch: nothing is sent to managers unless OUTREACH_ENABLED=1 in Vercel. */
 export const outreachOn = () => process.env.OUTREACH_ENABLED === '1';
 
-export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; suburbs: string[]; waiting: number; email: string; source: string };
+export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; suburbs: string[]; waiting: number; email: string; source: string; contactId?: string };
 
 export const unsubscribeUrl = (email: string, api = false) => `${BASE}${api ? '/api' : ''}/unsubscribe?e=${encodeURIComponent(email)}&s=${sign(`unsub:${email.toLowerCase()}`)}`;
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -59,7 +60,7 @@ export function localPlaces(localities: string[], cities: string[]) {
   return own.length ? own : cities.slice(0, 2);
 }
 
-async function context(contact: { email: string; first_name: string | null; source_url: string; manager_id: string }): Promise<Ctx | null> {
+async function context(contact: { id?: string; email: string; first_name: string | null; source_url: string; manager_id: string }): Promise<Ctx | null> {
   const db = adminClient();
   const { data: m } = await db.from('managers').select('id, slug, name, claimed, published, cities').eq('id', contact.manager_id).maybeSingle();
   if (!m || !m.published) return null;
@@ -68,7 +69,7 @@ async function context(contact: { email: string; first_name: string | null; sour
     db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', m.slug).in('status', ['sent', 'viewed']),
   ]);
   return { manager: m.name, slug: m.slug, first: contact.first_name, homes: st?.property_count ?? null, rating: st?.avg_rating != null ? Number(st.avg_rating) : null,
-    suburbs: localPlaces((st?.localities as string[] | null) || [], (m as { cities?: string[] }).cities || []), waiting: waiting ?? 0, email: contact.email, source: contact.source_url };
+    suburbs: localPlaces((st?.localities as string[] | null) || [], (m as { cities?: string[] }).cities || []), waiting: waiting ?? 0, email: contact.email, source: contact.source_url, contactId: contact.id };
 }
 
 export async function suppressed(email: string) {
@@ -81,6 +82,7 @@ async function send(c: Ctx, i: number) {
   return sendEmail({
     to: c.email, subject: e.subject(c), text: e.body(c) + footer(c), cta: e.cta(c),
     from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
+    replyTo: c.contactId ? outreachReplyTo(c.contactId) : undefined,
     headers: { 'List-Unsubscribe': `<${unsubscribeUrl(c.email, true)}>, <mailto:hello@cohostcompare.com?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
   });
 }
@@ -132,6 +134,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string): Pro
       text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and there are no lead fees while we launch.${footer(c)}`,
       cta: { label: 'See the request', url: `${BASE}/claim/${slug}` },
       from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
+      replyTo: outreachReplyTo(ct.id),
       headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     });
     sent++;

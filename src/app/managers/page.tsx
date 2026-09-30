@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import ManagerSignup from '@/components/ManagerSignup';
 import Photo from '@/components/Photo';
+import { FOUNDING_DEADLINE, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
@@ -8,11 +9,11 @@ export const metadata: Metadata = {
 };
 
 const faqs: [string, string][] = [
-  ['What does it cost?', 'Listing is free during launch, including owner quote requests. Paid plans will add featured placement and more service areas; founding managers get locked-in pricing.'],
+  ['What does it cost?', 'Nothing. Your profile, owner quote requests and replies are free, with no lead fees and no lock-in. Pro is an optional paid plan with extra tools for your business, and founding managers get it free for six months.'],
   ['Why do you show my fees?', 'Owners compare on fees first. We show a fee band publicly and the full breakdown only to signed-in owners, in the same format for every manager, so you are compared fairly.'],
   ['Where do the ratings come from?', 'From the public guest ratings on the listings you manage, combined across your portfolio and labelled as estimates. See “How we build manager profiles” above.'],
   ['How did you get my business’s details?', 'From public sources only: public short-term rental listing data (via AirROI) and your own website. We don’t buy contact lists. If we emailed you, it’s because your business publishes that address on its website.'],
-  ['Can I pay to rank higher?', 'You can pay to be featured, and featured results are always labelled. You can never pay to change your rating or your place in rated results.'],
+  ['Can I pay to rank higher?', 'No. Nobody can pay to appear higher, change their rating or change how quotes are compared. Pro only adds tools for you, like benchmarks and owner demand, and owners can’t see who has it.'],
   ['How do quote requests work?', 'An owner describes their property once and sends it to up to five managers. You reply with a quote in a standard format. The owner’s contact details are shared with you if they accept your quote.'],
 ];
 
@@ -37,6 +38,31 @@ export default function ForManagers() {
         <div style={{ display: 'grid', gap: 12 }}>
           <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Spend your time on homes, not sales calls</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>Owners arrive having already compared you on the numbers that matter. You get the property details up front, reply with a quote in a few minutes, and the owner accepts or asks questions in one place.</p>
+        </div>
+      </section>
+      <section id="pricing" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>
+        <div style={{ maxWidth: 760, display: 'grid', gap: 8 }}>
+          <span className="label" style={{ color: 'var(--brand)' }}>Pricing</span>
+          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Free to be found. Pro if you want more.</h2>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Everything owners see is free and the same for every manager. Pro adds tools for your business and never changes where you appear, your ratings or how quotes are compared.</p>
+        </div>
+        <div className="facts-grid">
+          <div className="panel" style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
+            <h3 style={{ margin: 0 }}>Free</h3>
+            <p style={{ margin: 0 }}><b style={{ fontFamily: 'var(--display)', fontSize: 30 }}>$0</b> <span className="hint">forever</span></p>
+            <ul className="ticks">
+              <li className="done">Your profile, fees, services, logo and 12 photos</li>
+              <li className="done">Unlimited quote requests and replies, no lead fees</li>
+              <li className="done">Verified business badge when your ABN checks out</li>
+              <li className="done">Search appearances, profile views and requests on your dashboard</li>
+            </ul>
+          </div>
+          <div className="panel" style={{ display: 'grid', gap: 10, alignContent: 'start', borderColor: 'var(--brand)' }}>
+            <h3 style={{ margin: 0 }}>Pro</h3>
+            <p style={{ margin: 0 }}><b style={{ fontFamily: 'var(--display)', fontSize: 30 }}>Free for 6 months</b> <span className="hint">for founding managers who claim by {new Date(FOUNDING_DEADLINE).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}, then planned at {PRO_PRICE}</span></p>
+            <ul className="ticks">{PRO_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}{f.live ? '' : ' Coming soon.'}</li>)}</ul>
+            <p className="hint" style={{ margin: 0 }}>We&apos;ll always ask before charging anything. Nothing renews automatically.</p>
+          </div>
         </div>
       </section>
       <section id="why-listed" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>

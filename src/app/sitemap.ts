@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const BASE = 'https://www.cohostcompare.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ['', '/how-it-works', '/why-us', '/rules', '/earnings', '/managers', '/areas', '/privacy', '/terms'].map((p) => ({ url: `${BASE}${p}`, changeFrequency: 'weekly' as const, priority: p === '' ? 1 : 0.7 }));
+  const pages = ['', '/how-it-works', '/why-us', '/setup', '/rules', '/earnings', '/managers', '/areas', '/privacy', '/terms'].map((p) => ({ url: `${BASE}${p}`, changeFrequency: 'weekly' as const, priority: p === '' ? 1 : 0.7 }));
   const [ar, { data: mgrs }] = await Promise.all([areas(), adminClient().from('managers').select('slug, updated_at').eq('published', true)]);
   return [
     ...pages,

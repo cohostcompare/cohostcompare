@@ -28,3 +28,28 @@ export async function eventTotals(ids: string[]) {
   }
   return out;
 }
+
+/** Counts an owner search in a postcode (no address or person stored). Never throws. Needs SQL 012. */
+export async function logSearch(postcode: string, suburb?: string) {
+  try {
+    if (!/^\d{4}$/.test(postcode)) return;
+    const ua = (await headers()).get('user-agent') || '';
+    if (!ua || BOT.test(ua)) return;
+    await adminClient().rpc('log_search', { p_postcode: postcode, p_suburb: suburb?.slice(0, 60) || null });
+  } catch { /* best-effort */ }
+}
+
+/** Owner searches per postcode over the last `days` days. */
+export async function searchDemand(postcodes: string[], days = 30) {
+  const out = new Map<string, { suburb: string | null; count: number }>();
+  if (!postcodes.length) return out;
+  const since = new Date(Date.now() - days * 86400e3).toISOString().slice(0, 10);
+  const { data, error } = await adminClient().from('search_log').select('postcode, suburb, count').in('postcode', postcodes.slice(0, 200)).gte('day', since);
+  if (error) return out;
+  for (const r of data || []) {
+    const t = out.get(r.postcode) || { suburb: r.suburb, count: 0 };
+    t.count += r.count; t.suburb = t.suburb || r.suburb;
+    out.set(r.postcode, t);
+  }
+  return out;
+}

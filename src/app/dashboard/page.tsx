@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
 import { eventTotals } from '@/lib/events';
+import { isPro, PRO_FEATURES } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
+import ProInterest from './ProInterest';
 
 export const metadata: Metadata = { title: 'Manager dashboard', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -45,6 +47,8 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
   const since = Date.now() - 30 * 86400e3;
+  const { data: proRows } = await db.from('managers').select('id, pro_until, pro_note').in('id', managers.map((m) => m.id)); // needs 012
+  const pro = new Map((proRows || []).map((r) => [r.id, r]));
 
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
@@ -82,6 +86,22 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               <div className="panel"><b>{score}%</b><span>profile complete</span></div>
             </div>
             <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
+            {(() => {
+              const p = pro.get(m.id);
+              if (p && isPro(p)) return (
+                <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
+                  <span><b>Pro{p.pro_note === 'founding' ? ' (founding manager)' : ''}</b> is free for you until {new Date(p.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}: benchmarks, owner demand in your postcodes, quote results and more photos.</span>
+                  <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
+                </div>
+              );
+              return (
+                <div className="panel" style={{ display: 'grid', gap: 8 }}>
+                  <b>CoHostCompare Pro (optional)</b>
+                  <span className="hint">Your profile, quote requests and replies stay free. Pro adds tools for you, and never changes where you appear or what owners see: {PRO_FEATURES.map((f) => f.title.toLowerCase()).join(', ')}.</span>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}><ProInterest managerId={m.id} /><Link href={`/dashboard/${m.slug}/insights`}>What&apos;s in Pro</Link></div>
+                </div>
+              );
+            })()}
             {score < 100 && (
               <div className="panel" style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>

@@ -5,6 +5,7 @@ import { coveringSlugs, publicManager } from '@/lib/data';
 import { memberEmails } from '@/lib/managers';
 import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email';
+import { inboundOn, threadReplyTo } from '@/lib/inbound';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
@@ -101,8 +102,9 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
-      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nReply with your quote in the standard format from your dashboard.`,
+      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
       cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
+      replyTo: threadReplyTo(t.id, 'm'),
     });
   }
 

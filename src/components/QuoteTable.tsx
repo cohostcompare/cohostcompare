@@ -80,7 +80,7 @@ export default function QuoteTable({ quotes }: { quotes: QuoteCol[] }) {
         {R != null && multi ? 'Year-one fees use the same booking revenue for every manager (the average of their estimates), so you compare fees, not forecasts. ' : ''}
         Revenue estimates are each manager&apos;s own and aren&apos;t guaranteed.
         {multi ? ' “Stands out for” labels are facts from the quotes and listing data. No manager can pay for them, and we don’t rank quotes, because the right pick depends on what matters to you.' : ''}
-        {showNearby ? ' Nearby homes and ratings are estimates. Data source: AirROI (www.airroi.com).' : ''}
+        {showNearby ? ' Nearby homes and ratings are estimates. Data source: AirROI (www.airroi.com). AirROI figures are modelled estimates from public sources and AirROI has not reviewed or endorsed this material.' : ''}
       </p>
     </div>
   );

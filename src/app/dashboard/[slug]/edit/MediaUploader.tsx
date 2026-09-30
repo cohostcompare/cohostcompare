@@ -45,7 +45,7 @@ export default function MediaUploader({ slug }: { slug: string }) {
         <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 }}>Logo (square works best)
           <input className="field" type="file" name="logo" accept="image/jpeg,image/png,image/webp" />
         </label>
-        <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 }}>Photos of homes you manage (up to 12)
+        <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 }}>Photos of homes you manage (up to 12, or 24 with Pro)
           <input className="field" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple />
         </label>
       </div>

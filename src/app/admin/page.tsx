@@ -23,6 +23,13 @@ export default async function Admin() {
   ]);
   const { data: recent } = await db.from('quote_requests').select('id, created_at, owner_name, owner_email, address, quote_request_managers(manager_name)').order('created_at', { ascending: false }).limit(20);
 
+  // Needs SQL 012; empty until then.
+  const [{ data: interest }, { data: errors }, { data: inbound }] = await Promise.all([
+    db.from('interest_signups').select('id, kind, email, name, area, note, created_at').order('created_at', { ascending: false }).limit(25),
+    db.from('error_events').select('sig, route, message, count, last_seen_at').order('last_seen_at', { ascending: false }).limit(10),
+    db.from('inbound_emails').select('email_id, from_email, subject, outcome, created_at').order('created_at', { ascending: false }).limit(10),
+  ]);
+  const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
   const tiles: [string, number, string?][] = [
     ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'], ['Manager outreach', -1, '/admin/outreach'],
   ];
@@ -42,6 +49,27 @@ export default async function Admin() {
             <span><b>{r.owner_name}</b> <span className="hint">{r.owner_email} · {new Date(r.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</span></span>
             <span className="hint">{r.address} → {(r.quote_request_managers || []).map((m: { manager_name: string }) => m.manager_name).join(', ')}</span>
           </div>
+        ))}
+      </section>
+      <section className="panel" style={{ display: 'grid', gap: 8 }}>
+        <b>Interest sign-ups (Pro, suburb reports, partners)</b>
+        {!interest?.length ? <span className="hint">None yet.</span> : interest.map((r) => (
+          <div key={r.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
+            <b>{r.kind === 'pro' ? 'Pro' : r.kind === 'report' ? 'Report' : 'Partner'}</b> {r.name ? `${r.name} · ` : ''}{r.email}{r.area ? ` · ${r.area}` : ''} <span className="hint">{when(r.created_at)}</span>
+            {r.note && <div className="hint">{r.note}</div>}
+          </div>
+        ))}
+      </section>
+      <section className="panel" style={{ display: 'grid', gap: 8 }}>
+        <b>Email replies received</b>
+        {!inbound?.length ? <span className="hint">None yet. Reply tracking starts once INBOUND_DOMAIN is set up.</span> : inbound.map((r) => (
+          <div key={r.email_id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>{r.from_email} · {r.subject} <span className="hint">{when(r.created_at)} · {r.outcome || 'processing'}</span></div>
+        ))}
+      </section>
+      <section className="panel" style={{ display: 'grid', gap: 8 }}>
+        <b>Recent site errors</b>
+        {!errors?.length ? <span className="hint">None recorded.</span> : errors.map((r) => (
+          <div key={r.sig} style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}><b>{r.route}</b> × {r.count} <span className="hint">last {when(r.last_seen_at)}</span><div className="hint" style={{ overflowWrap: 'anywhere' }}>{r.message}</div></div>
         ))}
       </section>
     </main>

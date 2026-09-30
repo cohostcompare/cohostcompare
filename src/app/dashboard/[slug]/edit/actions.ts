@@ -1,5 +1,6 @@
 'use server';
 
+import { photoLimit } from '@/lib/pro';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { PLATFORMS, SERVICES, requireManager } from '@/lib/managers';
@@ -66,7 +67,8 @@ export async function prepareUploads(slug: string, files: { kind: 'logo' | 'phot
   if (files.some((f) => !OK_TYPES[f.type])) return { error: 'Use JPG, PNG or WebP images.' };
   if (files.some((f) => f.size > 5 * 1024 * 1024)) return { error: 'Each image must be 5 MB or smaller.' };
   const newPhotos = files.filter((f) => f.kind === 'photo').length;
-  if (m.photos.length + newPhotos > 12) return { error: `You can have up to 12 photos (you have ${m.photos.length}). Remove some first.` };
+  const limit = await photoLimit(m.id);
+  if (m.photos.length + newPhotos > limit) return { error: `You can have up to ${limit} photos (you have ${m.photos.length}). Remove some first.` };
   const st = adminClient().storage.from('manager-media');
   const slots = [];
   for (const f of files) {
@@ -87,7 +89,7 @@ export async function attachMedia(slug: string, uploaded: { kind: 'logo' | 'phot
   const photos = mine.filter((u) => u.kind === 'photo').map((u) => st.getPublicUrl(u.path).data.publicUrl);
   const update: Record<string, unknown> = {};
   if (logo) update.logo_url = st.getPublicUrl(logo.path).data.publicUrl;
-  if (photos.length) update.photos = [...m.photos, ...photos].slice(0, 12);
+  if (photos.length) update.photos = [...m.photos, ...photos].slice(0, await photoLimit(m.id));
   if (!Object.keys(update).length) return { error: 'Nothing was uploaded.' };
   const db = adminClient();
   await db.from('managers').update(update).eq('id', m.id);
