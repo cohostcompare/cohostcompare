@@ -26,29 +26,29 @@ export type Estimate = {
 type Market = { full_name?: string; country?: string; region?: string; locality?: string; district?: string };
 type Summary = { occupancy?: number; average_daily_rate?: number; revenue?: number; active_listings_count?: number };
 
-async function cached<T>(key: string): Promise<T | null> {
+export async function cached<T>(key: string): Promise<T | null> {
   const { data } = await adminClient().from('market_cache').select('data, fetched_at').eq('key', key).maybeSingle();
   if (!data) return null;
   if (Date.now() - new Date(data.fetched_at).getTime() > TTL_DAYS * 86400e3) return null;
   return data.data as T;
 }
-async function store(key: string, data: unknown) {
+export async function store(key: string, data: unknown) {
   await adminClient().from('market_cache').upsert({ key, data, fetched_at: new Date().toISOString() });
 }
-async function underDailyCap() {
+export async function underDailyCap() {
   const since = new Date(Date.now() - 86400e3).toISOString();
   const { count, error } = await adminClient().from('market_cache').select('key', { count: 'exact', head: true }).like('key', 'mk:%').gte('fetched_at', since);
   if (error) return false; // no cache table yet (run 009): never call AirROI uncached
   return (count ?? 0) < DAILY_NEW_MARKETS;
 }
-async function airroi(path: string, init?: RequestInit) {
+export async function airroi(path: string, init?: RequestInit) {
   const r = await fetch(`${AIRROI}${path}`, { ...init, headers: { 'x-api-key': (process.env.AIRROI_API_KEY || '').trim(), 'Content-Type': 'application/json', ...(init?.headers || {}) }, cache: 'no-store' });
   const body = await r.json().catch(() => null);
   if (!r.ok) throw new Error(`AirROI ${r.status}: ${JSON.stringify(body).slice(0, 200)}`);
   return body;
 }
 
-async function marketFor(lat: number, lng: number): Promise<Market | null> {
+export async function marketFor(lat: number, lng: number): Promise<Market | null> {
   const key = `pt:${lat.toFixed(3)},${lng.toFixed(3)}`;
   const hit = await cached<Market>(key);
   if (hit) return hit;

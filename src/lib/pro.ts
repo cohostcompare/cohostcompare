@@ -10,10 +10,14 @@ import { adminClient } from '@/lib/supabase/server';
 
 export const FOUNDING_DEADLINE = '2027-01-31';
 export const FOUNDING_MONTHS = 3;
-export const PRO_PRICE = 'A$49 a month + GST';
-export const PRO_PRICE_SHORT = 'A$49';
-export const ENTERPRISE_PRICE = 'from A$249 a month + GST';
-export const ENTERPRISE_PRICE_SHORT = 'A$249';
+// Prices live here only. Change them in one place; paying managers get 30 days' notice (terms section 6).
+export const PRO_PRICE = 'A$99 a month + GST';
+export const PRO_PRICE_SHORT = 'A$99';
+export const ENTERPRISE_PRICE = 'from A$400 a month + GST';
+export const ENTERPRISE_PRICE_SHORT = 'A$400';
+/** Launch pricing: managers who subscribe during launch keep their price for this long. */
+export const PRICE_LOCK_MONTHS = 12;
+export const PRO_FOLLOW_LIMIT = 5; // extra report areas a Pro manager can follow
 export const foundingDeadlineText = () => new Date(`${FOUNDING_DEADLINE}T12:00:00+10:00`).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export type Feature = { title: string; body: string; live: boolean };
@@ -23,8 +27,8 @@ export const PRO_FEATURES: Feature[] = [
   { title: 'Owner demand', body: 'How many owners searched in each of your postcodes over the last 30 days, and which areas are growing.', live: true },
   { title: 'Quote results', body: 'Your quote win rate and how your quotes compare on fees, without showing any other manager’s quote.', live: true },
   { title: 'More photos', body: 'Up to 24 photos on your profile instead of 12.', live: true },
-  { title: 'Suburb reports', body: 'Short-stay market reports for your postcodes: seasonality, nightly rates by bedrooms and how fees compare.', live: false },
-  { title: 'SMS alerts', body: 'A text message the moment an owner asks you for a quote.', live: false },
+  { title: 'Suburb reports', body: 'Quarterly short-stay market reports for your areas, plus up to 5 more you choose: seasonality, nightly rates and revenue by bedrooms, demand and how fees compare, with every past report kept.', live: true },
+  { title: 'SMS alerts', body: 'A text message the moment an owner asks you for a quote or accepts yours.', live: true },
   { title: 'Saved replies', body: 'Reusable quote notes and message templates.', live: false },
 ];
 
@@ -33,12 +37,35 @@ export const ENTERPRISE_FEATURES: Feature[] = [
   { title: 'Team roles', body: 'Unlimited team logins, with regional managers who see only their own areas.', live: false },
   { title: 'API and webhooks', body: 'Quote requests, messages and quote outcomes sent straight into your CRM or property management system, or through Zapier.', live: false },
   { title: 'Portfolio insights', body: 'Benchmarks and owner demand across every region side by side, with CSV exports.', live: false },
-  { title: 'Suburb reports for every region', body: 'Market reports for all the areas you cover, refreshed quarterly.', live: false },
+  { title: 'Suburb reports for every region', body: 'Quarterly reports for every area we cover, not just five extra.', live: true },
   { title: 'Regional quote templates', body: 'Different standard fees, inclusions and terms for each region, ready to send.', live: false },
   { title: 'Priority support', body: 'A named contact, help setting up every profile, and a quarterly review of your results.', live: false },
 ];
 
-export const isPro = (m: { pro_until?: string | null }) => Boolean(m.pro_until && new Date(m.pro_until).getTime() > Date.now());
+export type Plan = 'free' | 'pro' | 'enterprise';
+type PlanRow = { plan?: string | null; pro_until?: string | null };
+const live = (until?: string | null) => !until || new Date(until).getTime() > Date.now();
+
+/** The plan a manager has right now. Founding managers have pro_until set and no plan. */
+export function planOf(m: PlanRow | null | undefined): Plan {
+  if (!m) return 'free';
+  if (m.plan === 'enterprise' && live(m.pro_until)) return 'enterprise';
+  if (m.plan === 'pro' && live(m.pro_until)) return 'pro';
+  if (m.pro_until && new Date(m.pro_until).getTime() > Date.now()) return 'pro';
+  return 'free';
+}
+export const isPro = (m: PlanRow | null | undefined) => planOf(m) !== 'free';
+export const planName = (p: Plan) => ({ free: 'Free', pro: 'Pro', enterprise: 'Enterprise' })[p];
+
+/** Plan columns for a set of manager ids (empty map if SQL 012/014 haven't been run). */
+export async function plansFor(ids: string[]) {
+  const out = new Map<string, PlanRow & { pro_note?: string | null }>();
+  if (!ids.length) return out;
+  let { data, error } = await adminClient().from('managers').select('id, plan, pro_until, pro_note').in('id', ids);
+  if (error) ({ data } = await adminClient().from('managers').select('id, pro_until, pro_note').in('id', ids) as unknown as { data: typeof data });
+  for (const r of data || []) out.set(r.id, r);
+  return out;
+}
 
 /** Founding offer: Pro free for FOUNDING_MONTHS from the day a manager claims, if they claim before the deadline. Needs SQL 012. */
 export async function grantFoundingPro(managerId: string) {
@@ -60,6 +87,5 @@ export const PRO_PHOTOS = 24;
 
 /** Photo allowance for a manager profile (Pro gets more). Falls back to the free limit if SQL 012 isn't run. */
 export async function photoLimit(managerId: string) {
-  const { data } = await adminClient().from('managers').select('pro_until').eq('id', managerId).maybeSingle();
-  return data && isPro(data) ? PRO_PHOTOS : FREE_PHOTOS;
+  return isPro((await plansFor([managerId])).get(managerId)) ? PRO_PHOTOS : FREE_PHOTOS;
 }

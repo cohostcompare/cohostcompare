@@ -311,3 +311,16 @@ main { min-width: 0; }
 .plan h3 { margin: 0; }
 .plan .price { margin: 0; }
 .plan .price b { font-family: var(--display); font-size: 30px; }
+
+/* suburb reports */
+.rtable { width: 100%; border-collapse: collapse; font-size: 15px; }
+.rtable th, .rtable td { text-align: left; padding: 10px 16px; border-top: 1px solid var(--line); white-space: nowrap; }
+.rtable thead th { border-top: 0; background: var(--tint); font-size: 13px; }
+.report-list { display: grid; gap: 0; padding: 0; overflow: hidden; }
+.report-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 18px; border-top: 1px solid var(--line); align-items: center; }
+.report-list > div:first-child { border-top: 0; }
+@media print {
+  .site-header, footer.site, .no-print { display: none !important; }
+  body { background: #fff; }
+  .panel { break-inside: avoid; }
+}

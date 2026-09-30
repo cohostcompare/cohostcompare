@@ -6,6 +6,7 @@ import { memberEmails } from '@/lib/managers';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
 import { postOwnerMessage } from '@/lib/threads';
+import { smsManager } from '@/lib/sms';
 
 export async function sendOwnerMessage(_: unknown, form: FormData): Promise<{ error?: string; ok?: boolean }> {
   const user = await currentUser();
@@ -42,6 +43,7 @@ export async function acceptQuote(form: FormData) {
   const managerEmails = await memberEmails(t.manager_slug);
   const h = await headers();
   const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
+  if (req) await smsManager(t.manager_slug, 'accepted', `CoHostCompare: ${String(req.owner_name || 'An owner').split(' ')[0]} accepted your quote for ${req.suburb || req.postcode}. Their details are in your dashboard: ${origin}/dashboard/requests/${t.id}`);
   if (managerEmails.length && req) {
     await sendEmail({
       to: managerEmails,

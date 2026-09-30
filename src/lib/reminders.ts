@@ -116,7 +116,9 @@ export async function runDaily() {
   const owners = await ownerReminders();
   const { sendOutreachBatch } = await import('@/lib/outreach');
   const outreach = await sendOutreachBatch().catch((e) => ({ sent: 0, note: String(e) }));
-  const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : [])];
+  const { runReports } = await import('@/lib/reports');
+  const reports = await runReports().catch((e) => ({ made: 0, notified: 0, note: String(e) }));
+  const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(reports.made ? [`Suburb reports: made ${reports.made}, emailed ${reports.notified} managers.`] : [])];
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com',
@@ -125,5 +127,5 @@ export async function runDaily() {
       cta: { label: 'Open admin', url: `${siteBase()}/admin` },
     });
   }
-  return { ownerReminders: owners, outreach, adminDigest: lines.length > 0 };
+  return { ownerReminders: owners, outreach, reports, adminDigest: lines.length > 0 };
 }

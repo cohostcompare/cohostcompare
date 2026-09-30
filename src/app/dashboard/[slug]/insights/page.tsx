@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { searchDemand } from '@/lib/events';
 import { requireManager } from '@/lib/managers';
-import { foundingDeadlineText, isPro, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
+import { foundingDeadlineText, isPro, planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 import ProInterest from '../../ProInterest';
 
@@ -38,8 +38,9 @@ export default async function Insights({ params }: { params: P }) {
   const { slug } = await params;
   const { manager: m } = await requireManager(slug, `/dashboard/${slug}/insights`);
   const db = adminClient();
-  const { data: pro } = await db.from('managers').select('pro_until, pro_note, cities').eq('id', m.id).maybeSingle(); // needs 012
-  const active = Boolean(pro && isPro(pro));
+  const pro = (await plansFor([m.id])).get(m.id);
+  const { data: extra } = await db.from('managers').select('cities').eq('id', m.id).maybeSingle();
+  const active = isPro(pro);
 
   if (!active) {
     return (
@@ -56,7 +57,7 @@ export default async function Insights({ params }: { params: P }) {
   }
 
   // Peers: other published managers covering any of the same postcodes (or, failing that, the same regions).
-  const cities = ((pro as { cities?: string[] } | null)?.cities) || [];
+  const cities = ((extra as { cities?: string[] } | null)?.cities) || [];
   const peerQ = db.from('managers').select('id, fee_min, fee_max').eq('published', true).neq('id', m.id);
   const { data: peers } = m.postcodes.length ? await peerQ.overlaps('postcodes', m.postcodes) : cities.length ? await peerQ.overlaps('cities', cities) : { data: [] };
   const ids = [m.id, ...(peers || []).map((p) => p.id)];
@@ -104,9 +105,9 @@ export default async function Insights({ params }: { params: P }) {
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
       <Link href="/dashboard" className="hint">← Dashboard</Link>
       <div>
-        <span className="label">CoHostCompare Pro{pro?.pro_note === 'founding' ? ' · founding manager' : ''}</span>
+        <span className="label">CoHostCompare {planName(planOf(pro))}{pro?.pro_note === 'founding' ? ' · founding manager' : ''}</span>
         <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Insights for {m.name}</h1>
-        <p className="hint" style={{ margin: '4px 0 0' }}>Pro is free for you until {new Date(pro!.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}. Nothing here changes where you appear or what owners see.</p>
+        <p className="hint" style={{ margin: '4px 0 0' }}>{pro?.pro_note === 'founding' && pro.pro_until ? `Pro is free for you until ${new Date(pro.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}. ` : ''}Nothing here changes where you appear or what owners see. Also in your plan: <Link href="/dashboard/reports">suburb reports</Link> and <Link href={`/dashboard/${m.slug}/alerts`}>SMS alerts</Link>.</p>
       </div>
 
       <section style={{ display: 'grid', gap: 10 }}>
@@ -166,7 +167,7 @@ export default async function Insights({ params }: { params: P }) {
 
       <section className="panel" style={{ display: 'grid', gap: 6 }}>
         <b>Also in Pro</b>
-        <ul className="ticks">{PRO_FEATURES.filter((f) => !f.live).map((f) => <li key={f.title}><b>{f.title}</b> (coming soon). {f.body}</li>)}<li className="done"><b>More photos.</b> Up to 24 photos on your profile.</li></ul>
+        <ul className="ticks">{PRO_FEATURES.filter((f) => !f.live).map((f) => <li key={f.title}><b>{f.title}</b> (coming soon). {f.body}</li>)}</ul>
       </section>
     </main>
   );

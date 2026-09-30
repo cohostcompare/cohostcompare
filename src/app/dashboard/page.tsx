@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { myManagers } from '@/lib/managers';
 import { eventTotals } from '@/lib/events';
-import { isPro, PRO_FEATURES } from '@/lib/pro';
+import { planName, planOf, plansFor, PRO_FEATURES } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ProInterest from './ProInterest';
 
@@ -47,8 +47,8 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
   const since = Date.now() - 30 * 86400e3;
-  const { data: proRows } = await db.from('managers').select('id, pro_until, pro_note').in('id', managers.map((m) => m.id)); // needs 012
-  const pro = new Map((proRows || []).map((r) => [r.id, r]));
+  const pro = await plansFor(managers.map((m) => m.id));
+  const { data: freshReports } = await db.from('suburb_reports').select('id, area_label, manager_ids').overlaps('manager_ids', managers.map((m) => m.id)).gte('created_at', new Date(Date.now() - 21 * 86400e3).toISOString()); // needs 014
 
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
@@ -77,6 +77,9 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link className="btn primary" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
                 <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
+                <Link className="btn secondary" href={`/dashboard/${m.slug}/insights`}>Insights</Link>
+                <Link className="btn secondary" href="/dashboard/reports">Reports</Link>
+                <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
               </div>
             </div>
             <div className="dash-stats">
@@ -87,10 +90,19 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
             </div>
             <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
             {(() => {
+              const fresh = (freshReports || []).filter((r) => (r.manager_ids as string[]).includes(m.id));
+              return fresh.length ? (
+                <Link href="/dashboard/reports" className="panel" style={{ display: 'block', background: 'var(--tint)', color: 'inherit', textDecoration: 'none' }}>
+                  <b>New suburb report{fresh.length > 1 ? 's' : ''}:</b> {fresh.slice(0, 3).map((r) => r.area_label).join(', ')}{fresh.length > 3 ? ` and ${fresh.length - 3} more` : ''} →
+                </Link>
+              ) : null;
+            })()}
+            {(() => {
               const p = pro.get(m.id);
-              if (p && isPro(p)) return (
+              const plan = planOf(p);
+              if (plan !== 'free') return (
                 <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
-                  <span><b>Pro{p.pro_note === 'founding' ? ' (founding manager)' : ''}</b> is free for you until {new Date(p.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}: benchmarks, owner demand in your postcodes, quote results and more photos.</span>
+                  <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, suburb reports, SMS alerts and more photos.</span>
                   <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
                 </div>
               );
@@ -98,7 +110,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
                   <span className="hint">Your profile, quote requests and replies stay free. Pro adds tools for you, and never changes where you appear or what owners see: {PRO_FEATURES.map((f) => f.title.toLowerCase()).join(', ')}.</span>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}><ProInterest managerId={m.id} /><Link href={`/dashboard/${m.slug}/insights`}>What&apos;s in Pro</Link></div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}><ProInterest managerId={m.id} /><Link href="/managers#pricing">See plans</Link></div>
                 </div>
               );
             })()}

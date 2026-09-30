@@ -70,14 +70,14 @@ export default function ForManagers() {
             <p className="price"><b>From {ENTERPRISE_PRICE_SHORT}</b> <span className="hint">a month + GST</span></p>
             <p className="hint" style={{ margin: 0 }}>For operators with homes in several regions. We&apos;re building it with our first Enterprise operators, so talk to us about what you need.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Pro, plus:</p>
-            <ul className="ticks">{ENTERPRISE_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}</li>)}</ul>
+            <ul className="ticks">{ENTERPRISE_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}</li>)}</ul>
             <details>
               <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--brand)' }}>Talk to us about Enterprise</summary>
               <div style={{ marginTop: 10 }}><InterestForm kind="enterprise" partner button="Send" noteLabel="How many homes, and which regions? (optional)" done="Thanks. We’ll be in touch by email." /></div>
             </details>
           </div>
         </div>
-        <p className="hint" style={{ margin: 0 }}>Prices in Australian dollars. We&apos;ll always ask before your first charge, and you can cancel any time. <a href="/terms#paid-plans">Paid plan terms</a></p>
+        <p className="hint" style={{ margin: 0 }}>Launch prices in Australian dollars. Subscribe during launch and your price is fixed for 12 months. We&apos;ll always ask before your first charge, and you can cancel any time. <a href="/terms#paid-plans">Paid plan terms</a></p>
       </section>
       <section id="why-listed" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>
         <div style={{ maxWidth: 760, display: 'grid', gap: 8 }}>

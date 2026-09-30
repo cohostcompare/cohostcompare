@@ -6,6 +6,7 @@ import { memberEmails } from '@/lib/managers';
 import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email';
 import { inboundOn, threadReplyTo } from '@/lib/inbound';
+import { smsManager } from '@/lib/sms';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
@@ -106,6 +107,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
       cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
       replyTo: threadReplyTo(t.id, 'm'),
     });
+    await smsManager(t.manager_slug, 'request', `CoHostCompare: new quote request for a ${bedrooms === 0 ? 'studio' : `${bedrooms}-bed ${String(row.property_type).toLowerCase()}`} in ${suburb} ${stateCode}. Send your quote: ${origin}/dashboard/requests/${t.id}`);
   }
 
   await sendEmail({

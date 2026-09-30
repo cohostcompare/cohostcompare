@@ -33,3 +33,19 @@ export async function setVerified(form: FormData) {
   revalidatePath('/admin/managers');
   redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${on ? 'verified' : 'unverified'}`);
 }
+
+/** Sets a claimed manager's plan by hand until billing exists (e.g. an Enterprise deal, or extending a trial). */
+export async function setPlan(form: FormData) {
+  const admin = await requireAdmin('/admin/managers');
+  const id = String(form.get('id') || '');
+  const q = String(form.get('q') || '');
+  const plan = String(form.get('plan') || 'free');
+  const months = Number(form.get('months') || 0);
+  if (!['free', 'pro', 'enterprise'].includes(plan)) redirect('/admin/managers');
+  const until = months > 0 ? new Date(Date.now() + months * 30.44 * 86400e3).toISOString() : null;
+  const { error } = await adminClient().from('managers').update({ plan, pro_until: plan === 'free' ? null : until, pro_note: plan === 'free' ? null : 'admin' }).eq('id', id);
+  if (error) redirect(`/admin/managers?q=${encodeURIComponent(q)}&error=${encodeURIComponent(error.message)}`);
+  await adminClient().from('manager_edits').insert({ manager_id: id, user_id: admin.id, changes: { plan, months, by: 'admin' } });
+  revalidatePath('/admin/managers');
+  redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${encodeURIComponent(`set to ${plan}`)}`);
+}

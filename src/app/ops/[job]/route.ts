@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { newBusinesses, seedManagers } from '@/lib/jobs/data';
 import { adminClient } from '@/lib/supabase/server';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 // Plain-text data exports for Claude's research (token only; 404 otherwise). Not linked anywhere.
@@ -22,6 +22,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
     if (job === 'managers') {
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
+    }
+    if (job === 'reports') {
+      const { runReports } = await import('@/lib/reports');
+      const r = await runReports(Number(p.get('n') || 8));
+      return new NextResponse(JSON.stringify(r), { headers });
+    }
+    if (job === 'report-preview') {
+      const { areas } = await import('@/lib/areas');
+      const { buildReport } = await import('@/lib/reports');
+      const a = (await areas()).find((x) => x.slug === p.get('area'));
+      if (!a) return new NextResponse('no such area', { headers });
+      const { data } = await buildReport(a);
+      return new NextResponse(`homes ${data.market.homes} | nightly ${data.market.nightly} | revenue ${data.market.revenue} | occ ${data.market.occupancy} | seasonality ${data.seasonality ? data.seasonality.map((m) => `${m.month}:${m.occupancy?.toFixed(2)}/${m.nightly}`).join(' ') : 'none'} | managers ${data.managers.count} fee ${data.managers.feeMedian}`, { headers });
     }
     if (job === 'seed') {
       const r = await seedManagers();

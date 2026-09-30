@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
-import { setVerified, setVisibility } from './actions';
+import { planName, planOf, plansFor } from '@/lib/pro';
+import { setPlan, setVerified, setVisibility } from './actions';
 
 export const metadata: Metadata = { title: 'Managers · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
   const { data: rows } = await query;
   const { data: abns } = await db.from('managers').select('id, abn, abn_name, abn_verified_at').in('id', (rows || []).map((r) => r.id)); // needs 009
   const abnOf = new Map((abns || []).map((a) => [a.id, a]));
+  const plans = await plansFor((rows || []).filter((r) => r.claimed).map((r) => r.id));
   const ids = (rows || []).filter((r) => !r.published).map((r) => r.id);
   const { data: edits } = ids.length ? await db.from('manager_edits').select('manager_id, changes, created_at').in('manager_id', ids).order('created_at', { ascending: false }) : { data: [] };
   const why = new Map<string, { reason?: string; at: string }>();
@@ -56,6 +58,15 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
                     <button type="submit" className="linkish" style={{ padding: 0 }}>{abnOf.get(m.id)!.abn_verified_at ? 'Remove badge' : 'Mark verified'}</button>
                   </form>
                 </div>
+              )}
+              {m.claimed && (
+                <form action={setPlan} className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
+                  <span>Plan: <b>{planName(planOf(plans.get(m.id)))}</b>{plans.get(m.id)?.pro_until ? ` until ${new Date(plans.get(m.id)!.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
+                  <input type="hidden" name="id" value={m.id} /><input type="hidden" name="q" value={q} />
+                  <select name="plan" defaultValue={planOf(plans.get(m.id))} style={{ minHeight: 30 }}><option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select>
+                  <select name="months" defaultValue="0" style={{ minHeight: 30 }}><option value="0">no end date</option><option value="1">1 month</option><option value="3">3 months</option><option value="12">12 months</option></select>
+                  <button type="submit" className="linkish" style={{ padding: 0 }}>Set plan</button>
+                </form>
               )}
               {!m.published && why.get(m.id) && <div className="hint">Hidden {new Date(why.get(m.id)!.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}{why.get(m.id)!.reason ? `: ${why.get(m.id)!.reason}` : ''}</div>}
             </div>
