@@ -167,8 +167,10 @@ export async function seedManagers() {
   const { data: existing } = await adminClient().from('managers').select('slug, published, claimed');
   const bySlug = new Map((existing || []).map((e) => [e.slug, e]));
   const toSave = rows.filter((r) => !bySlug.get(r.slug)?.claimed).map((r) => (bySlug.get(r.slug) && !bySlug.get(r.slug)!.published ? { ...r, published: false } : r));
-  if (toSave.length) {
-    const { error } = await adminClient().from('managers').upsert(toSave, { onConflict: 'slug' });
+  // Upsert rows with the same columns together (web-only rows also set postcodes).
+  for (const batch of [toSave.filter((r) => 'postcodes' in r), toSave.filter((r) => !('postcodes' in r))]) {
+    if (!batch.length) continue;
+    const { error } = await adminClient().from('managers').upsert(batch, { onConflict: 'slug', defaultToNull: false });
     if (error) throw new Error(error.message);
   }
   return { saved: toSave.length, skippedClaimed: rows.length - toSave.length, report };
