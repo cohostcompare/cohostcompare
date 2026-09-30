@@ -50,8 +50,8 @@ export async function sweepNext(form: FormData) {
   const cell = String(form.get('cell') || '') || undefined;
   let msg = '';
   try {
-    const r = await runSweep(cell, 40, 50000);
-    msg = 'message' in r ? String(r.message) : `${r.label}: ${r.stored} listings from ${r.calls} calls (about US$${(r.calls * 0.01).toFixed(2)}). ${r.done ? 'Area finished.' : 'More to fetch: run it again.'}`;
+    const r = await runSweep(cell, 4, 50000);
+    msg = 'message' in r ? String(r.message) : `${r.label}: ${r.stored} listings from ${r.calls} calls (US$${(r.calls * 0.5).toFixed(2)}). ${r.done ? 'Area finished.' : 'More to fetch: run it again.'}`;
   } catch (e) { back(String((e as Error).message), 'error'); }
   revalidatePath('/admin/data');
   back(msg);

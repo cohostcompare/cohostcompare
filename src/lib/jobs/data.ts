@@ -21,8 +21,12 @@ export function listingRow(l: Any) {
   };
 }
 
-/** Pages through AirROI for one sweep area (the next unfinished one if none given). ~US$0.01 per call. */
+/** US$ per AirROI listings search call (standard pricing, airroi.com/api/pricing). */
+export const AIRROI_CALL_USD = 0.5;
+
+/** Pages through AirROI for one sweep area. Costs AIRROI_CALL_USD per call. Disabled unless AIRROI_SWEEP_ENABLED=1. */
 export async function runSweep(cellId?: string, maxCalls = 20, budgetMs = 45000) {
+  if (process.env.AIRROI_SWEEP_ENABLED !== '1') throw new Error('Fetching is switched off to protect your AirROI credit. Ask Claude before switching it back on.');
   const db = adminClient();
   const started = Date.now();
   const q = db.from('sweep_cells').select('*');

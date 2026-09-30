@@ -28,16 +28,16 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
       <Link href="/admin" className="hint">← Admin</Link>
       <div>
         <h1 style={{ fontSize: 34, margin: 0 }}>Listing data</h1>
-        <p className="hint" style={{ margin: '4px 0 0' }}>{(listings ?? 0).toLocaleString('en-AU')} listings stored · {calls.toLocaleString('en-AU')} AirROI calls used (about US${(calls * 0.01).toFixed(2)}) · {open} of {(cells || []).length} areas still to fetch</p>
+        <p className="hint" style={{ margin: '4px 0 0' }}>{(listings ?? 0).toLocaleString('en-AU')} listings stored · {calls.toLocaleString('en-AU')} AirROI calls used (about US${(calls * 0.5).toFixed(2)} at US$0.50 a call) · {open} of {(cells || []).length} areas still to fetch</p>
       </div>
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <b>Fetch listings</b>
-        <p className="hint" style={{ margin: 0 }}>Each click fetches up to 400 listings for the next unfinished area (about 50 seconds, up to US$0.40). Keep clicking until every area says finished. Top up AirROI credit first if needed.</p>
+        <p className="hint" style={{ margin: 0 }}>Fetching is switched off. AirROI charges US$0.50 per call (10 listings each), so a full sweep would cost thousands. Claude will switch it back on only for a planned, budgeted run (4 calls = US$2 per click).</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <form action={sweepNext}><button className="btn primary" type="submit">Fetch the next area</button></form>
+          <form action={sweepNext}><button className="btn primary" type="submit" disabled={process.env.AIRROI_SWEEP_ENABLED !== '1'}>Fetch the next area (US$2)</button></form>
           <form action={addPresetAreas}><button className="btn secondary" type="submit">Add all Sydney and Melbourne areas</button></form>
           <form action={runSeed}><button className="btn secondary" type="submit">Update researched profiles</button></form>
           <Link className="btn secondary" href="/admin/data?find=1">Find businesses without a profile</Link>
@@ -61,7 +61,7 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
         {(cells || []).map((c) => (
           <div key={c.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 10, padding: '10px 16px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>
             <span><b>{c.label}</b> <span className="hint">· {c.listings_seen} listings · {c.calls_used} calls · {c.done ? 'finished' : 'more to fetch'}</span></span>
-            {!c.done && <form action={sweepNext}><input type="hidden" name="cell" value={c.id} /><button className="btn secondary small" type="submit">Fetch</button></form>}
+            {!c.done && process.env.AIRROI_SWEEP_ENABLED === '1' && <form action={sweepNext}><input type="hidden" name="cell" value={c.id} /><button className="btn secondary small" type="submit">Fetch</button></form>}
           </div>
         ))}
         <form action={addArea} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '12px 16px', borderTop: '1px solid var(--line)' }}>
