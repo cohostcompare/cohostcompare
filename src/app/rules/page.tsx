@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import AskRules from '@/components/AskRules';
 import Photo from '@/components/Photo';
-import { RULES, RULES_CHECKED } from '@/lib/rules';
+import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Short-term rental rules by state',
@@ -19,6 +21,11 @@ export default function Rules() {
         <p className="hint" style={{ margin: 0 }}>This is general information, not legal advice. Rules change and councils add their own, so check with your council, and your strata or owners corporation, before you list.</p>
       </header>
 
+      {rulesAgeDays() > RULES_STALE_DAYS && (
+        <p role="note" style={{ margin: 0, border: '1px solid var(--signal)', borderRadius: 10, padding: '10px 14px' }}>
+          <b>Heads up:</b> this guide was last checked {rulesAgeDays()} days ago and is due for review. Confirm anything important using the official sources linked under each state.
+        </p>
+      )}
       <AskRules />
 
       <nav aria-label="States" className="chips">

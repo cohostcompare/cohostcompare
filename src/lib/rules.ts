@@ -1,6 +1,10 @@
 // Plain-English summary of short-term rental rules by state. General information, not legal advice.
 // Every point is backed by an official government source (state, territory or council). No blogs or industry sites. Review and update regularly (last checked below).
 export const RULES_CHECKED = '30 September 2026';
+export const RULES_CHECKED_ISO = '2026-09-30'; // keep in step with RULES_CHECKED
+/** Days since the rules were last checked against official sources. Over 45 = overdue for review. */
+export const rulesAgeDays = () => Math.floor((Date.now() - new Date(`${RULES_CHECKED_ISO}T00:00:00+10:00`).getTime()) / 86400e3);
+export const RULES_STALE_DAYS = 45;
 
 export type StateRules = {
   code: string;
