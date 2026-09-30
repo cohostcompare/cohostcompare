@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import EmailSignIn from '@/components/EmailSignIn';
 import { emailMatchesSite, siteDomain } from '@/lib/claims';
-import { managerForClaim } from '@/lib/data';
+import { managerForClaim, publicManager } from '@/lib/data';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ClaimForm from './ClaimForm';
 
@@ -17,18 +17,58 @@ export default async function Claim({ params }: { params: P }) {
   if (!m) notFound();
   const user = await currentUser();
   const domain = siteDomain(m.website);
+  const pub = await publicManager(slug);
+  const { count: waiting } = await adminClient().from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', slug).in('status', ['sent', 'viewed']);
   const existing = user ? (await adminClient().from('manager_claims').select('status').eq('manager_id', m.id).eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle()).data : null;
 
   return (
-    <main style={{ maxWidth: 640, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
+    <main className="claim" style={{ paddingBlock: '16px 64px' }}>
+      <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
       <Link href={`/managers/${m.slug}`} className="hint">← Back to {m.name}</Link>
-      <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Claim {m.name}</h1>
-      <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--muted)', display: 'grid', gap: 4 }}>
-        <li>Add your fees, services, platforms, logo and photos</li>
-        <li>Receive and reply to owners&apos; quote requests</li>
-        <li>Free during launch</li>
-      </ul>
+      <div style={{ display: 'grid', gap: 8 }}>
+        <span className="label" style={{ color: 'var(--brand)' }}>Free for managers</span>
+        <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Claim {m.name}</h1>
+        <p className="lede" style={{ margin: 0 }}>Owners near your homes can already find {m.name} here. Claiming lets you tell your side: your fees, services and photos, and reply to owners who ask you for a quote.</p>
+      </div>
 
+      {!!waiting && !m.claimed && (
+        <div className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}>
+          <b>{waiting === 1 ? 'An owner is' : `${waiting} owners are`} waiting for a quote from {m.name}.</b> Claim your profile to see the property details and reply.
+        </div>
+      )}
+      {pub && (
+        <section className="panel" style={{ display: 'grid', gap: 10 }} aria-label="How owners see you now">
+          <span className="label">How owners see you today</span>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div className="av" aria-hidden="true" style={pub.tile ? { background: pub.tile.bg, color: pub.tile.fg } : undefined}>{pub.initials}</div>
+            <div style={{ minWidth: 0 }}>
+              <b style={{ fontSize: 18 }}>{pub.name}</b>
+              <div className="meta" style={{ margin: '2px 0 0' }}>
+                {pub.propertyCount ? <span><b>{pub.propertyCount}</b> Airbnb homes tracked</span> : <span>No listing figures yet</span>}
+                {pub.avgRating != null && <span><b>{pub.avgRating.toFixed(2)} ★</b> guest rating</span>}
+                <span>Fee: <b>{pub.feeMin != null ? `${pub.feeMin}${pub.feeMax && pub.feeMax !== pub.feeMin ? `–${pub.feeMax}` : ''}%` : 'on request'}</b></span>
+              </div>
+            </div>
+          </div>
+          <ul className="ticks">
+            <li className={pub.feeMin != null ? 'done' : ''}>Your fees and contract terms, in the same format as everyone else</li>
+            <li className={pub.logoUrl ? 'done' : ''}>Your logo and photos of homes you manage</li>
+            <li>Every platform you use, not just Airbnb</li>
+            <li>A &ldquo;Replies on CoHostCompare&rdquo; badge instead of &ldquo;Not yet on CoHostCompare&rdquo;</li>
+            <li>Quote requests from owners, with the property details filled in</li>
+            <li>A &ldquo;Verified business&rdquo; badge when your ABN checks out</li>
+          </ul>
+        </section>
+      )}
+
+      <section className="facts-grid">
+        <div className="panel"><h3>What it costs</h3><p>Nothing. Claiming, editing your profile and replying to owners are free, with no lead fees and no lock-in.</p></div>
+        <div className="panel"><h3>Where the figures come from</h3><p>Public listing data and your own website, measured the same way for every manager. <Link href="/managers#why-listed">How we build profiles</Link></p></div>
+      </section>
+      <p className="hint" style={{ margin: 0 }}>Not your business, or rather not be listed? Email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> and we&apos;ll sort it out.</p>
+      </div>
+
+      <aside className="sticky" style={{ display: 'grid', gap: 12 }}>
       {m.claimed && existing?.status !== 'approved' ? (
         <div className="panel">This profile has already been claimed. If that wasn&apos;t you or your team, email <b>hello@cohostcompare.com</b>.</div>
       ) : existing?.status === 'approved' ? (
@@ -49,6 +89,7 @@ export default async function Claim({ params }: { params: P }) {
             : "First, confirm your work email. We'll check your claim by hand, usually within one business day."}
         />
       )}
+      </aside>
     </main>
   );
 }

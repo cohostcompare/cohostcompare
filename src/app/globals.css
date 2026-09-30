@@ -286,3 +286,11 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .pl-list li.on { background: var(--tint); }
 .pl-list li.pl-attrib { cursor: default; font-size: 11px; color: var(--muted); text-align: right; padding: 4px 8px 0; }
 .pl-row .btn { min-height: 50px; }
+
+/* claim page */
+.claim { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; align-items: start; }
+@media (max-width: 880px) { .claim { grid-template-columns: 1fr; } }
+.ticks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.ticks li { position: relative; padding-left: 26px; }
+.ticks li::before { content: "+"; position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 99px; background: var(--tint); color: var(--brand); font-weight: 800; font-size: 13px; display: grid; place-items: center; line-height: 1; margin-top: 3px; }
+.ticks li.done::before { content: "✓"; background: var(--brand); color: var(--on-brand); }
