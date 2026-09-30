@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
+import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
 import { sendOutreachBatch, suppressed } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 
@@ -37,4 +38,23 @@ export async function sendNow() {
   const r = await sendOutreachBatch();
   revalidatePath('/admin/outreach');
   back(`Sent ${r.sent} email${r.sent === 1 ? '' : 's'}.${'note' in r && r.note ? ` ${r.note}.` : ''}`);
+}
+
+/** Adds the researched contacts ticked on the review list (unclaimed, visible managers only; skips unsubscribed and existing). */
+export async function approveResearched(form: FormData) {
+  await requireAdmin('/admin/outreach');
+  const picked = new Set(form.getAll('pick').map(String));
+  const db = adminClient();
+  const { data: mgrs } = await db.from('managers').select('id, slug, claimed, published');
+  const bySlug = new Map((mgrs || []).map((m) => [m.slug, m]));
+  let added = 0, skipped = 0;
+  for (const c of RESEARCHED_CONTACTS) {
+    if (!picked.has(`${c.slug}|${c.email}`)) continue;
+    const m = bySlug.get(c.slug);
+    if (!m || m.claimed || !m.published || await suppressed(c.email)) { skipped++; continue; }
+    const { error } = await db.from('outreach_contacts').insert({ manager_id: m.id, email: c.email, source_url: c.source });
+    if (error) skipped++; else added++;
+  }
+  revalidatePath('/admin/outreach');
+  back(`Added ${added} contact${added === 1 ? '' : 's'}${skipped ? ` (${skipped} skipped: already added, claimed, hidden or not created yet)` : ''}. Emails start with the next morning's batch.`);
 }

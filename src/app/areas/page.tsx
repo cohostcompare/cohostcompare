@@ -5,7 +5,7 @@ import { areas } from '@/lib/areas';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Short-term rental managers by area',
-  description: 'Browse Airbnb and short-term rental managers by area across Sydney and Melbourne.',
+  description: 'Browse Airbnb and short-term rental managers by area across Sydney, Melbourne and NSW and Victorian holiday spots.',
 };
 
 export default async function Areas() {

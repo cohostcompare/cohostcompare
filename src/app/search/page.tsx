@@ -33,7 +33,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
       ) : (
         <div className="empty" style={{ marginBottom: 48 }}>
           <h2 style={{ marginTop: 0, fontSize: 22 }}>No managers found near here yet</h2>
-          <p style={{ color: 'var(--muted)' }}>We&apos;re starting in Sydney and Melbourne and adding managers every week. Try another address or a nearby suburb, picking it from the suggestions.</p>
+          <p style={{ color: 'var(--muted)' }}>We cover Sydney, Melbourne and NSW and Victorian holiday spots, and add managers every week. Try another address or a nearby suburb, picking it from the suggestions.</p>
           <AddressSearch />
         </div>
       )}

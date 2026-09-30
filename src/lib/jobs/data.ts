@@ -156,7 +156,7 @@ export async function seedManagers() {
     if (!g) { report.push({ slug: s.slug, matched: false }); continue; }
     rows.push({
       slug: s.slug, name: s.name, tagline: s.tagline || null, about: s.about || null,
-      airbnb_host_ids: g.accounts.map((a) => a.id), website: s.website || null, cities: s.cities || [], platforms: ['Airbnb'], services: s.services || [],
+      airbnb_host_ids: g.accounts.map((a) => a.id), website: s.website || null, cities: s.cities || [], platforms: s.platforms || ['Airbnb'], services: s.services || [],
       fee_min: s.fee_min ?? null, fee_max: s.fee_max ?? null, fee_note: s.fee_note || null, licensed_agent: s.licensed_agent ?? null,
       gated: s.gated || {}, sources: s.sources || [], published: Boolean(s.published), updated_at: new Date().toISOString(),
     });

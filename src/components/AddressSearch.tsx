@@ -36,7 +36,7 @@ export default function AddressSearch() {
       <label className="label" htmlFor="addr">Your property&apos;s address or suburb</label>
       <PlacesInput id="addr" kind="any" placeholder="Start typing an address or suburb" onPick={go} fallback={postcodeBox} buttonLabel="Find managers" />
       {error && <p className="hint" role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{error}</p>}
-      <p className="hint" style={{ margin: 0 }}>A full address gives the most accurate results. Buying? A suburb works too. Now covering Sydney and Melbourne.</p>
+      <p className="hint" style={{ margin: 0 }}>A full address gives the most accurate results. Buying? A suburb works too. Now covering Sydney, Melbourne and NSW and Victorian holiday spots.</p>
     </div>
   );
 }

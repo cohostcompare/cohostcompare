@@ -7,8 +7,8 @@ export type Area = { slug: string; label: string; city: 'Sydney' | 'Melbourne' |
 export async function areas(): Promise<Area[]> {
   const { data } = await adminClient().from('sweep_cells').select('id, label, lat, lng').gt('listings_seen', 0).order('label');
   const rows = (data || []).map((c) => ({
-    short: c.id.replace(/^(syd|mel)-/, ''), label: c.label, lat: c.lat, lng: c.lng,
-    city: c.id.startsWith('syd-') ? 'Sydney' : c.id.startsWith('mel-') ? 'Melbourne' : 'Australia',
+    short: c.id.replace(/^(syd|mel|nsw|vic)-/, ''), label: c.label, lat: c.lat, lng: c.lng,
+    city: c.id.startsWith('syd-') ? 'Sydney' : c.id.startsWith('mel-') ? 'Melbourne' : c.id.startsWith('nsw-') ? 'NSW holiday areas' : c.id.startsWith('vic-') ? 'Victorian holiday areas' : 'Australia',
   }));
   // Same short name in two cities (e.g. both CBDs): prefix the city to keep URLs unique.
   const dup = new Set(rows.map((r) => r.short).filter((x, i, a) => a.indexOf(x) !== i));

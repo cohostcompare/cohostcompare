@@ -7,7 +7,7 @@ export default function Home() {
     <main>
       <section className="split" style={{ paddingBlock: '36px 56px' }}>
         <div style={{ display: 'grid', gap: 22 }}>
-          <div className="label" style={{ color: 'var(--brand)' }}>Sydney and Melbourne</div>
+          <div className="label" style={{ color: 'var(--brand)' }}>Sydney, Melbourne and NSW and Victorian holiday spots</div>
           <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare every short-term rental manager for your property.</h1>
           <p className="lede">See the managers who cover your address, with fees, platforms and real guest ratings side by side. Then request quotes from up to five managers in one go. Free for owners, and neutral: no manager can pay to change their rating.</p>
           <AddressSearch />
@@ -54,8 +54,8 @@ export default function Home() {
       </section>
 
       <section className="band">
-        <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Starting in Sydney and Melbourne</h2>
-        <p className="lede" style={{ marginBottom: 24 }}>We&apos;re mapping every manager running short-term rentals in both cities, from Bondi to Brunswick. More cities soon. <Link href="/areas">Browse by area →</Link></p>
+        <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Sydney, Melbourne and the holiday coast</h2>
+        <p className="lede" style={{ marginBottom: 24 }}>We&apos;ve mapped the managers running short-term rentals across Sydney and Melbourne, plus NSW and Victorian holiday spots from Byron Bay and the Blue Mountains to the Great Ocean Road and Daylesford. More areas soon. <Link href="/areas">Browse by area →</Link></p>
         <div className="cities">
           <div className="city">
             <Photo name="sydney" ratio="16 / 10" sizes="(max-width: 880px) 100vw, 540px" />

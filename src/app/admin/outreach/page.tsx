@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { DAILY_CAP, SEQUENCE, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
-import { addContact, sendNow, setStatus } from './actions';
+import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
+import { addContact, approveResearched, sendNow, setStatus } from './actions';
 
 export const metadata: Metadata = { title: 'Outreach · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,11 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
     db.from('outreach_contacts').select('id, email, first_name, source_url, step, status, next_send_at, last_sent_at, managers(name, slug, claimed)').order('created_at', { ascending: false }).limit(300),
     db.from('managers').select('id, name, claimed').eq('published', true).eq('claimed', false).order('name'),
   ]);
+  const { data: allMgrs } = await db.from('managers').select('slug, name, claimed, published');
+  const mgrBySlug = new Map((allMgrs || []).map((m) => [m.slug, m]));
+  const have = new Set((contacts || []).map((c) => `${((Array.isArray(c.managers) ? c.managers[0] : c.managers) as { slug: string } | null)?.slug}|${c.email}`));
+  const pending = RESEARCHED_CONTACTS.filter((c) => !have.has(`${c.slug}|${c.email}`));
+  const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
   const counts = (contacts || []).reduce<Record<string, number>>((a, c) => ({ ...a, [c.status]: (a[c.status] || 0) + 1 }), {});
   const sample: Ctx = { manager: 'Example Stays', slug: 'example', first: 'Sam', homes: 24, rating: 4.86, suburbs: ['Bondi', 'Coogee'], waiting: 0, email: 'sam@example.com.au', source: 'https://example.com.au/contact' };
   const i = Math.min(Math.max(Number(sp.preview || 1), 1), SEQUENCE.length) - 1;
@@ -47,6 +53,25 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
           <button className="btn primary" type="submit">Add contact</button>
         </div>
       </form>
+      {pending.length > 0 && (
+        <form action={approveResearched} className="panel" style={{ display: 'grid', gap: 10 }}>
+          <b>Researched contacts to review ({pending.length})</b>
+          <p className="hint" style={{ margin: 0 }}>Each email was found on the business&apos;s own website (source link). Untick any you don&apos;t want, then approve. Nothing is sent until you approve, and only unclaimed, visible profiles are emailed. Profiles marked &ldquo;not created yet&rdquo; need <b>Admin → Listing data → Update researched profiles</b> first.</p>
+          <div style={{ display: 'grid', gap: 2, maxHeight: 460, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: 10 }}>
+            {pending.map((c) => {
+              const m = mgrBySlug.get(c.slug);
+              const ok = m && !m.claimed && m.published;
+              return (
+                <label key={`${c.slug}|${c.email}`} style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr)', gap: 10, padding: '8px 12px', borderTop: '1px solid var(--line)', alignItems: 'start', opacity: ok ? 1 : 0.55 }}>
+                  <input type="checkbox" name="pick" value={`${c.slug}|${c.email}`} defaultChecked={Boolean(ok)} disabled={!ok} style={{ marginTop: 4 }} />
+                  <span><b>{m?.name || c.slug}</b> <span className="hint">· {c.email} · <a href={c.source} target="_blank" rel="noreferrer">{host(c.source)}</a>{!m ? ' · profile not created yet' : m.claimed ? ' · already claimed' : !m.published ? ' · hidden' : ''}</span></span>
+                </label>
+              );
+            })}
+          </div>
+          <button className="btn primary" type="submit" style={{ justifySelf: 'start' }}>Approve ticked contacts</button>
+        </form>
+      )}
       <form action={sendNow}><button className="btn secondary" type="submit">Send today&apos;s due emails now</button></form>
 
       <section className="panel" style={{ padding: 0, overflow: 'hidden' }}>
