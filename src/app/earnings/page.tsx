@@ -18,7 +18,7 @@ export default function Earnings() {
         </div>
         <Photo name="bondi" ratio="3 / 2" eager sizes="(max-width: 880px) 100vw, 480px" />
       </header>
-      <div style={{ maxWidth: 1000 }}><EarningsTool /></div>
+      <EarningsTool />
     </main>
   );
 }

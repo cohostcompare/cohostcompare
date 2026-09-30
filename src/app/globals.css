@@ -351,7 +351,7 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 40px; 
 .ticks .soon { color: var(--muted); font-size: 13px; font-weight: 600; }
 
 /* earnings tool */
-.earn-tool { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.earn-tool { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); column-gap: 40px; padding: 0; overflow: hidden; } /* same columns as .split, so the right panel lines up with the photo above */
 .earn-form { display: grid; gap: 18px; padding: 26px 28px; }
 .earn-form h2 { font-size: 24px; margin: 0; }
 .beds { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -368,5 +368,6 @@ select.field { appearance: none; -webkit-appearance: none; padding-right: 40px; 
 .earn-preview li { display: grid; gap: 1px; padding-left: 14px; border-left: 3px solid var(--brand); }
 .earn-preview li b { font-family: var(--display); font-size: 17px; }
 .earn-preview li span { font-size: 14px; color: var(--muted); }
-@media (max-width: 760px) { .earn-tool { grid-template-columns: 1fr; } .earn-form { padding: 20px; } .earn-preview { padding: 20px; } }
+@media (max-width: 880px) { .earn-tool { grid-template-columns: 1fr; column-gap: 0; } }
+@media (max-width: 760px) { .earn-form { padding: 20px; } .earn-preview { padding: 20px; } }
 @media (max-width: 760px) { .seg { flex-wrap: nowrap; } .seg button { flex: 1 1 0; min-width: 0; padding: 0 4px; } }
