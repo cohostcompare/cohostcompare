@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const POINTS: [string, string][] = [
   ['Neutral by design', 'We’re not a manager, and we don’t earn more when you pick one over another. Most “best Airbnb manager” lists are written by managers ranking themselves first.'],
   ['Every manager, every platform', 'Airbnb’s own co-host directory only shows Airbnb co-hosts. We include full-service agencies and managers who list on Booking.com, Stayz and direct booking sites.'],
-  ['Performance you can check', 'Home counts, guest ratings and occupancy are estimates from managers’ public listings, refreshed regularly and shown the same way for everyone. We show where each figure comes from.'],
+  ['Performance you can check', 'Home counts, guest ratings and nightly rates are estimates from managers’ public listings, refreshed regularly and shown the same way for everyone. We show where each figure comes from.'],
   ['Fees in the same format', 'Where managers publish fees, we show them. Quotes come back in a standard format, so a 15% fee with a setup charge and a 12-month lock-in can be compared with 18% and no lock-in.'],
   ['No pay-to-rank', 'Managers can pay to be featured. Featured results are always labelled, and payment never changes a rating or a manager’s place in rated results.'],
   ['Your details stay yours', 'Managers see your property details and first name. Your email and phone number go only to the manager whose quote you accept.'],

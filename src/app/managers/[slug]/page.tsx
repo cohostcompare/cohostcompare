@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic';
 type P = Promise<{ slug: string }>;
 type SP = Promise<{ postcode?: string; street?: string; suburb?: string; state?: string; lat?: string; lng?: string }>;
 
-const pct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 const NOT_PUBLISHED = <span style={{ color: 'var(--muted)' }}>Not published yet: ask in your quote request</span>;
 
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
@@ -58,7 +57,6 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">homes tracked</div></div>
             {m.avgRating != null && <div className="stat"><div className="n">{m.avgRating.toFixed(2)} ★</div><div className="t">average guest rating</div></div>}
             {!!m.reviewCount && <div className="stat"><div className="n">{m.reviewCount.toLocaleString('en-AU')}</div><div className="t">guest reviews</div></div>}
-            {m.avgOccupancy != null && <div className="stat"><div className="n">{pct(m.avgOccupancy)}</div><div className="t">nights booked, last 12 months</div></div>}
             {m.avgNightlyRate != null && <div className="stat"><div className="n">A${Math.round(m.avgNightlyRate)}</div><div className="t">average nightly rate</div></div>}
             <div className="stat"><div className="n" style={fee ? undefined : { fontSize: 18 }}>{fee ?? 'On request'}</div><div className="t">management fee</div></div>
           </div>
@@ -131,7 +129,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
         )}
-        {hasData && <p className="hint" style={{ margin: 0 }}>Performance figures are estimates based on {m.name}&apos;s public Airbnb listings over the last 12 months{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
+        {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>
 
       <aside className="sticky">

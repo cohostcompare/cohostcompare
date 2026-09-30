@@ -7,7 +7,6 @@ import TrustBadges from '@/components/TrustBadges';
 import { areaKey, usePicks } from '@/lib/client/picks';
 import type { NearbyManager } from '@/lib/types';
 
-const pct = (v: number | null) => (v == null ? null : `${Math.round(v * 100)}%`);
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
 export default function ResultsList({ managers, query }: { managers: NearbyManager[]; query: string }) {
@@ -37,7 +36,6 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                 <div className="meta">
                   {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
                   {m.propertyCount != null && <span><b>{m.propertyCount}</b> homes tracked</span>}
-                  {m.avgOccupancy != null && <span><b>{pct(m.avgOccupancy)}</b> nights booked</span>}
                 </div>
                 <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
               </div>

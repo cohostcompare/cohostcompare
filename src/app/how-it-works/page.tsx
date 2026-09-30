@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const STEPS: [string, string][] = [
   ['Enter your address or suburb', 'We show every manager running short-term rentals near you, from Airbnb co-hosts to full-service agencies. Buying? A suburb works too.'],
-  ['Compare them side by side', 'See how many homes each manager runs near you, their guest ratings, how often their homes are booked and their average nightly rate. Where managers publish fees, you see those too.'],
+  ['Compare them side by side', 'See how many homes each manager runs near you, their guest ratings and their average nightly rate. Where managers publish fees, you see those too.'],
   ['Sign in free for the full picture', 'A free account shows each manager’s full fees and contract terms, and how they perform around your address.'],
   ['Request quotes from up to five managers', 'Describe your property once. Each manager replies with a quote in the same format, so fees, setup costs, lock-in and what’s included line up.'],
   ['Choose, with everything in one inbox', 'Message managers, compare quotes and accept the one you want. Your contact details are shared only with the manager you choose.'],

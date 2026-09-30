@@ -33,7 +33,7 @@ export default async function AreaPage({ params }: { params: P }) {
         </div>
       </div>
       {managers.length ? <ResultsList managers={managers} query={q.toString()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
-      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and occupancy are estimates based on managers&apos; public listings over the last 12 months. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
+      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public listings over the last 12 months. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
     </main>
   );
 }
