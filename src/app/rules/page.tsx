@@ -15,7 +15,7 @@ export default function Rules() {
       <header style={{ display: 'grid', gap: 10 }}>
         <span className="label" style={{ color: 'var(--brand)' }}>Rules by state</span>
         <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Short-term rental rules in Australia</h1>
-        <p className="lede">Registration, night caps, levies and strata rules, state by state, in plain English. Last checked {RULES_CHECKED}.</p>
+        <p className="lede">Registration, night caps, levies and strata rules, state by state, in plain English. Every point is checked against official government and council sources, last on {RULES_CHECKED}.</p>
         <p className="hint" style={{ margin: 0 }}>This is general information, not legal advice. Rules change and councils add their own, so check with your council, and your strata or owners corporation, before you list.</p>
       </header>
 
@@ -32,8 +32,8 @@ export default function Rules() {
           <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
             {r.points.map((p) => <li key={p}>{p}</li>)}
           </ul>
-          {r.watch && <p className="hint" style={{ margin: 0 }}>{r.watch.join(' ')}</p>}
-          <p className="hint" style={{ margin: 0 }}>Sources: {r.sources.map((s, i) => <span key={s.url}>{i ? '; ' : ''}<a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></span>)}</p>
+          {r.watch && <p style={{ margin: 0, background: 'var(--tint)', borderRadius: 10, padding: '8px 12px', fontSize: 14 }}><b>Coming up:</b> {r.watch.join(' ')}</p>}
+          <p className="hint" style={{ margin: 0 }}>Official sources: {r.sources.map((s, i) => <span key={s.url}>{i ? '; ' : ''}<a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></span>)}</p>
         </section>
       ))}
     </main>
