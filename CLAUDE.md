@@ -3,8 +3,9 @@
 Neutral marketplace where Australian property owners compare short-term-rental (STR) managers and request quotes from up to 5. Owner: Ben Deeley (Sydney), hello@cohostcompare.com. Self-service by design: no sales calls.
 
 ## Branches and hosting
-- `main`: live waitlist site at www.cohostcompare.com (static index.html + root `/api/*.js` Vercel functions used for admin data jobs: AirROI sweep, clustering, seeding).
-- `app`: the Next.js 15 app (App Router, React 19, TypeScript). Deployed as a Vercel preview at cohostcompare-git-app-cohostcompare.vercel.app (behind Vercel login). Launch = merge `app` into `main` after porting the root `/api/*.js` jobs to Next route handlers.
+- `main` = production at www.cohostcompare.com (Next.js 15 App Router, React 19, TypeScript). Vercel deploys `main` to production.
+- `app` = working branch; every push deploys a Vercel preview (cohostcompare-git-app-cohostcompare.vercel.app, behind Vercel login). Ship by fast-forwarding `main` to `app`.
+- Admin data jobs (AirROI sweep, clustering, seeding) live in `src/lib/jobs/data.ts`, run from /admin/data or `/api/admin/[job]` (admin session or `?pass=ADMIN_TOKEN`).
 - Commits on this repo are authored as Claude; the GitHub app is installed on the org.
 
 ## Services
