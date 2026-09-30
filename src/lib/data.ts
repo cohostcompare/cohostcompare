@@ -63,6 +63,28 @@ async function withStats(rows: Row[]): Promise<Map<string, Stats>> {
   return new Map((data as Stats[] | null || []).map((s) => [s.manager_id, s]));
 }
 
+/** Internal test profile: unpublished, so the public never sees it; admins see it in every search and can request quotes. */
+export const TEST_SLUG = 'test-profile';
+async function viewerIsAdmin() {
+  try {
+    const { currentUser } = await import('@/lib/supabase/server');
+    const { isAdminEmail } = await import('@/lib/admin');
+    return isAdminEmail((await currentUser())?.email);
+  } catch { return false; }
+}
+async function testManager(): Promise<NearbyManager | null> {
+  const { data: r } = await adminClient().from('managers').select(COLS).eq('slug', TEST_SLUG).maybeSingle();
+  if (!r) return null;
+  const extras = await withExtras([r as Row]);
+  return { ...toPublic(r as Row, undefined, extras.get((r as Row).id)), nearby: 0, nearbyRating: null, nearestKm: null };
+}
+/** Adds the test profile to results when an admin is looking. */
+export async function withTestForAdmin(list: NearbyManager[]): Promise<NearbyManager[]> {
+  if (!(await viewerIsAdmin())) return list;
+  const t = await testManager();
+  return t && !list.some((m) => m.slug === t.slug) ? [...list, t] : list;
+}
+
 /** Managers with homes within COVER_KM of a point, busiest nearby first. */
 export async function managersNear(lat: number, lng: number): Promise<NearbyManager[]> {
   const db = adminClient();
@@ -86,7 +108,8 @@ export async function managersForPostcode(postcode: string): Promise<NearbyManag
 }
 
 export async function publicManager(slug: string): Promise<PublicManager | null> {
-  const { data: r } = await adminClient().from('managers').select(COLS).eq('slug', slug).eq('published', true).maybeSingle();
+  const q = adminClient().from('managers').select(COLS).eq('slug', slug);
+  const { data: r } = slug === TEST_SLUG && (await viewerIsAdmin()) ? await q.maybeSingle() : await q.eq('published', true).maybeSingle();
   if (!r) return null;
   const [stats, extras] = await Promise.all([withStats([r as Row]), withExtras([r as Row])]);
   return toPublic(r as Row, stats.get((r as Row).id), extras.get((r as Row).id));
@@ -95,7 +118,9 @@ export async function publicManager(slug: string): Promise<PublicManager | null>
 /** Which of these managers cover a point (homes within COVER_KM). */
 export async function coveringSlugs(lat: number, lng: number, slugs: string[], postcode?: string): Promise<Set<string>> {
   const near = await managersForArea(lat, lng, postcode);
-  return new Set(near.filter((m) => slugs.includes(m.slug)).map((m) => m.slug));
+  const out = new Set(near.filter((m) => slugs.includes(m.slug)).map((m) => m.slug));
+  if (slugs.includes(TEST_SLUG) && (await viewerIsAdmin())) out.add(TEST_SLUG);
+  return out;
 }
 
 /**
@@ -111,7 +136,8 @@ export async function managersForArea(lat: number, lng: number, postcode?: strin
 
 /** Owner-only details. Call only after confirming the visitor is signed in. */
 export async function gatedDetails(slug: string): Promise<GatedDetails | null> {
-  const { data: r } = await adminClient().from('managers').select('fee_note, gated').eq('slug', slug).eq('published', true).maybeSingle();
+  const gq = adminClient().from('managers').select('fee_note, gated').eq('slug', slug);
+  const { data: r } = slug === TEST_SLUG && (await viewerIsAdmin()) ? await gq.maybeSingle() : await gq.eq('published', true).maybeSingle();
   if (!r) return null;
   const g = (r.gated || {}) as Record<string, unknown>;
   return {

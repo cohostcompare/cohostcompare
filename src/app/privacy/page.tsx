@@ -47,6 +47,7 @@ export default function Privacy() {
         <li>Supabase: database and sign-in (hosted in Sydney, Australia).</li>
         <li>Vercel: website hosting and visit statistics (servers may be outside Australia, including the United States).</li>
         <li>Resend and Google Workspace: sending and receiving email (United States).</li>
+        <li>Stripe: card payments from managers (Australia and the United States). We never see or store full card numbers.</li>
         <li>ClickSend: sends text message alerts to managers who turn them on (Australia).</li>
         <li>Google Maps: address search and maps. Google receives what you type into the address box.</li>
         <li>Anthropic: answers questions typed into our rules tool (United States). Questions aren&apos;t linked to your account.</li>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AddressSearch from '@/components/AddressSearch';
+import HeroCarousel from '@/components/HeroCarousel';
 import Photo from '@/components/Photo';
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
           <p style={{ margin: 0 }}><Link href="/earnings"><b>Not listed yet? See what your property could earn →</b></Link></p>
         </div>
         <div className="hero-photo">
-          <Photo name="bondi" ratio="4 / 5" eager sizes="(max-width: 880px) 100vw, 520px" />
+          <HeroCarousel sizes="(max-width: 880px) 100vw, 520px" />
           <div className="float" aria-hidden="true">
             <b>Up to 5 quotes</b>
             <span className="hint">in one standard format, side by side</span>

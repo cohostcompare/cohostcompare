@@ -31,7 +31,7 @@ export default async function Admin() {
     db.from('inbound_emails').select('email_id, from_email, subject, outcome, created_at').order('created_at', { ascending: false }).limit(10),
   ]);
   const [{ data: fees }, { data: flags }] = await Promise.all([
-    db.from('success_fees').select('id, amount, status, created_at, managers(name)').in('status', ['owed', 'invoiced']).order('created_at', { ascending: false }).limit(50), // needs 015
+    db.from('success_fees').select('id, amount, status, created_at, managers(name)').order('created_at', { ascending: false }).limit(30), // needs 015
     db.from('account_flags').select('id, user_id, reason, created_at, managers(name)').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
   ]);
   const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
@@ -57,12 +57,12 @@ export default async function Admin() {
         ))}
       </section>
       <section className="panel" style={{ display: 'grid', gap: 8 }}>
-        <b>Success fees to invoice (Free plan, A$ ex GST)</b>
-        {!fees?.length ? <span className="hint">None owed.</span> : fees.map((f) => (
+        <b>Client confirmations (Free plan, A$ ex GST)</b>
+        {!fees?.length ? <span className="hint">None yet.</span> : fees.map((f) => (
           <div key={f.id} style={{ borderTop: '1px solid var(--line)', paddingTop: 8, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             <span><b>{(f.managers as unknown as { name: string } | null)?.name}</b> · ${f.amount} · {f.status} <span className="hint">{when(f.created_at)}</span></span>
-            {['invoiced', 'paid', 'waived'].filter((x) => x !== f.status).map((x) => (
-              <form key={x} action={setFeeStatus}><input type="hidden" name="id" value={f.id} /><input type="hidden" name="status" value={x} /><button className="linkish">Mark {x}</button></form>
+            {f.status === 'awaiting_unlock' && ['waived'].map((x) => (
+              <form key={x} action={setFeeStatus}><input type="hidden" name="id" value={f.id} /><input type="hidden" name="status" value={x} /><button className="linkish">Waive and introduce</button></form>
             ))}
           </div>
         ))}

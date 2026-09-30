@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { myManagers, requireThread } from '@/lib/managers';
-import { planOf, plansFor, SUCCESS_FEE_TEXT } from '@/lib/pro';
+import { planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
+import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
 import { declineRequest } from '../actions';
 import { ManagerComposer, QuoteForm } from './Forms';
@@ -12,8 +13,9 @@ export const dynamic = 'force-dynamic';
 type P = Promise<{ thread: string }>;
 const WHO: Record<string, string> = { manager: 'You', system: 'CoHostCompare' };
 
-export default async function ManagerThread({ params }: { params: P }) {
+export default async function ManagerThread({ params, searchParams }: { params: P; searchParams: Promise<{ unlocked?: string; billing?: string }> }) {
   const { thread: id } = await params;
+  const sp = await searchParams;
   const { user, thread: t, req } = await requireThread(id);
   const db = adminClient();
   const { data: msgs } = await db.from('messages').select('id, sender, body, created_at').eq('thread_id', t.id).order('created_at');
@@ -24,7 +26,9 @@ export default async function ManagerThread({ params }: { params: P }) {
   const defaults = { feePct: m.fee_min ?? undefined, gst: String(m.fee_note || '').includes('GST'), setupFee: g.setupFee ?? undefined, minTermMonths: g.minTermMonths ?? undefined, noticeDays: g.noticeDays ?? undefined, cleaning: g.cleaningPassedOn === true ? 'guests' : g.cleaningPassedOn === false ? 'owner' : undefined, linenIncluded: g.linenIncluded, included: g.inclusions || [] };
   const plan = planOf((await plansFor([m.id])).get(m.id));
   const { data: tpl } = await db.from('managers').select('quote_templates').eq('id', m.id).maybeSingle(); // needs 015
+  const { data: fee } = await db.from('success_fees').select('status, expires_at').eq('thread_id', t.id).maybeSingle(); // needs 015/016
   const accepted = t.status === 'accepted';
+  const locked = accepted && Boolean(fee && ['awaiting_unlock', 'expired'].includes(fee.status));
   const closed = ['accepted', 'declined', 'withdrawn'].includes(t.status);
   const first = String(req.owner_name || 'Owner').split(' ')[0];
 
@@ -36,16 +40,29 @@ export default async function ManagerThread({ params }: { params: P }) {
         <h1 style={{ fontSize: 'clamp(26px,4vw,34px)', margin: '2px 0 0' }}>{first} · {req.suburb || ''} {req.state || ''} {req.postcode}</h1>
       </div>
 
+      {sp.unlocked && <div className="panel" style={{ background: 'var(--tint)' }}><b>Thanks, payment received.</b> We&apos;ve emailed you and {first} an introduction. It can take a minute to show here.</div>}
+      {sp.billing === 'soon' && <div className="panel">Card payments are being switched on. Please try again shortly, or email hello@cohostcompare.com.</div>}
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '10px 20px', margin: 0 }}>
           <div><dt className="label">Property</dt><dd style={{ margin: 0 }}>{req.property_type}, {Number(req.bedrooms) === 0 ? 'studio' : `${req.bedrooms} bedrooms`}</dd></div>
           <div><dt className="label">Listed now</dt><dd style={{ margin: 0 }}>{req.currently_listed}</dd></div>
           <div><dt className="label">Wants help with</dt><dd style={{ margin: 0 }}>{(req.services || []).join(', ')}</dd></div>
           <div><dt className="label">Timing</dt><dd style={{ margin: 0 }}>{req.start_timing}</dd></div>
+          {req.situation && <div><dt className="label">Owner</dt><dd style={{ margin: 0 }}>{String(req.situation).replace(/^I own the property/, 'Owns the property').replace(/^I’m buying it now|^I'm buying it now/, 'Buying it now').replace(/^I’m planning to buy a property|^I'm planning to buy a property/, 'Planning to buy')}</dd></div>}
           <div><dt className="label">Received</dt><dd style={{ margin: 0 }}>{new Date(t.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
         </dl>
         {req.notes && <p style={{ margin: 0 }}><b>Owner&apos;s note:</b> {req.notes}</p>}
-        {accepted ? (
+        {locked ? (
+          <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 10 }}>
+            <b>{first} accepted your quote. Confirm this client to get their details.</b>
+            <span>You&apos;re on the Free plan. Confirm for {SUCCESS_FEE_TEXT} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>
+            {fee?.status === 'expired' ? <span className="hint">The {UNLOCK_HOURS}-hour window has passed, so {first} has been told they can choose another manager. You can still confirm, and we&apos;ll introduce you.</span> : fee?.expires_at ? <span className="hint">Please confirm by {new Date(fee.expires_at).toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}.</span> : null}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <form action={unlockClient}><input type="hidden" name="thread" value={t.id} /><button className="btn primary">Confirm for {SUCCESS_FEE_TEXT}</button></form>
+              <form action={startPro}><input type="hidden" name="slug" value={t.manager_slug} /><button className="btn secondary">Start Pro instead</button></form>
+            </div>
+          </div>
+        ) : accepted ? (
           <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '12px 14px' }}>
             <b>{first} accepted your quote.</b> Their details: {req.owner_name}, <a href={`mailto:${req.owner_email}`}>{req.owner_email}</a>{req.owner_phone ? `, ${req.owner_phone}` : ''}{req.street ? `. Property: ${req.street}, ${req.suburb} ${req.state} ${req.postcode}` : ''}.
           </div>

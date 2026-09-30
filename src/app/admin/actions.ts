@@ -8,7 +8,13 @@ export async function setFeeStatus(form: FormData) {
   await requireAdmin('/admin');
   const status = String(form.get('status') || '');
   if (!['owed', 'invoiced', 'paid', 'waived'].includes(status)) return;
-  await adminClient().from('success_fees').update({ status, updated_at: new Date().toISOString() }).eq('id', String(form.get('id') || ''));
+  const id = String(form.get('id') || '');
+  if (status === 'waived') {
+    // Waiving a confirmation sends the introduction, as if the manager had paid.
+    const { data: f } = await adminClient().from('success_fees').select('thread_id').eq('id', id).maybeSingle();
+    const { completeUnlock } = await import('@/lib/intro');
+    if (f) await completeUnlock(f.thread_id, 'waived');
+  } else await adminClient().from('success_fees').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
   revalidatePath('/admin');
 }
 

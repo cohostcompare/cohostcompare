@@ -41,11 +41,18 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       <input type="hidden" name="managers" value={covered.map((m) => m.slug).join(',')} />
       <input type="hidden" name="lat" value={addr.lat ?? ''} />
       <input type="hidden" name="lng" value={addr.lng ?? ''} />
-      <p className="hint" style={{ margin: 0 }}>Signed in as {email}.</p>
       <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
+        <label style={L}>Email<input className="field" name="email" type="email" autoComplete="email" defaultValue={email} required /></label>
         <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
       </div>
+      <label style={L}>Which best describes you?
+        <select className="field" name="situation" defaultValue="I own the property">
+          <option>I own the property</option>
+          <option>I&apos;m buying it now (under contract or about to settle)</option>
+          <option>I&apos;m planning to buy a property</option>
+        </select>
+      </label>
 
       {!editing ? (
         <div style={{ display: 'grid', gap: 4 }}>
@@ -109,7 +116,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
           <select className="field" name="currently_listed"><option>Not yet listed</option><option>Listed, I manage it myself</option><option>Listed with another manager</option></select>
         </label>
         <label style={L}>When do you want to start?
-          <select className="field" name="start_timing"><option>As soon as possible</option><option>Within 1–3 months</option><option>Just exploring</option></select>
+          <select className="field" name="start_timing" defaultValue="In 1 to 3 months"><option>Within a month</option><option>In 1 to 3 months</option><option>In 3 to 12 months</option><option>Not sure yet</option></select>
         </label>
       </div>
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 8 }}>

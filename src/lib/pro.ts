@@ -11,15 +11,20 @@ import { adminClient } from '@/lib/supabase/server';
 export const FOUNDING_DEADLINE = '2027-01-31';
 export const FOUNDING_MONTHS = 3;
 // Prices live here only. Change them in one place; paying managers get 30 days' notice (terms section 6).
-export const PRO_PRICE = 'A$99 a month + GST';
+/** Set GST_REGISTERED=0 in Vercel if CoHostCompare isn't registered for GST: prices then show and charge without GST. */
+export const GST = process.env.GST_REGISTERED !== '0';
+const plusGst = GST ? ' + GST' : '';
+export const PRO_PRICE = `A$99 a month${plusGst}`;
 export const PRO_PRICE_SHORT = 'A$99';
-export const ENTERPRISE_PRICE = 'from A$400 a month + GST';
+export const ENTERPRISE_PRICE = `from A$400 a month${plusGst}`;
+export const PRO_CENTS = 9900;
 export const ENTERPRISE_PRICE_SHORT = 'A$400';
 /** Launch pricing: managers who subscribe during launch keep their price for this long. */
 export const PRICE_LOCK_MONTHS = 12;
-/** Free plan: a success fee only when an owner accepts the manager's quote. None on Pro or Enterprise. */
-export const SUCCESS_FEE = 199;
-export const SUCCESS_FEE_TEXT = 'A$199 + GST';
+/** Free plan: when an owner accepts, the manager pays this to unlock the owner's details and introduction. Free on Pro and Enterprise. */
+export const SUCCESS_FEE = 99;
+export const SUCCESS_FEE_TEXT = `A$99${plusGst}`;
+export const UNLOCK_HOURS = 48;
 /** Logins per plan. */
 export const SEATS: Record<'free' | 'pro' | 'enterprise', number> = { free: 1, pro: 5, enterprise: 1000 };
 export const PRO_FOLLOW_LIMIT = 2; // extra report regions a Pro manager can follow
@@ -34,7 +39,7 @@ export const PRO_FEATURES: Feature[] = [
   { title: 'More photos', body: 'Up to 24 photos on your profile instead of 12.', live: true },
   { title: 'Regional reports', body: 'Quarterly short-stay market reports for your regions, plus 2 more you choose, broken down by suburb: seasonality, nightly rates and revenue by bedrooms, demand and how fees compare. Every past report is kept.', live: true },
   { title: 'SMS alerts', body: 'A text message the moment an owner asks you for a quote or accepts yours.', live: true },
-  { title: 'No success fees', body: `Keep every client you win. On Free, a ${'A$199 + GST'} fee applies when an owner accepts your quote.`, live: true },
+  { title: 'Clients unlocked free', body: `When an owner accepts your quote you get their details and an introduction straight away. On Free, each one costs ${`A$99${plusGst}`} to unlock.`, live: true },
   { title: 'Team logins', body: 'Up to 5 people from your business, each with their own login.', live: true },
   { title: 'Quote templates', body: 'Save your standard fees, terms and inclusions and fill in a quote in one click.', live: true },
 ];

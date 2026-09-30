@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ManagerSignup from '@/components/ManagerSignup';
 import Photo from '@/components/Photo';
 import InterestForm from '@/app/interest/InterestForm';
-import { ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
+import { SUCCESS_FEE_TEXT, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const faqs: [string, string][] = [
-  ['What does it cost?', 'Your profile, owner quote requests and replies are free, with no lock-in. On the Free plan there’s a A$199 + GST success fee only when an owner accepts your quote. Pro and Enterprise have no success fees and add tools for your business, and founding managers get Pro free for three months.'],
+  ['What does it cost?', `Your profile, owner quote requests and replies are free, with no lock-in. On the Free plan, when an owner accepts your quote you pay ${SUCCESS_FEE_TEXT} to confirm them and get their details and an introduction. On Pro and Enterprise every client is confirmed at no extra cost, and founding managers get Pro free for three months.`],
   ['Why do you show my fees?', 'Owners compare on fees first. We show a fee band publicly and the full breakdown only to signed-in owners, in the same format for every manager, so you are compared fairly.'],
   ['Where do the ratings come from?', 'From the public guest ratings on the listings you manage, combined across your portfolio and labelled as estimates. See “How we build manager profiles” above.'],
   ['How did you get my business’s details?', 'From public sources only: public short-term rental listing data (via AirROI) and your own website. We don’t buy contact lists. If we emailed you, it’s because your business publishes that address on its website.'],
@@ -55,7 +55,7 @@ export default function ForManagers() {
               <li className="done">Your profile, fees, services, logo and 12 photos</li>
               <li className="done">Unlimited quote requests and replies</li>
               <li className="done">1 login</li>
-              <li>A$199 + GST success fee only when an owner accepts your quote</li>
+              <li>{SUCCESS_FEE_TEXT} to confirm each owner who accepts your quote</li>
               <li className="done">Verified business badge when your ABN checks out</li>
               <li className="done">Search appearances, profile views and requests on your dashboard</li>
             </ul>

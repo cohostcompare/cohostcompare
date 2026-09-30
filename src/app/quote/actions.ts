@@ -9,6 +9,7 @@ import { inboundOn, threadReplyTo } from '@/lib/inbound';
 import { smsManager } from '@/lib/sms';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
+const SITUATIONS = ['I own the property', 'I’m buying it now (under contract or about to settle)', "I'm buying it now (under contract or about to settle)", 'I’m planning to buy a property', "I'm planning to buy a property"];
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 
 export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ error?: string }> {
@@ -27,6 +28,9 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   const suburb = String(form.get('suburb') || '').trim().slice(0, 80);
   const stateCode = String(form.get('state') || '').trim().slice(0, 3);
   if (!name) return { error: 'Enter your name.' };
+  const email = String(form.get('email') || user.email).trim().toLowerCase().slice(0, 200);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Enter a valid email address.' };
+  const situation = SITUATIONS.find((s) => s === String(form.get('situation') || '')) || null;
   if (!suburb) return { error: "Enter your property's suburb." };
   if (!/^\d{4}$/.test(postcode)) return { error: "Enter your property's 4-digit postcode." };
   const lat = Number(form.get('lat')), lng = Number(form.get('lng'));
@@ -39,7 +43,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
 
   const row = {
     owner_id: user.id,
-    owner_email: user.email,
+    owner_email: email,
     owner_name: name,
     owner_phone: String(form.get('phone') || '').trim().slice(0, 30) || null,
     street: street || null,
@@ -57,7 +61,8 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
 
   const db = adminClient();
   // lat/lng need 008_owner_reminders.sql; fall back gracefully if it hasn't been run yet.
-  let { data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng }).select('id').single();
+  let { data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng, situation }).select('id').single(); // situation needs 016
+  if (error && /situation/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng }).select('id').single());
   if (error && /lat|lng|column/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert(row).select('id').single());
   if (error || !req) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
   const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
@@ -76,12 +81,13 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     `Type: ${row.property_type}, ${bedrooms} bedroom${bedrooms === 1 ? '' : 's'}`,
     `Listed now: ${row.currently_listed}`,
     `Wants: ${services.join(', ')}`,
+    situation ? `Owner: ${situation.replace(/^I’m|^I'm/, 'They’re').replace(/^I own/, 'They own')}` : '',
     `Start: ${row.start_timing}`,
     row.notes ? `Notes: ${row.notes}` : '',
   ].filter(Boolean).join('\n');
 
   await sendEmail({
-    to: user.email,
+    to: email,
     subject: `Your quote request has gone to ${managers.length} manager${managers.length === 1 ? '' : 's'}`,
     text: `Hi ${name},\n\nYour request has gone to: ${managers.map((m) => m.name).join(', ')}.\n\n${summary}\n\nEach manager replies with a quote in the same format, so you can compare them side by side, and message them, in your inbox.\n\nThe CoHostCompare team`,
     cta: { label: 'Open my inbox', url: 'https://www.cohostcompare.com/account' },
@@ -103,7 +109,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
-      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
+      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
       cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
       replyTo: threadReplyTo(t.id, 'm'),
     });

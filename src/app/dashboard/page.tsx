@@ -6,11 +6,13 @@ import { eventTotals } from '@/lib/events';
 import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, SUCCESS_FEE_TEXT } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ProInterest from './ProInterest';
+import { manageBilling, startPro } from './billing/actions';
+import { stripeOn } from '@/lib/stripe';
 
 export const metadata: Metadata = { title: 'Manager dashboard', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-type SP = Promise<{ claimed?: string }>;
+type SP = Promise<{ claimed?: string; pro?: string; billing?: string }>;
 
 const STATUS: Record<string, [string, string]> = {
   sent: ['New', 'var(--signal)'], viewed: ['Needs your quote', 'var(--signal)'], quoted: ['Quote sent', 'var(--brand)'],
@@ -49,10 +51,16 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
   const since = Date.now() - 30 * 86400e3;
   const pro = await plansFor(managers.map((m) => m.id));
+  const { data: billRows } = await db.from('managers').select('id, stripe_customer_id, stripe_subscription_id').in('id', managers.map((m) => m.id)); // needs 016
+  const bill = new Map((billRows || []).map((b) => [b.id, b]));
+  const billing = stripeOn();
+  const { data: waiting } = await db.from('success_fees').select('thread_id, manager_id').in('manager_id', managers.map((m) => m.id)).in('status', ['awaiting_unlock', 'expired']);
   const { data: freshReports } = await db.from('suburb_reports').select('id, area_label, manager_ids').overlaps('manager_ids', managers.map((m) => m.id)).gte('created_at', new Date(Date.now() - 21 * 86400e3).toISOString()); // needs 014
 
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
+      {sp.pro && <div className="panel" style={{ background: 'var(--tint)' }}><b>Welcome to Pro.</b> It can take a minute to show here. Manage your card and invoices under Billing.</div>}
+      {sp.billing === 'soon' && <div className="panel">Card payments are being switched on. Please try again shortly, or email hello@cohostcompare.com.</div>}
       {sp.claimed && <div className="panel" style={{ background: 'var(--tint)' }}><b>You&apos;re in.</b> Start by adding your fees, services and logo so owners can compare you properly.</div>}
       {managers.map((m) => {
         const mine = (threads || []).filter((t) => t.manager_slug === m.slug);
@@ -91,6 +99,11 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               <div className="panel"><b>{score}%</b><span>profile complete</span></div>
             </div>
             <p className="hint" style={{ margin: '-4px 0 0' }}>Last 30 days. Views from you and your team aren&apos;t counted.</p>
+            {(waiting || []).filter((w) => w.manager_id === m.id).map((w) => (
+              <Link key={w.thread_id} href={`/dashboard/requests/${w.thread_id}`} className="panel" style={{ display: 'block', borderColor: 'var(--signal)', color: 'inherit', textDecoration: 'none' }}>
+                <b>An owner accepted your quote.</b> Confirm them to get their details and an introduction →
+              </Link>
+            ))}
             {(() => {
               const fresh = (freshReports || []).filter((r) => (r.manager_ids as string[]).includes(m.id));
               return fresh.length ? (
@@ -105,14 +118,21 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
               if (plan !== 'free') return (
                 <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
                   <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, regional reports, SMS alerts and more photos.</span>
-                  <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
+                  <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <Link className="btn primary small" href={`/dashboard/${m.slug}/insights`}>Open insights</Link>
+                    {bill.get(m.id)?.stripe_subscription_id && bill.get(m.id)?.stripe_customer_id ? (
+                      <form action={manageBilling}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary small">Billing</button></form>
+                    ) : billing && p?.pro_note === 'founding' ? (
+                      <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary small">Keep Pro after the free months</button></form>
+                    ) : null}
+                  </span>
                 </div>
               );
               return (
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
-                  <span className="hint">Your profile, quote requests and replies stay free, with a {SUCCESS_FEE_TEXT} success fee only when an owner accepts your quote. Pro ({PRO_PRICE}) has no success fees and adds {PRO_FEATURES.filter((f) => f.title !== 'No success fees').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}><ProInterest managerId={m.id} /><Link href="/managers#pricing">See plans</Link></div>
+                  <span className="hint">Your profile, quote requests and replies stay free, and when an owner accepts your quote you confirm them for {SUCCESS_FEE_TEXT}. Pro ({PRO_PRICE}) confirms every client at no extra cost and adds {PRO_FEATURES.filter((f) => f.title !== 'Clients unlocked free').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>{billing ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary small">Start Pro</button></form> : <ProInterest managerId={m.id} />}<Link href="/managers#pricing">See plans</Link></div>
                 </div>
               );
             })()}

@@ -23,6 +23,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
       const { data } = await adminClient().from('managers').select('slug, name, website, published, claimed').order('name');
       return new NextResponse((data || []).map((m) => `${m.slug} | ${m.name} | ${m.website || '-'} | ${m.published ? 'published' : 'hidden'}${m.claimed ? ' | claimed' : ''}`).join('\n'), { headers });
     }
+    if (job === 'test-profile') {
+      // Creates (or refreshes) the internal test profile: unpublished, Pro, managed by the given email.
+      const email = (p.get('email') || '').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+$/.test(email)) return new NextResponse('email=...', { headers });
+      const db = adminClient();
+      const row = { slug: 'test-profile', name: 'Test Profile (internal)', published: false, claimed: true, plan: 'pro', pro_until: null, pro_note: 'test',
+        tagline: 'Internal test profile. Never shown to the public.', about: 'Used by CoHostCompare to test quote requests, messages and alerts end to end.',
+        cities: ['Sydney'], postcodes: [], platforms: ['Airbnb', 'Booking.com'], services: ['Listing setup', 'Cleaning and linen'], fee_min: 18, fee_max: 20, website: null };
+      const { data: m, error } = await db.from('managers').upsert(row, { onConflict: 'slug' }).select('id').single();
+      if (error || !m) return new NextResponse(`error: ${error?.message}`, { headers });
+      let uid: string | null = null;
+      for (let page = 1; page <= 20 && !uid; page++) {
+        const { data: users } = await db.auth.admin.listUsers({ page, perPage: 200 });
+        uid = users?.users.find((u) => (u.email || '').toLowerCase() === email)?.id ?? null;
+        if (!users || users.users.length < 200) break;
+      }
+      if (!uid) { const { data: made, error: e2 } = await db.auth.admin.createUser({ email, email_confirm: true }); if (e2) return new NextResponse(`user error: ${e2.message}`, { headers }); uid = made.user?.id ?? null; }
+      await db.from('manager_members').upsert({ manager_id: m.id, user_id: uid, role: 'owner' });
+      return new NextResponse(`ok: test profile ${m.id}, member ${email}`, { headers });
+    }
     if (job === 'report-status') {
       const { data, error } = await adminClient().from('suburb_reports').select('area_slug, period, created_at, notified_at, data->market->homes, data->seasonality').order('created_at', { ascending: false }).limit(40);
       if (error) return new NextResponse(`error: ${error.message}`, { headers });

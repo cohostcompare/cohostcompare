@@ -51,7 +51,7 @@ export async function requireThread(threadId: string) {
   if (!user) redirect(`/signin?next=${encodeURIComponent(`/dashboard/requests/${threadId}`)}`);
   const db = adminClient();
   const { data: t } = await db.from('quote_request_managers')
-    .select('id, request_id, manager_slug, manager_name, status, quote, quoted_at, accepted_at, created_at, quote_requests(id, owner_id, owner_name, owner_email, owner_phone, street, suburb, state, postcode, property_type, bedrooms, currently_listed, services, start_timing, notes, created_at)')
+    .select('id, request_id, manager_slug, manager_name, status, quote, quoted_at, accepted_at, created_at, quote_requests(*)')
     .eq('id', threadId).maybeSingle();
   if (!t) redirect('/dashboard');
   const mine = await myManagers(user.id);

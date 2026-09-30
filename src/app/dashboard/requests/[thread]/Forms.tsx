@@ -53,7 +53,7 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
         {state?.ok && <span role="status" style={{ color: 'var(--brand)', fontWeight: 600 }}>Sent. The owner has been emailed.</span>}
       </div>
       <p className="hint" style={{ margin: 0 }}>Every manager quotes in this same format, so owners compare like with like. Estimates are optional and are shown to the owner as your estimate.</p>
-      {!paid && <p className="hint" style={{ margin: 0 }}>You&apos;re on the Free plan: if the owner accepts this quote, a {feeText} success fee applies. <a href="/managers#pricing">Pro</a> has no success fees.</p>}
+      {!paid && <p className="hint" style={{ margin: 0 }}>You&apos;re on the Free plan: if the owner accepts this quote, you confirm them for {feeText} to get their details and an introduction. On <a href="/managers#pricing">Pro</a>, every client is confirmed at no extra cost.</p>}
       {!locked && (paid ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
           <input className="field" name="template_name" placeholder="Template name, e.g. Standard 2-bed" style={{ maxWidth: 260, minHeight: 38 }} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} />

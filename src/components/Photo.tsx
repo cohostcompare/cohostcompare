@@ -7,11 +7,14 @@ export const PHOTOS = {
   yarra: { id: 'photo-1596527199903-6cdaacee1208', alt: 'The Yarra River and Melbourne city skyline', by: 'Paul Macallan' },
   bed: { id: 'photo-1712227552198-8d304299351f', alt: 'A freshly made bed with folded towels, ready for guests', by: 'Maria Sime' },
   keys: { id: 'photo-1741156386380-0236c72eb6f9', alt: 'Holding house keys at the front door of a home', by: 'Jakub Żerdzicki' },
+  byron: { id: 'photo-1690179536948-68cb4d28f1a9', alt: 'Aerial view of The Pass and the beach at Byron Bay', by: 'Bailey Rytenskild' },
+  bluemountains: { id: 'photo-1665395492464-fa1da74d2e5c', alt: 'Bushland and valley in the Blue Mountains', by: 'Calvin Kurlekar' },
+  greatoceanroad: { id: 'photo-1596015988036-9904322d3a58', alt: 'The Great Ocean Road winding along the coast near Anglesea', by: 'Wee Ping Khoo' },
   making: { id: 'photo-1686828751885-040f0a0fb77a', alt: 'Making a bed between guest stays', by: 'Slaapwijsheid.nl' },
 } as const;
 
 export type PhotoName = keyof typeof PHOTOS;
-const src = (id: string, w: number) => `https://images.unsplash.com/${id}?auto=format&fit=crop&q=70&w=${w}`;
+export const src = (id: string, w: number) => `https://images.unsplash.com/${id}?auto=format&fit=crop&q=70&w=${w}`;
 
 export default function Photo({ name, ratio = '4 / 3', sizes = '(max-width: 880px) 100vw, 50vw', eager, credit = false, style }: {
   name: PhotoName; ratio?: string; sizes?: string; eager?: boolean; credit?: boolean; style?: React.CSSProperties;

@@ -6,6 +6,7 @@ import { emailMatchesSite, siteDomain } from '@/lib/claims';
 import { managerForClaim, publicManager } from '@/lib/data';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ClaimForm from './ClaimForm';
+import { SUCCESS_FEE_TEXT } from '@/lib/pro';
 
 export const metadata: Metadata = { title: 'Claim your profile', robots: { index: false } };
 
@@ -62,7 +63,7 @@ export default async function Claim({ params }: { params: P }) {
       )}
 
       <section className="facts-grid">
-        <div className="panel"><h3>What it costs</h3><p>Claiming, editing your profile, receiving quote requests and replying are free, with no lock-in. On the Free plan you pay a A$199 + GST success fee only when an owner accepts your quote. Claim by 31 January 2027 and you get <Link href="/managers#pricing">Pro</Link> free for three months, with no success fees.</p></div>
+        <div className="panel"><h3>What it costs</h3><p>Claiming, editing your profile, receiving quote requests and replying are free, with no lock-in. On the Free plan, when an owner accepts your quote you pay {SUCCESS_FEE_TEXT} to confirm them and get their details. Claim by 31 January 2027 and you get <Link href="/managers#pricing">Pro</Link> free for three months, with every client confirmed at no extra cost.</p></div>
         <div className="panel"><h3>Where the figures come from</h3><p>Public listing data and your own website, measured the same way for every manager. <Link href="/managers#why-listed">How we build profiles</Link></p></div>
       </section>
       <p className="hint" style={{ margin: 0 }}>Not your business, or rather not be listed? Email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> and we&apos;ll sort it out.</p>
