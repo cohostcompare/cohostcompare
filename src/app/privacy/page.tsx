@@ -9,14 +9,14 @@ export default function Privacy() {
       <h1>Privacy policy</h1>
       <p className="hint">Last updated 30 September 2026</p>
 
-      <p>CoHostCompare helps Australian property owners compare short-term rental managers and request quotes from them. It is run by Ben Deeley, a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what personal information we collect, why, who we share it with, and your choices. We handle personal information in line with the Australian Privacy Principles in the <i>Privacy Act 1988</i> (Cth).</p>
+      <p>CoHostCompare helps Australian property owners compare short-term rental managers and request quotes from them. It is run by Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what personal information we collect, why, who we share it with, and your choices. We handle personal information in line with the Australian Privacy Principles in the <i>Privacy Act 1988</i> (Cth).</p>
 
       <h2>What we collect</h2>
       <ul>
-        <li><b>Your account:</b> your email address, used to sign you in with a one-time email link. We don&apos;t store passwords.</li>
+        <li><b>Your account:</b> your email address, used to sign you in with a one-time email link. If you choose to sign in with Google or Microsoft, we receive your name and email address from them. We don&apos;t store passwords.</li>
         <li><b>Quote requests (owners):</b> your name, email, phone number (optional), the property&apos;s address and location, property type, bedrooms, what help you want, timing and any notes you add.</li>
         <li><b>Messages and quotes:</b> messages between you and managers, and the quotes managers send.</li>
-        <li><b>Managers:</b> the name, email and phone of people who claim or run a manager profile, and anything they add to it (fees, services, logo and photos).</li>
+        <li><b>Managers:</b> the name, email and phone of people who claim or run a manager profile, anything they add to it (fees, services, logo and photos), and their ABN, which we check on the public Australian Business Register. We also record business contact emails that a manager publishes on its own website, to invite it to claim its profile. Every such email identifies us and has an unsubscribe link, which we honour straight away.</li>
         <li><b>Questions about the rules:</b> the questions you type into our rules tool. Don&apos;t include personal details in them.</li>
         <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We don&apos;t use advertising trackers.</li>
         <li><b>Waitlist:</b> if you joined our waitlist, the details you gave then.</li>
@@ -45,6 +45,7 @@ export default function Privacy() {
         <li>Resend and Google Workspace: sending and receiving email (United States).</li>
         <li>Google Maps: address search and maps. Google receives what you type into the address box.</li>
         <li>Anthropic: answers questions typed into our rules tool (United States). Questions aren&apos;t linked to your account.</li>
+        <li>AirROI: supplies short-stay market data for earnings estimates. We send it only a map location, never your details.</li>
       </ul>
       <p>Where information is stored or processed overseas, we take reasonable steps to make sure it&apos;s handled consistently with the Australian Privacy Principles. We may also disclose information where the law requires it.</p>
 

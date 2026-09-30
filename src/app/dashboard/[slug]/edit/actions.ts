@@ -108,3 +108,23 @@ export async function removeMedia(form: FormData) {
   revalidatePath(`/managers/${slug}`);
   redirect(`/dashboard/${slug}/edit?media=removed#media`);
 }
+
+/** Manager enters their ABN; verified automatically when the registered name matches. */
+export async function saveAbn(_: unknown, form: FormData): Promise<{ error?: string; ok?: string }> {
+  const slug = String(form.get('slug') || '');
+  const { user, manager: m } = await requireManager(slug, `/dashboard/${slug}/edit`);
+  const { cleanAbn, lookupAbn, namesMatch, validAbn } = await import('@/lib/abn');
+  const abn = cleanAbn(String(form.get('abn') || ''));
+  if (!validAbn(abn)) return { error: 'That isn’t a valid ABN. Check the 11 digits.' };
+  const db = adminClient();
+  const r = await lookupAbn(abn).catch(() => ({ ok: false as const, error: 'The business register didn’t respond. Try again soon.' }));
+  const matched = r.ok && r.active && namesMatch(m.name, r.names);
+  const { error } = await db.from('managers').update({ abn, abn_name: r.ok ? r.names.join(' / ').slice(0, 300) : null, abn_verified_at: matched ? new Date().toISOString() : null }).eq('id', m.id);
+  if (error) return { error: 'We couldn’t save your ABN. Your account may need an update first: please try again later.' };
+  await db.from('manager_edits').insert({ manager_id: m.id, user_id: user.id, changes: { abn, abn_verified: matched } });
+  revalidatePath(`/managers/${slug}`); revalidatePath(`/dashboard/${slug}/edit`);
+  if (matched) return { ok: 'Verified. Your profile now shows the Verified business badge.' };
+  if (r.ok && !r.active) return { ok: 'Saved, but that ABN isn’t active on the register, so we can’t verify it.' };
+  if (r.ok) return { ok: `Saved. It's registered to ${r.names[0]}, which doesn't match ${m.name} closely enough to verify automatically. We'll check it by hand within 2 business days.` };
+  return { ok: `Saved. ${r.error}` };
+}

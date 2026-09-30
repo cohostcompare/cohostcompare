@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
-import { setVisibility } from './actions';
+import { setVerified, setVisibility } from './actions';
 
 export const metadata: Metadata = { title: 'Managers · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -18,6 +18,8 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
   if (q) query = query.ilike('name', `%${q}%`);
   if (sp.show === 'hidden') query = query.eq('published', false);
   const { data: rows } = await query;
+  const { data: abns } = await db.from('managers').select('id, abn, abn_name, abn_verified_at').in('id', (rows || []).map((r) => r.id)); // needs 009
+  const abnOf = new Map((abns || []).map((a) => [a.id, a]));
   const ids = (rows || []).filter((r) => !r.published).map((r) => r.id);
   const { data: edits } = ids.length ? await db.from('manager_edits').select('manager_id, changes, created_at').in('manager_id', ids).order('created_at', { ascending: false }) : { data: [] };
   const why = new Map<string, { reason?: string; at: string }>();
@@ -47,6 +49,14 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
             <div style={{ minWidth: 0 }}>
               <b>{m.published ? <Link href={`/managers/${m.slug}`}>{m.name}</Link> : m.name}</b>
               <span className="hint"> · {m.published ? 'Visible' : 'Hidden'}{m.claimed ? ' · Claimed' : ''}{m.website ? ` · ${m.website.replace(/^https?:\/\//, '')}` : ''}</span>
+              {abnOf.get(m.id)?.abn && (
+                <div className="hint">ABN {abnOf.get(m.id)!.abn}{abnOf.get(m.id)!.abn_name ? ` · registered to ${abnOf.get(m.id)!.abn_name}` : ''} · {abnOf.get(m.id)!.abn_verified_at ? 'verified' : 'not verified'}{' '}
+                  <form action={setVerified} style={{ display: 'inline' }}>
+                    <input type="hidden" name="id" value={m.id} /><input type="hidden" name="q" value={q} /><input type="hidden" name="on" value={abnOf.get(m.id)!.abn_verified_at ? '0' : '1'} />
+                    <button type="submit" className="linkish" style={{ padding: 0 }}>{abnOf.get(m.id)!.abn_verified_at ? 'Remove badge' : 'Mark verified'}</button>
+                  </form>
+                </div>
+              )}
               {!m.published && why.get(m.id) && <div className="hint">Hidden {new Date(why.get(m.id)!.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}{why.get(m.id)!.reason ? `: ${why.get(m.id)!.reason}` : ''}</div>}
             </div>
             <form action={setVisibility} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'end' }}>

@@ -1,0 +1,58 @@
+'use client';
+
+import Link from 'next/link';
+import { useState, useTransition } from 'react';
+import PlacesInput, { type PickedPlace } from '@/components/PlacesInput';
+import type { Estimate } from '@/lib/earnings';
+import { getEstimate } from './actions';
+
+const money = (n: number) => `A$${Math.round(n).toLocaleString('en-AU')}`;
+
+export default function EarningsTool() {
+  const [place, setPlace] = useState<PickedPlace | null>(null);
+  const [beds, setBeds] = useState(2);
+  const [res, setRes] = useState<Estimate | { error: string } | null>(null);
+  const [pending, start] = useTransition();
+
+  const run = (p: PickedPlace | null, b: number) => {
+    if (!p || p.lat == null || p.lng == null) { setRes({ error: 'Pick an address or suburb from the suggestions.' }); return; }
+    start(async () => setRes(await getEstimate(p.lat!, p.lng!, b)));
+  };
+  const q = place ? new URLSearchParams(Object.fromEntries(Object.entries({ postcode: place.postcode, suburb: place.suburb, state: place.state, street: place.street, lat: place.lat != null ? String(place.lat) : '', lng: place.lng != null ? String(place.lng) : '' }).filter(([, v]) => v)) as Record<string, string>) : null;
+
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div className="panel" style={{ display: 'grid', gap: 14 }}>
+        <label className="label" htmlFor="earn-addr">Property address or suburb</label>
+        <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} />
+        <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}>
+          <label style={{ display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 }}>Bedrooms
+            <select className="field" value={beds} onChange={(e) => { const b = Number(e.target.value); setBeds(b); if (place) run(place, b); }} style={{ minWidth: 160 }}>
+              <option value={0}>Studio</option>{[1, 2, 3, 4].map((b) => <option key={b} value={b}>{b} bedroom{b > 1 ? 's' : ''}</option>)}<option value={5}>5 or more</option>
+            </select>
+          </label>
+          <button className="btn primary" type="button" onClick={() => run(place, beds)} disabled={pending}>{pending ? 'Working it out…' : 'Estimate earnings'}</button>
+        </div>
+      </div>
+
+      {res && 'error' in res && <p role="alert" className="panel" style={{ margin: 0, color: 'var(--signal)' }}>{res.error}</p>}
+      {res && 'mid' in res && (
+        <section className="estimate" aria-live="polite">
+          <span className="label">Estimated booking revenue for a {res.bedrooms === 0 ? 'studio' : `${res.bedrooms === 5 ? '5+' : res.bedrooms}-bedroom home`} in {res.market}</span>
+          <div className="big">{money(res.low)} – {money(res.high)} <span>a year</span></div>
+          <div className="facts">
+            <div><b>{Math.round(res.occupancy * 100)}%</b><span>of nights booked, area average</span></div>
+            <div><b>{money(res.nightly)}</b><span>typical nightly rate for this size</span></div>
+            <div><b>{money(res.mid * 0.8)}</b><span>kept after a 20% management fee, before cleaning and other costs</span></div>
+            {res.activeListings ? <div><b>{res.activeListings.toLocaleString('en-AU')}</b><span>active short-stay listings in the area</span></div> : null}
+          </div>
+          <p className="hint" style={{ margin: 0 }}>An estimate from area averages over the last 12 months, adjusted for bedrooms. Your home&apos;s actual earnings depend on its location, presentation, pricing and local rules. Data source: AirROI (www.airroi.com).</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {q && <Link className="btn primary" href={`/search?${q.toString()}`}>Compare managers near this address</Link>}
+            <Link className="btn secondary" href="/rules">Check the rules first</Link>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

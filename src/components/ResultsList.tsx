@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import QuoteBar from '@/components/QuoteBar';
+import TrustBadges from '@/components/TrustBadges';
 import { areaKey, usePicks } from '@/lib/client/picks';
 import type { NearbyManager } from '@/lib/types';
 
@@ -30,6 +31,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
                   e.preventDefault(); setOpen(isOpen ? null : m.slug);
                 }}>{m.name}</Link></h2>
+                <div style={{ margin: '4px 0 2px' }}><TrustBadges m={m} /></div>
                 {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you{m.nearbyRating ? ` · ${m.nearbyRating.toFixed(2)} ★ nearby` : ''}</p>}
                 <div className="meta">
                   {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}

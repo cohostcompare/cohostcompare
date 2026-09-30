@@ -21,7 +21,9 @@ function initials(name: string) {
   return name.replace(/['’]/g, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || name.slice(0, 2).toUpperCase();
 }
 
-function toPublic(r: Row, s?: Stats): PublicManager {
+type Extras = { responseHours: number | null; replies: number; verified: boolean };
+
+function toPublic(r: Row, s?: Stats, x?: Extras): PublicManager {
   const n = (v: unknown) => (v == null ? null : Number(v));
   return {
     slug: r.slug, name: r.name, tagline: r.tagline || '', about: r.about || '', initials: initials(r.name),
@@ -32,9 +34,27 @@ function toPublic(r: Row, s?: Stats): PublicManager {
     avgOccupancy: n(s?.avg_occupancy), avgNightlyRate: n(s?.avg_nightly_rate),
     platforms: r.platforms || [], services: r.services || [],
     feeMin: n(r.fee_min), feeMax: n(r.fee_max), licensedAgent: r.licensed_agent,
-    responseHours: null, claimed: r.claimed, dataAsOf: s?.data_as_of || null,
+    responseHours: x?.responseHours ?? null, replies: x?.replies ?? 0, verified: x?.verified ?? false, claimed: r.claimed, dataAsOf: s?.data_as_of || null,
     tile: tileColour(r.name), logoUrl: r.logo_url, photos: r.photos || [],
   };
+}
+
+/** How quickly claimed managers reply to quote requests (median hours), and whether their ABN is verified. */
+async function withExtras(rows: Row[]): Promise<Map<string, Extras>> {
+  const out = new Map<string, Extras>();
+  if (!rows.length) return out;
+  const db = adminClient();
+  const { data: ts } = await db.from('quote_request_managers').select('manager_slug, status, created_at, quoted_at, updated_at')
+    .in('manager_slug', rows.filter((r) => r.claimed).map((r) => r.slug)).in('status', ['quoted', 'accepted', 'declined']);
+  const { data: abn } = await db.from('managers').select('id, abn_verified_at').in('id', rows.map((r) => r.id)); // needs 009; ignored if missing
+  const verified = new Set((abn || []).filter((a) => a.abn_verified_at).map((a) => a.id));
+  for (const r of rows) {
+    const hrs = (ts || []).filter((t) => t.manager_slug === r.slug)
+      .map((t) => (new Date(t.quoted_at || t.updated_at).getTime() - new Date(t.created_at).getTime()) / 3600e3)
+      .filter((h) => h >= 0).sort((a, b) => a - b);
+    out.set(r.id, { responseHours: hrs.length >= 3 ? Math.round(hrs[Math.floor(hrs.length / 2)]) : null, replies: hrs.length, verified: verified.has(r.id) });
+  }
+  return out;
 }
 
 async function withStats(rows: Row[]): Promise<Map<string, Stats>> {
@@ -51,25 +71,25 @@ export async function managersNear(lat: number, lng: number): Promise<NearbyMana
   const hits = (near || []) as { manager_id: string; nearby: number; nearby_rating: number | null; nearest_km: number | null }[];
   if (!hits.length) return [];
   const { data: rows } = await db.from('managers').select(COLS).in('id', hits.map((h) => h.manager_id)).eq('published', true);
-  const stats = await withStats((rows || []) as Row[]);
+  const [stats, extras] = await Promise.all([withStats((rows || []) as Row[]), withExtras((rows || []) as Row[])]);
   return ((rows || []) as Row[]).map((r) => {
     const h = hits.find((x) => x.manager_id === r.id)!;
-    return { ...toPublic(r, stats.get(r.id)), nearby: h.nearby, nearbyRating: h.nearby_rating == null ? null : Number(h.nearby_rating), nearestKm: h.nearest_km == null ? null : Number(h.nearest_km) };
+    return { ...toPublic(r, stats.get(r.id), extras.get(r.id)), nearby: h.nearby, nearbyRating: h.nearby_rating == null ? null : Number(h.nearby_rating), nearestKm: h.nearest_km == null ? null : Number(h.nearest_km) };
   }).sort((a, b) => b.nearby - a.nearby || (b.avgRating ?? 0) - (a.avgRating ?? 0));
 }
 
 /** Fallback when we only have a postcode: managers who've declared that postcode. */
 export async function managersForPostcode(postcode: string): Promise<NearbyManager[]> {
   const { data: rows } = await adminClient().from('managers').select(COLS).contains('postcodes', [postcode]).eq('published', true);
-  const stats = await withStats((rows || []) as Row[]);
-  return ((rows || []) as Row[]).map((r) => ({ ...toPublic(r, stats.get(r.id)), nearby: 0, nearbyRating: null, nearestKm: null }));
+  const [stats, extras] = await Promise.all([withStats((rows || []) as Row[]), withExtras((rows || []) as Row[])]);
+  return ((rows || []) as Row[]).map((r) => ({ ...toPublic(r, stats.get(r.id), extras.get(r.id)), nearby: 0, nearbyRating: null, nearestKm: null }));
 }
 
 export async function publicManager(slug: string): Promise<PublicManager | null> {
   const { data: r } = await adminClient().from('managers').select(COLS).eq('slug', slug).eq('published', true).maybeSingle();
   if (!r) return null;
-  const stats = await withStats([r as Row]);
-  return toPublic(r as Row, stats.get((r as Row).id));
+  const [stats, extras] = await Promise.all([withStats([r as Row]), withExtras([r as Row])]);
+  return toPublic(r as Row, stats.get((r as Row).id), extras.get((r as Row).id));
 }
 
 /** Which of these managers cover a point (homes within COVER_KM). */

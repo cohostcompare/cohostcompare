@@ -20,3 +20,16 @@ export async function setVisibility(form: FormData) {
   revalidatePath('/admin/managers');
   redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${show ? 'shown' : 'hidden'}`);
 }
+
+/** Admin confirms (or removes) a manager's verified-business badge after checking the ABN by hand. */
+export async function setVerified(form: FormData) {
+  const admin = await requireAdmin('/admin/managers');
+  const id = String(form.get('id') || '');
+  const on = form.get('on') === '1';
+  const q = String(form.get('q') || '');
+  const { error } = await adminClient().from('managers').update({ abn_verified_at: on ? new Date().toISOString() : null }).eq('id', id);
+  if (error) redirect(`/admin/managers?q=${encodeURIComponent(q)}&error=${encodeURIComponent(error.message)}`);
+  await adminClient().from('manager_edits').insert({ manager_id: id, user_id: admin.id, changes: { abn_verified: on, by: 'admin' } });
+  revalidatePath('/admin/managers');
+  redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${on ? 'verified' : 'unverified'}`);
+}

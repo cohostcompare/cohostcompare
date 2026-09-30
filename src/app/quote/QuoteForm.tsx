@@ -12,7 +12,7 @@ const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: 
 
 type Addr = { street: string; suburb: string; state: string; postcode: string; lat: number | null; lng: number | null };
 
-type M = { slug: string; name: string };
+type M = { slug: string; name: string; claimed?: boolean };
 
 export default function QuoteForm({ managers, initial, email }: { managers: M[]; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
@@ -76,6 +76,11 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
 
       {!located && (
         <p role="status" style={{ margin: 0, color: 'var(--signal)' }}>Pick the address from the suggestions so we can check which managers cover it.</p>
+      )}
+      {covered.some((m) => !m.claimed) && (
+        <p style={{ margin: 0, background: 'var(--surface)', borderRadius: 10, padding: '10px 14px' }}>
+          <b>{covered.filter((m) => !m.claimed).map((m) => m.name).join(', ')} {covered.filter((m) => !m.claimed).length === 1 ? "hasn't" : "haven't"} joined CoHostCompare yet.</b> We&apos;ll invite {covered.filter((m) => !m.claimed).length === 1 ? 'them' : 'them'} to reply to your request, so {covered.filter((m) => !m.claimed).length === 1 ? 'their' : 'their'} quote may take longer, or may not come. Managers already on CoHostCompare reply here directly.
+        </p>
       )}
       {uncovered.length > 0 && (
         <div role="alert" style={{ border: '1px solid var(--signal)', borderRadius: 10, padding: '12px 14px', display: 'grid', gap: 8 }}>

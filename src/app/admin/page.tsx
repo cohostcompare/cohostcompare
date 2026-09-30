@@ -24,7 +24,7 @@ export default async function Admin() {
   const { data: recent } = await db.from('quote_requests').select('id, created_at, owner_name, owner_email, address, quote_request_managers(manager_name)').order('created_at', { ascending: false }).limit(20);
 
   const tiles: [string, number, string?][] = [
-    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'],
+    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'], ['Manager outreach', -1, '/admin/outreach'],
   ];
   return (
     <main style={{ maxWidth: 960, paddingBlock: '16px 64px', display: 'grid', gap: 18 }}>

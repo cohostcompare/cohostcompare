@@ -19,7 +19,9 @@ export type PublicManager = {
   feeMin: number | null; // % of booking revenue, only when published by the manager
   feeMax: number | null;
   licensedAgent: boolean | null;
-  responseHours: number | null;
+  responseHours: number | null; // median hours to reply, claimed managers with 3+ replies
+  replies?: number;
+  verified?: boolean; // ABN checked on the Australian Business Register
   claimed: boolean;
   dataAsOf: string | null;
   logoUrl?: string | null;

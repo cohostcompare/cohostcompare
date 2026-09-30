@@ -106,9 +106,17 @@ async function managerReminders(): Promise<string[]> {
 }
 
 /** Everything the daily cron does. */
+async function abnLines(): Promise<string[]> {
+  const { data, error } = await adminClient().from('managers').select('name, abn, abn_name').not('abn', 'is', null).is('abn_verified_at', null);
+  if (error || !data?.length) return [];
+  return ['ABNs to check by hand (Admin → Managers → Mark verified):', ...data.map((m) => `- ${m.name}: ABN ${m.abn}${m.abn_name ? `, registered to ${m.abn_name}` : ''}`), ''];
+}
+
 export async function runDaily() {
   const owners = await ownerReminders();
-  const lines = [...(await claimLines()), ...(await managerReminders())];
+  const { sendOutreachBatch } = await import('@/lib/outreach');
+  const outreach = await sendOutreachBatch().catch((e) => ({ sent: 0, note: String(e) }));
+  const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : [])];
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com',
@@ -117,5 +125,5 @@ export async function runDaily() {
       cta: { label: 'Open admin', url: `${siteBase()}/admin` },
     });
   }
-  return { ownerReminders: owners, adminDigest: lines.length > 0 };
+  return { ownerReminders: owners, outreach, adminDigest: lines.length > 0 };
 }

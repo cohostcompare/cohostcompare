@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PLATFORMS, SERVICES, requireManager } from '@/lib/managers';
 import { removeMedia } from './actions';
+import AbnForm from './AbnForm';
 import MediaUploader from './MediaUploader';
+import { adminClient } from '@/lib/supabase/server';
 import ProfileForm from './ProfileForm';
 
 export const metadata: Metadata = { title: 'Edit profile', robots: { index: false } };
@@ -13,6 +15,7 @@ type P = Promise<{ slug: string }>;
 export default async function EditProfile({ params }: { params: P }) {
   const { slug } = await params;
   const { manager: m } = await requireManager(slug, `/dashboard/${slug}/edit`);
+  const { data: abn } = await adminClient().from('managers').select('abn, abn_verified_at').eq('id', m.id).maybeSingle(); // needs 009
   return (
     <main style={{ maxWidth: 860, paddingBlock: '16px 64px', display: 'grid', gap: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
@@ -47,6 +50,7 @@ export default async function EditProfile({ params }: { params: P }) {
       </section>
 
       <ProfileForm slug={m.slug} name={m.name} values={m} services={SERVICES} platforms={PLATFORMS} />
+      <AbnForm slug={m.slug} abn={(abn as { abn?: string } | null)?.abn ?? null} verified={Boolean((abn as { abn_verified_at?: string } | null)?.abn_verified_at)} />
     </main>
   );
 }

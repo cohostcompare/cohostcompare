@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
+import TrustBadges from '@/components/TrustBadges';
 import ProfileQuote from './ProfileQuote';
 import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
 import { currentUser } from '@/lib/supabase/server';
@@ -47,6 +48,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
               {m.tagline}
             </p>
+            <div style={{ marginTop: 8 }}><TrustBadges m={m} full /></div>
           </div>
         </div>
 

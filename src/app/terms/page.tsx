@@ -9,7 +9,7 @@ export default function Terms() {
       <h1>Terms of use</h1>
       <p className="hint">Last updated 30 September 2026</p>
 
-      <p>These terms apply when you use cohostcompare.com. CoHostCompare is run by Ben Deeley, a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By using the site you agree to these terms. Our <Link href="/privacy">privacy policy</Link> explains how we handle personal information.</p>
+      <p>These terms apply when you use cohostcompare.com. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By using the site you agree to these terms. Our <Link href="/privacy">privacy policy</Link> explains how we handle personal information.</p>
 
       <h2>1. What CoHostCompare is</h2>
       <p>CoHostCompare is a comparison and introduction service. It helps property owners find short-term rental managers who operate near their property, compare them, and request quotes. We aren&apos;t a property manager, real estate agent or booking platform. We aren&apos;t a party to any agreement between an owner and a manager, and we don&apos;t guarantee any manager&apos;s services, availability or results.</p>

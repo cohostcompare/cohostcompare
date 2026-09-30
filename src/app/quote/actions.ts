@@ -89,9 +89,10 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   const h = await headers();
   const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
   const { data: tRows } = await db.from('quote_request_managers').select('id, manager_slug').eq('request_id', req.id);
+  const { notifyUnclaimedOfRequest } = await import('@/lib/outreach');
   for (const t of tRows || []) {
     const to = await memberEmails(t.manager_slug);
-    if (!to.length) continue;
+    if (!to.length) { await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim()).catch(() => {}); continue; }
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
