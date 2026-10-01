@@ -17,9 +17,10 @@ export default async function Manage({ params, searchParams }: { params: Promise
   const { id } = await params;
   const { s = '' } = await searchParams;
   const ok = /^[0-9a-f-]{36}$/i.test(id) && manageOk(id, s);
-  const db = adminClient();
-  const { data: p } = ok ? await db.from('partners').select('*').eq('id', id).maybeSingle() : { data: null };
+  const db = ok ? adminClient() : null;
+  const { data: p } = db ? await db.from('partners').select('*').eq('id', id).maybeSingle() : { data: null };
   if (!p) return <main style={{ maxWidth: 560, paddingBlock: '48px 80px' }}><h1 style={{ fontSize: 30 }}>Link not valid</h1><p>This partner link isn&apos;t valid. Email hello@cohostcompare.com and we&apos;ll send you a new one.</p></main>;
+  if (!db) return null;
   const since = new Date(Date.now() - 30 * 86400e3).toISOString();
   const [{ count: d30 }, { count: all }] = await Promise.all([
     db.from('partner_clicks').select('id', { count: 'exact', head: true }).eq('partner_id', id).gte('created_at', since),
