@@ -71,10 +71,10 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
       <Link href="/admin" className="hint">← Admin</Link>
       <h1 style={{ fontSize: 34, margin: 0 }}>Quote requests</h1>
       <section className="kpis">
-        <Link href={link('f', '')} className="kpi k-blue"><span>Requests</span><b>{counts.all}</b><small>{days === 'all' ? 'all time' : `last ${days} days`}</small></Link>
-        <Link href={link('f', 'waiting')} className="kpi k-amber"><span>Waiting for quotes</span><b>{counts.waiting}</b><small>at least one manager yet to reply</small></Link>
-        <Link href={link('f', 'overdue')} className={`kpi ${counts.overdue ? 'k-alert' : 'k-teal'}`}><span>Overdue</span><b>{counts.overdue}</b><small>{counts.overdueThreads} manager{counts.overdueThreads === 1 ? '' : 's'} {OVERDUE_HOURS}h+ without replying</small></Link>
-        <Link href={link('f', 'accepted')} className="kpi k-green"><span>Accepted</span><b>{counts.accepted}</b><small>{counts.quoted} with at least one quote</small></Link>
+        <Link href={link('f', '')} className={`kpi k-blue${f === '' ? ' on' : ''}`} aria-current={f === '' ? 'true' : undefined}><span>{f === '' ? '✓ Showing: all requests' : 'All requests'}</span><b>{counts.all}</b><small>{days === 'all' ? 'all time' : `last ${days} days`}</small></Link>
+        <Link href={link('f', 'waiting')} className={`kpi k-amber${f === 'waiting' ? ' on' : ''}`} aria-current={f === 'waiting' ? 'true' : undefined}><span>{f === 'waiting' ? '✓ Showing: waiting for quotes' : 'Waiting for quotes'}</span><b>{counts.waiting}</b><small>at least one manager yet to reply</small></Link>
+        <Link href={link('f', 'overdue')} className={`kpi ${counts.overdue ? 'k-alert' : 'k-teal'}${f === 'overdue' ? ' on' : ''}`} aria-current={f === 'overdue' ? 'true' : undefined}><span>{f === 'overdue' ? '✓ Showing: overdue' : 'Overdue'}</span><b>{counts.overdue}</b><small>{counts.overdueThreads} manager{counts.overdueThreads === 1 ? '' : 's'} {OVERDUE_HOURS}h+ without replying</small></Link>
+        <Link href={link('f', 'accepted')} className={`kpi k-green${f === 'accepted' ? ' on' : ''}`} aria-current={f === 'accepted' ? 'true' : undefined}><span>{f === 'accepted' ? '✓ Showing: accepted' : 'Accepted'}</span><b>{counts.accepted}</b><small>{counts.quoted} with at least one quote</small></Link>
       </section>
       <form className="panel" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <input className="field" name="q" defaultValue={sp.q || ''} placeholder="Owner, email, suburb, postcode or manager" style={{ flex: '1 1 260px' }} />
