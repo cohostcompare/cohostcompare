@@ -8,14 +8,12 @@ import { adminClient } from '@/lib/supabase/server';
  - owners: sent a quote request at least 2 days ago, and have received a quote or sent a message
  - managers: used their dashboard on at least 3 different days, and joined at least 7 days ago
  It shows at most 3 times, never within 7 days of the last time, and never again after feedback or "no thanks".
- Thank-you rewards (one per person, for a genuine answer, never for positive feedback):
+ Thank-you reward for managers (one per business, for a genuine answer, never for positive feedback):
  - managers: 1 month of Pro free, added on top of any free Pro they already have (paying subscribers get a
    month's credit, applied by hand)
- - owners: an A$25 digital gift card for the first OWNER_REWARD_LIMIT owners, sent by hand from /admin/feedback
+ - owners: no reward (just thanks)
 */
 
-export const OWNER_REWARD_LIMIT = 30;
-export const OWNER_REWARD = 'an A$25 digital gift card';
 export const MANAGER_REWARD = '1 month of Pro free';
 export const MIN_GENUINE = 40; // characters in "what should we improve" to qualify for the reward
 
@@ -46,12 +44,8 @@ export async function feedbackContext(user: { id: string; email?: string | null 
     const { count } = await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids.slice(0, 100)).eq('sender', 'owner');
     engaged = (count ?? 0) > 0;
   }
-  let reward: string | null = null;
-  if (!rewarded) {
-    const { count: given } = await db.from('feedback').select('id', { count: 'exact', head: true }).eq('role', 'owner').in('reward_status', ['to_send', 'sent']);
-    reward = (given ?? 0) < OWNER_REWARD_LIMIT ? OWNER_REWARD : null;
-  }
-  return { role: 'owner', managerId: null, managerName: null, eligible: Boolean(reqs?.length) && engaged, reward, given: Boolean(prior?.length) };
+  // Owners aren't offered a reward for feedback.
+  return { role: 'owner', managerId: null, managerName: null, eligible: Boolean(reqs?.length) && engaged, reward: null, given: Boolean(prior?.length) };
 }
 
 /** Whether to show the pop-up to this user now. Never throws. */
