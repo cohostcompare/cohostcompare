@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
-import { planName, planOf, plansFor } from '@/lib/pro';
+import { isPro, planName, planOf, plansFor } from '@/lib/pro';
 import { setPlan, setVerified, setVisibility } from './actions';
 
 export const metadata: Metadata = { title: 'Managers · Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-type SP = Promise<{ q?: string; show?: string; error?: string; done?: string }>;
+type SP = Promise<{ q?: string; show?: string; plan?: string; error?: string; done?: string }>;
 
 export default async function AdminManagers({ searchParams }: { searchParams: SP }) {
   await requireAdmin('/admin/managers');
@@ -18,7 +18,20 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
   let query = db.from('managers').select('id, slug, name, website, claimed, published').order('name').limit(300);
   if (q) query = query.ilike('name', `%${q}%`);
   if (sp.show === 'hidden') query = query.eq('published', false);
-  const { data: rows } = await query;
+  const planFilter = ['pro', 'paying', 'freepro', 'free'].includes(sp.plan || '') ? sp.plan! : '';
+  if (planFilter) query = query.eq('claimed', true).limit(2000);
+  const { data: all } = await query;
+  // Plan filter (from the admin dashboard's Pro tile): any Pro, paying through Stripe, free Pro (founding, feedback, admin), or Free.
+  let rows = all;
+  if (planFilter) {
+    const pl = await plansFor((all || []).map((r) => r.id));
+    const { data: subs } = await db.from('managers').select('id, stripe_subscription_id').in('id', (all || []).map((r) => r.id));
+    const paying = new Set((subs || []).filter((x) => x.stripe_subscription_id).map((x) => x.id));
+    rows = (all || []).filter((r) => {
+      const pro = isPro(pl.get(r.id));
+      return planFilter === 'pro' ? pro : planFilter === 'paying' ? paying.has(r.id) : planFilter === 'freepro' ? pro && !paying.has(r.id) : !pro;
+    });
+  }
   const { data: abns } = await db.from('managers').select('id, abn, abn_name, abn_verified_at').in('id', (rows || []).map((r) => r.id)); // needs 009
   const abnOf = new Map((abns || []).map((a) => [a.id, a]));
   const plans = await plansFor((rows || []).filter((r) => r.claimed).map((r) => r.id));
@@ -42,9 +55,11 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
       <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input className="field" name="q" defaultValue={q} placeholder="Search by name" style={{ maxWidth: 320 }} />
         <select className="field" name="show" defaultValue={sp.show || ''} style={{ maxWidth: 200 }}><option value="">All managers</option><option value="hidden">Hidden only</option></select>
+        <select className="field" name="plan" defaultValue={planFilter} style={{ maxWidth: 220 }}><option value="">Any plan</option><option value="pro">Pro (paying or free)</option><option value="paying">Paying Pro</option><option value="freepro">Free Pro (founding etc.)</option><option value="free">Free plan (claimed)</option></select>
         <button className="btn secondary" type="submit">Filter</button>
       </form>
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+        {planFilter && <p className="hint" style={{ margin: 0, padding: '12px 16px' }}>{(rows || []).length} manager{(rows || []).length === 1 ? '' : 's'} on this plan.</p>}
         {!(rows || []).length && <p style={{ margin: 0, padding: 16 }} className="hint">No managers match.</p>}
         {(rows || []).map((m) => (
           <div key={m.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '6px 12px', padding: '12px 16px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>

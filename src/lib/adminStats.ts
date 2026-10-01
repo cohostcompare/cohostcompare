@@ -23,7 +23,7 @@ export async function adminStats() {
   const db = adminClient();
   const now = Date.now();
   const since = new Date(now - WEEKS * 7 * DAY).toISOString();
-  const [visits, reqs, threads, claims, pending, published, claimed, plans, fees, feedback] = await Promise.all([
+  const [visits, reqs, threads, claims, pending, published, claimed, plans, fees, feedback, late] = await Promise.all([
     db.from('funnel_events').select('created_at, source').eq('kind', 'visit').gte('created_at', since).limit(100000),
     db.from('quote_requests').select('id, created_at, quote_request_managers(manager_slug)').gte('created_at', since).limit(10000),
     db.from('quote_request_managers').select('created_at, accepted_at, status, manager_slug').gte('created_at', since).neq('manager_slug', TEST_SLUG).limit(20000),
@@ -34,6 +34,8 @@ export async function adminStats() {
     db.from('managers').select('plan, pro_until, pro_note, stripe_subscription_id').eq('claimed', true).neq('slug', TEST_SLUG).limit(5000),
     db.from('success_fees').select('amount, status, updated_at').eq('status', 'paid').gte('updated_at', new Date(now - 31 * DAY).toISOString()).limit(5000),
     db.from('feedback').select('nps').not('nps', 'is', null).limit(5000),
+    // Overdue: a manager hasn't quoted, declined or replied 48h after a request (last 90 days).
+    db.from('quote_request_managers').select('request_id').in('status', ['sent', 'viewed']).neq('manager_slug', TEST_SLUG).lt('created_at', new Date(now - 48 * 3600e3).toISOString()).gte('created_at', new Date(now - 90 * DAY).toISOString()).limit(5000),
   ]);
 
   const ads = zero(), google = zero(), other = zero();
@@ -75,5 +77,6 @@ export async function adminStats() {
     claimsToReview: pending.count ?? 0, published: published.count ?? 0, claimed: claimed.count ?? 0,
     payingPro, freePro, mrr: payingPro * (PRO_CENTS / 100), unlocks30, nps, npsCount: scored.length,
     trackingReady: !visits.error,
+    overdueManagers: (late.data || []).length, overdueRequests: new Set((late.data || []).map((x) => x.request_id)).size,
   };
 }

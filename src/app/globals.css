@@ -580,3 +580,10 @@ a.kpi:hover { border-color: var(--k); }
 .admin-sec h2 { font-size: 18px; margin: 0; color: var(--g); }
 .admin-sec .row { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
 .admin-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start; }
+.req-card { display: grid; gap: 6px; }
+.req-card.late { border-left: 5px solid var(--signal); }
+.req-threads { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.req-thread { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+.st { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.st-wait { background: #FFF1DD; color: #7A4A06; } .st-quoted { background: #E8EDFB; color: #2A438F; } .st-won { background: #EAF3DC; color: #2A5E1D; } .st-lost { background: var(--surface); color: var(--muted); border: 1px solid var(--line); } .st-late { background: #FBE3DE; color: #8E2A17; }
+@media (prefers-color-scheme: dark) { .st-wait { background: #33281A; color: #F1D9B5; } .st-quoted { background: #1C2338; color: #B9C8F5; } .st-won { background: #212D17; color: #BFE0B0; } .st-late { background: #3A1E19; color: #F3B5A8; } }

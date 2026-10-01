@@ -47,13 +47,13 @@ export default async function Admin() {
   type Item = { label: string; href: string; n?: number; ext?: boolean };
   const GROUPS: { title: string; tone: string; items: Item[] }[] = [
     { title: 'Managers', tone: 'g-teal', items: [{ label: 'Claims to review', href: '/admin/claims', n: openClaims }, { label: 'Managers and plans', href: '/admin/managers' }, { label: 'Manager outreach', href: '/admin/outreach' }, { label: 'Listing data', href: '/admin/data' }] },
-    { title: 'Owners', tone: 'g-blue', items: [{ label: 'Latest quote requests', href: '#requests' }, { label: 'Owner reviews', href: '/admin/reviews', n: reviewsCount }, { label: 'Feedback', href: '/admin/feedback', n: thanks }] },
+    { title: 'Owners', tone: 'g-blue', items: [{ label: 'All quote requests', href: '/admin/requests' }, { label: 'Overdue quotes', href: '/admin/requests?f=overdue&d=90', n: st.overdueRequests }, { label: 'Owner reviews', href: '/admin/reviews', n: reviewsCount }, { label: 'Feedback', href: '/admin/feedback', n: thanks }] },
     { title: 'Growth', tone: 'g-amber', items: [{ label: 'Ad results', href: '/admin/ads' }, { label: 'Partners', href: '/admin/partners', n: partnersPending }, { label: 'Interest sign-ups', href: '#interest' }] },
     { title: 'Money', tone: 'g-green', items: [{ label: 'Client confirmations', href: '#fees', n: awaiting }, { label: 'Shared logins', href: '#flags', n: (flags || []).length }, { label: 'Stripe dashboard', href: 'https://dashboard.stripe.com', ext: true }] },
     { title: 'System', tone: 'g-rose', items: [{ label: 'Site errors', href: '#errors', n: openErrors }, { label: 'Email replies', href: '#inbound' }, { label: 'Vercel', href: 'https://vercel.com/dashboard', ext: true }, { label: 'Supabase', href: 'https://supabase.com/dashboard/project/hkntldmrckaosytpjakw', ext: true }] },
   ];
   const needs: [string, number, string][] = ([
-    ['claims to review', openClaims, '/admin/claims'], ['partner applications', partnersPending, '/admin/partners'], ['client confirmations waiting', awaiting, '#fees'],
+    ['claims to review', openClaims, '/admin/claims'], ['quote requests with overdue managers', st.overdueRequests, '/admin/requests?f=overdue&d=90'], ['partner applications', partnersPending, '/admin/partners'], ['client confirmations waiting', awaiting, '#fees'],
     ['possible shared logins', (flags || []).length, '#flags'], ['Pro months to credit by hand', thanks, '/admin/feedback'], ['site errors this week', openErrors, '#errors'],
   ] as [string, number, string][]).filter(([, n]) => n > 0);
   const delta = ([a, b]: [number, number]) => { const d = a - b; return <span className={`wb-delta ${d > 0 ? 'up' : d < 0 ? 'down' : ''}`}>{d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '–'} vs last week</span>; };
@@ -88,13 +88,14 @@ export default async function Admin() {
       )}
 
       <section className="kpis" aria-label="This week at a glance">
-        <div className="kpi k-blue"><span>Quote requests</span><b>{st.week.requests[0]}</b>{delta(st.week.requests as [number, number])}<small>{st.week.contacted[0]} managers contacted</small></div>
-        <div className="kpi k-green"><span>Accepted quotes</span><b>{st.week.accepted[0]}</b>{delta(st.week.accepted as [number, number])}<small>introductions made</small></div>
+        <Link href="/admin/requests?d=7" className="kpi k-blue"><span>Quote requests</span><b>{st.week.requests[0]}</b>{delta(st.week.requests as [number, number])}<small>{st.week.contacted[0]} managers contacted</small></Link>
+        <Link href="/admin/requests?f=accepted&d=7" className="kpi k-green"><span>Accepted quotes</span><b>{st.week.accepted[0]}</b>{delta(st.week.accepted as [number, number])}<small>introductions made</small></Link>
+        <Link href="/admin/requests?f=overdue&d=90" className={`kpi ${st.overdueRequests ? 'k-alert' : 'k-teal'}`}><span>Overdue quotes</span><b>{st.overdueRequests}</b><small>{st.overdueManagers} manager{st.overdueManagers === 1 ? '' : 's'} 48h+ without replying</small></Link>
         <div className="kpi k-amber"><span>Visitors</span><b>{st.week.visitors[0]}</b>{delta(st.week.visitors as [number, number])}<small>{st.week.ads[0]} from ads · {st.week.google[0]} from Google search</small></div>
         <div className="kpi k-purple"><span>Visitor to request</span><b>{conv}</b><small>quote requests per visitor this week</small></div>
         <Link href="/admin/claims" className={`kpi ${openClaims ? 'k-alert' : 'k-teal'}`}><span>Claims to review</span><b>{openClaims}</b><small>{st.claimed} claimed of {st.published} published profiles</small></Link>
-        <div className="kpi k-teal"><span>Pro managers</span><b>{st.payingPro}</b><small>paying (A${st.mrr.toLocaleString('en-AU')} a month) · {st.freePro} on free Pro</small></div>
-        <div className="kpi k-green"><span>Client confirmations</span><b>A${st.unlocks30.toLocaleString('en-AU')}</b><small>paid in the last 30 days</small></div>
+        <Link href="/admin/managers?plan=pro" className="kpi k-teal"><span>Pro managers</span><b>{st.payingPro + st.freePro}</b><small>{st.payingPro} paying (A${st.mrr.toLocaleString('en-AU')} a month) · {st.freePro} on free Pro</small></Link>
+        <a href="#fees" className="kpi k-green"><span>Client confirmation fees</span><b>A${st.unlocks30.toLocaleString('en-AU')}</b><small>last 30 days: A$99 unlocks paid by Free-plan managers for clients beyond their 4 free a month</small></a>
         <Link href="/admin/feedback" className="kpi k-rose"><span>Recommend score</span><b>{st.nps ?? '–'}</b><small>{st.npsCount ? `from ${st.npsCount} feedback replies` : 'no feedback yet'}</small></Link>
       </section>
 
@@ -105,14 +106,14 @@ export default async function Admin() {
           <WeekBars title="Visitors from Google Ads" values={st.series.ads} labels={st.labels} href="/admin/ads" />
           <WeekBars title="Visitors from Google search (free)" values={st.series.google} labels={st.labels} href="/admin/ads" />
           <WeekBars title="All other visitors" values={st.series.other} labels={st.labels} href="/admin/ads" note="Direct, social, email and other websites" />
-          <WeekBars title="Quote requests" values={st.series.requests} labels={st.labels} href="#requests" />
-          <WeekBars title="Accepted quotes" values={st.series.accepted} labels={st.labels} />
+          <WeekBars title="Quote requests" values={st.series.requests} labels={st.labels} href="/admin/requests?d=90" />
+          <WeekBars title="Accepted quotes" values={st.series.accepted} labels={st.labels} href="/admin/requests?f=accepted&d=90" />
           <WeekBars title="New profile claims" values={st.series.claims} labels={st.labels} href="/admin/claims" />
         </div>
       </section>
 
       <Sec id="requests" tone="g-blue" title="Latest quote requests">
-        <span className="hint">{requests.toLocaleString('en-AU')} in total · {owners} waitlist sign-ups</span>
+        <span className="hint">{requests.toLocaleString('en-AU')} in total · {owners} waitlist sign-ups · <Link href="/admin/requests">See all with filters →</Link></span>
         {!recent?.length ? <span className="hint">None yet.</span> : recent.map((r) => (
           <div key={r.id} className="row">
             <span><b>{r.owner_name}</b> <span className="hint">{r.owner_email} · {when(r.created_at)}</span></span>
