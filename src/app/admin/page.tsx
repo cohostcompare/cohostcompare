@@ -36,7 +36,7 @@ export default async function Admin() {
   ]);
   const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
   const tiles: [string, number, string?][] = [
-    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'], ['Manager outreach', -1, '/admin/outreach'], ['Ad results', -1, '/admin/ads'], ['Owner reviews', -1, '/admin/reviews'], ['Partners', -1, '/admin/partners'],
+    ['Claims to review', openClaims, '/admin/claims'], ['Published managers', managers, '/admin/managers'], ['Claimed profiles', claimed], ['Quote requests', requests], ['Waitlist sign-ups', owners], ['Listing data', -1, '/admin/data'], ['Manager outreach', -1, '/admin/outreach'], ['Ad results', -1, '/admin/ads'], ['Owner reviews', -1, '/admin/reviews'], ['Partners', -1, '/admin/partners'], ['Feedback', -1, '/admin/feedback'],
   ];
   return (
     <main style={{ maxWidth: 960, paddingBlock: '16px 64px', display: 'grid', gap: 18 }}>

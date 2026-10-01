@@ -122,9 +122,10 @@ export async function runDaily() {
   const expired = await expireUnlocks().catch(() => 0);
   const { checkSharing } = await import('@/lib/activity');
   const sharing = await checkSharing().catch(() => [] as string[]);
+  const { count: thanks } = await adminClient().from('feedback').select('id', { count: 'exact', head: true }).in('reward_status', ['to_send', 'manual']).then((r) => r, () => ({ count: 0 }));
   const { sendReviewInvites } = await import('@/lib/reviewInvites');
   const invites = await sendReviewInvites().catch((e) => { console.error('review invites', e); return 0; });
-    const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(expired ? [`Unconfirmed accepted quotes past 48 hours: ${expired} (owners told they can choose another manager).`] : []), ...(sharing.length ? [`Possible shared logins: ${sharing.length} (emailed separately).`] : []), ...(reports.made ? [`Regional reports: made ${reports.made}, emailed ${reports.notified} managers.`] : []), ...(invites ? [`Review invites sent to owners: ${invites}.`] : [])];
+    const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(expired ? [`Unconfirmed accepted quotes past 48 hours: ${expired} (owners told they can choose another manager).`] : []), ...(sharing.length ? [`Possible shared logins: ${sharing.length} (emailed separately).`] : []), ...(reports.made ? [`Regional reports: made ${reports.made}, emailed ${reports.notified} managers.`] : []), ...(invites ? [`Review invites sent to owners: ${invites}.`] : []), ...(thanks ? [`Feedback thank-yous to send by hand: ${thanks} (Admin → Feedback).`] : [])];
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com',

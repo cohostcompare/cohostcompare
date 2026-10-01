@@ -474,3 +474,23 @@ a.stat-link:hover { border-color: var(--brand); }
 .offer-head > div { display: grid; }
 .offer-tag { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .offer .code { font-family: ui-monospace, Menlo, monospace; background: var(--tint); padding: 2px 8px; border-radius: 6px; }
+
+/* Feedback */
+.feedback-form fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.feedback-form legend, .feedback-form label > span { font-weight: 600; margin-bottom: 6px; }
+.feedback-form label { display: grid; gap: 4px; }
+.feedback-form label.check { display: flex; gap: 8px; align-items: center; font-weight: 400; }
+.feedback-form textarea { width: 100%; }
+.scale { display: flex; flex-wrap: wrap; gap: 6px; }
+.scale button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+.scale.nps button { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
+.scale button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.scale-ends { display: flex; justify-content: space-between; max-width: 506px; font-size: 13px; color: var(--muted); }
+.fb-pop { position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 50px rgba(16,48,47,.18); padding: 20px; display: grid; gap: 10px; animation: fbIn .35s ease-out; }
+.fb-pop h2 { font-size: 20px; margin: 0; padding-right: 28px; }
+.fb-pop p { margin: 0; font-size: 15px; }
+.fb-pop .gift { background: var(--tint); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.fb-pop .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.fb-pop .x { position: absolute; top: 10px; right: 10px; background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px; }
+@keyframes fbIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fb-pop { animation: none; } }

@@ -65,6 +65,9 @@ export default function Terms() {
         <li><b>API and integrations (Enterprise).</b> Keep your API keys secure and use the API only for your own business. Owner information you receive through the API or integrations is covered by the same rules as in section 5, including privacy law. We may set usage limits, and we may suspend API access if it&apos;s misused or puts the site at risk.</li>
       </ul>
 
+      <h2 id="feedback">6A. Feedback and thank-you rewards</h2>
+      <p>We welcome feedback at any time at <a href="/feedback">cohostcompare.com/feedback</a>. From time to time we may thank people for feedback with a reward, such as a month of Pro for a manager or a digital gift card for an owner. Rewards are one per person (or per business, for managers), are for a genuine answer, never depend on whether your feedback is positive, have no cash value unless stated, and may be limited in number or ended at any time. A free month of Pro is added to any free Pro you already have; if you already pay for Pro, we credit a month instead. We may use what you tell us to improve the service. We don&apos;t publish feedback with your name without asking you first.</p>
+
       <h2>7. Acceptable use</h2>
       <p>Don&apos;t misuse the site. That includes sending spam or abusive messages, impersonating others, scraping or copying data from the site, interfering with its security or operation, or using it for anything unlawful. We can remove content and restrict access where we reasonably believe these terms have been broken.</p>
 

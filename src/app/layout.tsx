@@ -5,6 +5,8 @@ import './globals.css';
 import AccountMenu from '@/components/AccountMenu';
 import GoogleTag from '@/components/GoogleTag';
 import TrafficBeacon from '@/components/TrafficBeacon';
+import FeedbackPrompt from '@/components/FeedbackPrompt';
+import { cookies } from 'next/headers';
 import ManagerMenu from '@/components/ManagerMenu';
 import { ORG_JSONLD, SOCIAL } from '@/lib/social';
 import SiteMenu, { NavLink, NavMore } from '@/components/SiteMenu';
@@ -34,6 +36,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       if (ids.length) unread = (await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids).eq('read_by_owner', false).neq('sender', 'owner')).count ?? 0;
     } catch { /* badge is optional */ }
   }
+  // Feedback pop-up (src/lib/feedback.ts): checked once per browser session, skipped once answered or snoozed.
+  const ask = Boolean(user) && !(await cookies()).get('cc_fb');
   return (
     <html lang="en-AU">
       <head>
@@ -68,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare · ABN 52 679 120 059</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/setup">Setting up your rental</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/about">About</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/setup">Setting up your rental</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/about">About</Link> · <Link href="/feedback">Feedback</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
             <span>Made in Sydney · hello@cohostcompare.com{SOCIAL.map((x) => <span key={x.url}> · <a href={x.url} rel="me noopener">{x.name}</a></span>)}</span>
           </footer>
         </div>
@@ -76,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Analytics />
         <GoogleTag />
         <TrafficBeacon />
+        {ask && <FeedbackPrompt />}
       </body>
     </html>
   );
