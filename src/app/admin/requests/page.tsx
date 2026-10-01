@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { TEST_SLUG } from '@/lib/data';
 import { adminClient } from '@/lib/supabase/server';
+import { deleteRequest } from './actions';
 
 export const metadata: Metadata = { title: 'Quote requests', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -105,6 +106,13 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
               );
             })}
           </div>
+          <details className="req-del"><summary className="hint">Delete</summary>
+            <form action={deleteRequest} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+              <input type="hidden" name="id" value={r.id} />
+              <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Permanently delete this request, its messages and quotes (for test or junk requests). Nobody is emailed.</label>
+              <button className="btn secondary small" type="submit" style={{ color: 'var(--signal)' }}>Delete request</button>
+            </form>
+          </details>
         </article>
       ))}
     </main>
