@@ -4,8 +4,7 @@ import { myManagers, requireThread } from '@/lib/managers';
 import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
 import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
-import { declineRequest } from '../actions';
-import { ManagerComposer, QuoteForm } from './Forms';
+import { DeclineForm, ManagerComposer, QuoteForm } from './Forms';
 
 export const metadata: Metadata = { title: 'Quote request', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -107,12 +106,8 @@ export default async function ManagerThread({ params, searchParams }: { params: 
 
       {!closed && (
         <details className="panel">
-          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Can&apos;t take on this property?</summary>
-          <form action={declineRequest} style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-            <input type="hidden" name="thread" value={t.id} />
-            <textarea className="field" name="reason" rows={2} maxLength={500} placeholder="Optional: a short reason for the owner, e.g. outside our area or fully booked" />
-            <button className="btn secondary" type="submit" style={{ justifySelf: 'start' }}>Let the owner know</button>
-          </form>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Can&apos;t take on this property? Decline with a reason</summary>
+          <DeclineForm thread={t.id} owner={first} />
         </details>
       )}
     </main>

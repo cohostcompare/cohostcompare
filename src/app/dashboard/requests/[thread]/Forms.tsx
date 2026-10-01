@@ -1,7 +1,8 @@
 'use client';
 
 import { useActionState, useEffect, useRef } from 'react';
-import { saveTemplate, sendManagerMessage, sendQuote } from '../actions';
+import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
+import { declineRequest, saveTemplate, sendManagerMessage, sendQuote } from '../actions';
 
 const L = { display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 } as const;
 const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))` });
@@ -81,6 +82,27 @@ export function ManagerComposer({ thread, name }: { thread: string; name: string
         {state?.error && <span role="alert" style={{ color: 'var(--signal)' }}>{state.error}</span>}
         {state?.ok && <span className="hint">Sent.</span>}
       </div>
+    </form>
+  );
+}
+
+/** "Can't take this on": at least one standard reason plus a note, both shown to the owner. */
+export function DeclineForm({ thread, owner }: { thread: string; owner: string }) {
+  const [state, act, pending] = useActionState(declineRequest, {} as { error?: string });
+  return (
+    <form action={act} style={{ display: 'grid', gap: 12, marginTop: 10 }}>
+      <input type="hidden" name="thread" value={thread} />
+      <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 6 }}>
+        <legend style={{ fontWeight: 600, marginBottom: 6 }}>Why can&apos;t you take it on? <span className="hint">(choose at least one)</span></legend>
+        {DECLINE_REASONS.map((r) => <label key={r} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}><input type="checkbox" name="reasons" value={r} style={{ marginTop: 4 }} /> <span>{r}</span></label>)}
+      </fieldset>
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span style={{ fontWeight: 600 }}>Note for {owner} <span className="hint">(required)</span></span>
+        <textarea className="field" name="note" rows={3} required minLength={MIN_DECLINE_NOTE} maxLength={800} placeholder="e.g. We only take properties we can manage for at least 9 months of the year. If that changes, we'd be happy to quote." />
+      </label>
+      <p className="hint" style={{ margin: 0 }}>{owner} sees your reasons and note in their inbox and by email. This closes the request for you.</p>
+      {state?.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}
+      <button className="btn secondary" type="submit" disabled={pending} style={{ justifySelf: 'start' }}>{pending ? 'Sending…' : `Decline and tell ${owner}`}</button>
     </form>
   );
 }

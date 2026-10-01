@@ -10,6 +10,7 @@ import { adminClient } from '@/lib/supabase/server';
 import { isPro, plansFor } from '@/lib/pro';
 import { threadReplyTo } from '@/lib/inbound';
 import { postManagerMessage } from '@/lib/threads';
+import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
 
 async function origin() {
   const h = await headers();
@@ -51,20 +52,27 @@ export async function sendManagerMessage(_: unknown, form: FormData): Promise<{ 
   return { ok: true };
 }
 
-export async function declineRequest(form: FormData) {
+export async function declineRequest(_: unknown, form: FormData): Promise<{ error?: string }> {
   const { thread, req } = await requireThread(String(form.get('thread') || ''));
+  if (['accepted', 'declined', 'withdrawn'].includes(thread.status)) return { error: 'This request is already closed.' };
+  // A reason and a note are both required, so the owner is never left in the dark.
+  const reasons = form.getAll('reasons').map(String).filter((r) => (DECLINE_REASONS as readonly string[]).includes(r));
+  const note = String(form.get('note') || '').trim().slice(0, 800);
+  if (!reasons.length) return { error: 'Choose at least one reason.' };
+  if (note.length < MIN_DECLINE_NOTE) return { error: `Add a short note for the owner (at least ${MIN_DECLINE_NOTE} characters), for example what would need to change.` };
   const db = adminClient();
   await db.from('quote_request_managers').update({ status: 'declined', updated_at: new Date().toISOString() }).eq('id', thread.id);
-  const reason = String(form.get('reason') || '').trim().slice(0, 500);
-  await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} can’t take on this property.${reason ? ` They said: “${reason}”` : ''}` });
-  if (await notifyIfAllReplied(thread.request_id, await origin())) { revalidatePath(`/dashboard/requests/${thread.id}`); return; }
+  const list = reasons.map((r) => `- ${r}`).join('\n');
+  await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} can’t take on this property.\n\nWhy:\n${list}\n\nTheir note: “${note}”` });
+  if (await notifyIfAllReplied(thread.request_id, await origin())) { revalidatePath(`/dashboard/requests/${thread.id}`); return {}; }
   await sendEmail({
     to: req.owner_email,
     subject: `${thread.manager_name} can’t take on your property`,
-    text: `${thread.manager_name} has let you know they can’t take on your property at ${req.suburb || `postcode ${req.postcode}`}.${reason ? `\n\nThey said: “${reason}”` : ''}\n\nYour other quote requests are unaffected, and you can request quotes from more managers any time.`,
+    text: `${thread.manager_name} has let you know they can’t take on your property at ${req.suburb || `postcode ${req.postcode}`}.\n\nWhy:\n${list}\n\nTheir note: “${note}”\n\nYour other quote requests are unaffected, and you can request quotes from more managers any time.`,
     cta: { label: 'Open my inbox', url: `${await origin()}/account` },
   });
   revalidatePath(`/dashboard/requests/${thread.id}`);
+  return {};
 }
 
 /** Pro: save the quote form as a reusable template (max 10 per business). */
