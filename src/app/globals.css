@@ -589,3 +589,7 @@ a.kpi:hover { border-color: var(--k); }
 @media (prefers-color-scheme: dark) { .st-wait { background: #33281A; color: #F1D9B5; } .st-quoted { background: #1C2338; color: #B9C8F5; } .st-won { background: #212D17; color: #BFE0B0; } .st-late { background: #3A1E19; color: #F3B5A8; } }
 .kpi.on { border: 3px solid var(--k); border-left-width: 6px; box-shadow: 0 6px 18px rgba(16,48,47,.12); }
 .kpi.on > span:first-child { color: var(--k); font-weight: 700; }
+.req-del { position: relative; }
+.req-del summary { cursor: pointer; list-style: none; color: var(--signal); font-size: 13px; }
+.req-del summary::-webkit-details-marker { display: none; }
+.req-del-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: min(320px, 80vw); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 12px 30px rgba(16,48,47,.18); display: grid; gap: 10px; }

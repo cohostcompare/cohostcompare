@@ -90,6 +90,13 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
             <b>{r.owner_name}</b>
             <span className="hint"><a href={`mailto:${r.owner_email}`}>{r.owner_email}</a>{r.owner_phone ? ` · ${r.owner_phone}` : ''}</span>
             <span className="hint" style={{ marginLeft: 'auto' }}>{when(r.created_at)} ({ago(r.created_at)} ago){r.source && r.source !== 'direct' ? ` · from ${r.source === 'ads' ? 'Google Ads' : r.source === 'google' ? 'Google search' : r.source}` : ''}</span>
+            <details className="req-del"><summary className="hint">Delete</summary>
+              <form action={deleteRequest} className="req-del-pop">
+                <input type="hidden" name="id" value={r.id} />
+                <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Permanently delete this request, its messages and quotes. Nobody is emailed.</label>
+                <button className="btn secondary small" type="submit" style={{ color: 'var(--signal)' }}>Delete request</button>
+              </form>
+            </details>
           </div>
           <span className="hint">{r.address || `${r.suburb || ''} ${r.postcode}`} · {r.property_type}{r.bedrooms != null ? `, ${r.bedrooms === 0 ? 'studio' : `${r.bedrooms} bed`}` : ''}</span>
           <div className="req-threads">
@@ -106,13 +113,6 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
               );
             })}
           </div>
-          <details className="req-del"><summary className="hint">Delete</summary>
-            <form action={deleteRequest} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 6 }}>
-              <input type="hidden" name="id" value={r.id} />
-              <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Permanently delete this request, its messages and quotes (for test or junk requests). Nobody is emailed.</label>
-              <button className="btn secondary small" type="submit" style={{ color: 'var(--signal)' }}>Delete request</button>
-            </form>
-          </details>
         </article>
       ))}
     </main>
