@@ -12,6 +12,36 @@ import { adminClient, currentUser } from '@/lib/supabase/server';
 const SITUATIONS = ['I own the property', 'I’m buying it now (under contract or about to settle)', "I'm buying it now (under contract or about to settle)", 'I’m planning to buy a property', "I'm planning to buy a property"];
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 
+/*
+ Limits so nobody can spam managers (admins exempt). An owner can send up to REQUESTS_PER_DAY requests in 24 hours
+ and reach up to MANAGERS_PER_MONTH managers in 30 days (each request goes to up to 5). Hitting a limit blocks the
+ request with a friendly message and tells hello@, who can help a genuine owner with several properties.
+*/
+const REQUESTS_PER_DAY = 3;
+const MANAGERS_PER_MONTH = 15;
+
+async function requestLimit(userId: string, email: string, adding: number, where: string): Promise<string | null> {
+  const { isAdminEmail } = await import('@/lib/admin');
+  if (isAdminEmail(email)) return null;
+  const db = adminClient();
+  const ago = (d: number) => new Date(Date.now() - d * 86400e3).toISOString();
+  const { data, error } = await db.from('quote_requests').select('id, created_at, quote_request_managers(id)').eq('owner_id', userId).gte('created_at', ago(30));
+  if (error) return null; // never block on a lookup error
+  const today = (data || []).filter((r) => r.created_at >= ago(1)).length;
+  const reached = (data || []).reduce((n, r) => n + ((r.quote_request_managers as unknown[]) || []).length, 0);
+  let msg: string | null = null;
+  if (today >= REQUESTS_PER_DAY) msg = `You've sent ${today} quote requests in the last 24 hours, which is our daily limit. Please try again tomorrow. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
+  else if (reached + adding > MANAGERS_PER_MONTH) msg = `This would take you past ${MANAGERS_PER_MONTH} managers contacted in 30 days${reached < MANAGERS_PER_MONTH ? `. You can still ask ${MANAGERS_PER_MONTH - reached} more` : ''}. We limit this so managers can trust every request is genuine. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
+  if (msg) {
+    await sendEmail({ to: 'hello@cohostcompare.com', subject: 'Quote request limit reached', text: `${email} hit the quote request limit.
+
+In the last 30 days: ${data?.length ?? 0} requests, ${reached} managers contacted (${today} requests in the last 24 hours). They tried to add ${adding} more for ${where}.
+
+If they're genuine (e.g. several properties), reply to them and send the request on their behalf, or ask Claude to raise their limit.`, replyTo: email }).catch(() => {});
+  }
+  return msg;
+}
+
 export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ error?: string }> {
   const user = await currentUser();
   if (!user?.email) return { error: 'Your sign-in has expired. Refresh the page and sign in again.' };
@@ -40,6 +70,9 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} run homes near this address. Remove them or search again for this address.` };
   if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
   if (!services.length) return { error: 'Choose at least one service you want.' };
+
+  const limited = await requestLimit(user.id, user.email, managers.length, `${suburb} ${stateCode} ${postcode}`);
+  if (limited) return { error: limited };
 
   const row = {
     owner_id: user.id,

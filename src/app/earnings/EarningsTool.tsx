@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import PlacesInput, { type PickedPlace } from '@/components/PlacesInput';
 import type { Estimate } from '@/lib/earnings';
-import { getEstimate } from './actions';
+import { getEstimate, type EstimateResult } from './actions';
 
 const money = (n: number) => `A$${Math.round(n).toLocaleString('en-AU')}`;
 
 export default function EarningsTool() {
   const [place, setPlace] = useState<PickedPlace | null>(null);
   const [beds, setBeds] = useState(2);
-  const [res, setRes] = useState<Estimate | { error: string } | null>(null);
+  const [res, setRes] = useState<EstimateResult | null>(null);
   const [pending, start] = useTransition();
 
   const run = (p: PickedPlace | null, b: number) => {
@@ -40,7 +40,7 @@ export default function EarningsTool() {
           </div>
           <ul className="earn-trust">
             <li>Free to use</li>
-            <li>No account or sign-up</li>
+            <li>No sign-up for your first few estimates</li>
             <li>No contact details asked for</li>
           </ul>
         </div>
@@ -55,7 +55,12 @@ export default function EarningsTool() {
         </aside>
       </div>
 
-      {res && 'error' in res && <p role="alert" className="panel" style={{ margin: 0, color: 'var(--signal)' }}>{res.error}</p>}
+      {res && 'error' in res && (
+        <p role="alert" className="panel" style={{ margin: 0, color: 'var(--signal)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span>{res.error}</span>
+          {res.signin && <Link className="btn primary small" href="/signin?next=/earnings">Sign in free</Link>}
+        </p>
+      )}
       {res && 'mid' in res && (
         <section className="estimate" aria-live="polite">
           <span className="label">Estimated booking revenue for a {res.bedrooms === 0 ? 'studio' : `${res.bedrooms === 5 ? '5+' : res.bedrooms}-bedroom home`} in {res.market}</span>

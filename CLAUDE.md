@@ -9,7 +9,7 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Commits on this repo are authored as Claude; the GitHub app is installed on the org.
 
 ## Services
-- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–018 so far). RLS on; server uses the secret key via `adminClient()`.
+- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–019 so far). RLS on; server uses the secret key via `adminClient()`.
 - Resend sends from hello@ (`src/lib/email.ts`, branded HTML). Supabase Auth email also goes through Resend.
 - Google Maps JS (Places API New) in the browser; AirROI API for listing data (derived, aggregated figures only, attributed "Data source: AirROI (www.airroi.com)"; never show listing-level data or Airbnb photos).
 - Google Ads: tag AW-18486166646 (`src/components/GoogleTag.tsx`, production only); "Quote request sent" conversion fires once per request on /account?sent=&r= (`QuoteSentConversion.tsx`, label in `src/lib/ads.ts`). Search campaign, no Display/partners; enhanced conversions off.
@@ -37,6 +37,7 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Review invites (`src/lib/reviewInvites.ts`, daily cron): every owner once (per request, max one per 180 days): 14 days after accepting (manager review + Trustpilot) or 21 days after the request (Trustpilot). Never selective. Unsubscribe via email_suppressions.
 - Partner offers (`src/lib/partners.ts`): apply at /partners (direct link only, noindex), private signed manage link /partners/manage/[id], admin /admin/partners (approve, referral-fee flag, show/hide switch `site_settings.offers_live`). Offers show on /setup only when the switch is on AND a partner is approved; clicks via /go/[id]. Always labelled, referral fees disclosed.
 - Feedback (`src/lib/feedback.ts`, /feedback, /admin/feedback, SQL 018): anyone can send any time (footer link). Pop-up (`FeedbackPrompt`, checked once per session via server action) only for genuine users: owners with a request 2+ days old and a quote or message; managers with 3+ active days and 7+ days since joining. Max 3 shows, 7 days apart, never after answering or "No thanks". Thank-you for an honest "improve" answer (40+ chars), one each, never tied to sentiment: managers only: 1 month Pro (added to pro_until; paying/open-ended Pro → credit by hand). Owners get no reward (Ben's call). No skeleton loading screens (Ben dislikes them); a thin top progress bar only. Terms section 6A.
+- Limits: earnings estimator 3 different places a day without an account (then "sign in free"), 25 signed in, bedroom changes free, admins unlimited (`rate_events`, SQL 019, purged after 7 days; plus the global AirROI daily cap in `src/lib/earnings.ts`). Quote requests: 3 per 24h and 15 managers per 30 days per owner (`requestLimit` in `src/app/quote/actions.ts`), hello@ emailed when hit, admins exempt.
 - No paid placement anywhere. Never gate the verified badge, visibility in results or lead volume behind payment.
 
 ## Style
