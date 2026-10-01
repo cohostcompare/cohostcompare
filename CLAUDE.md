@@ -12,6 +12,7 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–016 so far). RLS on; server uses the secret key via `adminClient()`.
 - Resend sends from hello@ (`src/lib/email.ts`, branded HTML). Supabase Auth email also goes through Resend.
 - Google Maps JS (Places API New) in the browser; AirROI API for listing data (derived, aggregated figures only, attributed "Data source: AirROI (www.airroi.com)"; never show listing-level data or Airbnb photos).
+- Google Ads: tag AW-18486166646 (`src/components/GoogleTag.tsx`, production only); "Quote request sent" conversion fires once per request on /account?sent=&r= (`QuoteSentConversion.tsx`, label in `src/lib/ads.ts`). Search campaign, no Display/partners; enhanced conversions off.
 - Anthropic API (claude-haiku-4-5) for the rules Q&A at `/api/ask-rules`, grounded only on `src/lib/rules.ts`.
 - Vercel env: AIRROI_API_KEY, ADMIN_TOKEN, SUPABASE_SECRET_KEY, RESEND_API_KEY, CRON_SECRET, ANTHROPIC_API_KEY, ABN_LOOKUP_GUID. Optional switches: OUTREACH_ENABLED=1 (manager outreach, paused until Ben says), INBOUND_DOMAIN + RESEND_INBOUND_SECRET (email reply tracking), CLICKSEND_USERNAME + CLICKSEND_API_KEY + SMS_FROM (SMS alerts).
 - Reply tracking (`src/lib/inbound.ts`, `/api/inbound`): conversation emails carry a signed Reply-To on INBOUND_DOMAIN; Resend posts `email.received`, the reply is added to the thread. Outreach replies stop the sequence.
