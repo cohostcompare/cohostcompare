@@ -7,7 +7,7 @@ export default function Privacy() {
   return (
     <main className="legal">
       <h1>Privacy policy</h1>
-      <p className="hint">Last updated 30 September 2026</p>
+      <p className="hint">Last updated 1 October 2026</p>
 
       <p>CoHostCompare helps Australian property owners compare short-term rental managers and request quotes from them. It is run by Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what personal information we collect, why, who we share it with, and your choices. We handle personal information in line with the Australian Privacy Principles in the <i>Privacy Act 1988</i> (Cth).</p>
 
@@ -22,7 +22,7 @@ export default function Privacy() {
         <li><b>Questions about the rules:</b> the questions you type into our rules tool. Don&apos;t include personal details in them.</li>
         <li><b>Manager sign-ins:</b> for manager accounts, the day, device type, approximate city (from your IP address) and a scrambled version of your IP address, to keep accounts secure and check that logins aren&apos;t shared. We delete these after 12 months.</li>
         <li><b>Searches:</b> we count searches by postcode (with no address or person attached) to show managers how many owners search in their areas.</li>
-        <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We don&apos;t use advertising trackers.</li>
+        <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We also use the Google Ads tag, which sets cookies so we can tell whether someone who clicked one of our ads went on to request quotes. It doesn&apos;t receive your name, email, address or property details. You can opt out of personalised ads at adssettings.google.com.</li>
         <li><b>Waitlist:</b> if you joined our waitlist, the details you gave then.</li>
       </ul>
 
@@ -50,6 +50,7 @@ export default function Privacy() {
         <li>Stripe: card payments from managers (Australia and the United States). We never see or store full card numbers.</li>
         <li>ClickSend: sends text message alerts to managers who turn them on (Australia).</li>
         <li>Google Maps: address search and maps. Google receives what you type into the address box.</li>
+        <li>Google Ads: measures whether our ads lead to quote requests (United States). It receives pages visited and a random request number, not your details.</li>
         <li>Anthropic: answers questions typed into our rules tool (United States). Questions aren&apos;t linked to your account.</li>
         <li>AirROI: supplies short-stay market data for earnings estimates. We send it only a map location, never your details.</li>
       </ul>

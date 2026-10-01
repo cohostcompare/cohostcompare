@@ -123,5 +123,5 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     replyTo: user.email,
   });
 
-  redirect(`/account?sent=${managers.length}`);
+  redirect(`/account?sent=${managers.length}&r=${req.id}`);
 }

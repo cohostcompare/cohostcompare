@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next';
 import Link from 'next/link';
 import './globals.css';
 import AccountMenu from '@/components/AccountMenu';
+import GoogleTag from '@/components/GoogleTag';
 import ManagerMenu from '@/components/ManagerMenu';
 import { ORG_JSONLD, SOCIAL } from '@/lib/social';
 import SiteMenu, { NavLink, NavMore } from '@/components/SiteMenu';
@@ -72,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </div>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />
         <Analytics />
+        <GoogleTag />
       </body>
     </html>
   );

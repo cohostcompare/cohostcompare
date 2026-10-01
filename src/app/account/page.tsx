@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import QuoteSentConversion from '@/components/QuoteSentConversion';
 import QuoteTable, { type QuoteCol } from '@/components/QuoteTable';
 import { managersNear } from '@/lib/data';
 import type { Quote } from '@/lib/quotes';
@@ -8,7 +9,7 @@ import { adminClient, currentUser, userClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Owner portal', robots: { index: false } };
 
-type SP = Promise<{ sent?: string }>;
+type SP = Promise<{ sent?: string; r?: string }>;
 
 const STATUS: Record<string, string> = { sent: 'Waiting for a reply', viewed: 'Viewed by the manager', quoted: 'Quote received, ready to compare', accepted: 'Accepted', declined: 'Declined', withdrawn: 'Withdrawn' };
 
@@ -50,6 +51,7 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
         </div>
         <Link className="btn secondary" href="/">New search</Link>
       </div>
+      {sp.sent && sp.r && <QuoteSentConversion requestId={sp.r} />}
       {sp.sent && <div className="panel" style={{ background: 'var(--tint)' }}><b>Request sent to {sp.sent} manager{sp.sent === '1' ? '' : 's'}.</b> We&apos;ve emailed you a copy. Open a manager below to message them; quotes and replies appear here.</div>}
       {!requests?.length ? (
         <div className="panel">No requests yet. <a href="/">Search for managers</a> near your property to get started.</div>
