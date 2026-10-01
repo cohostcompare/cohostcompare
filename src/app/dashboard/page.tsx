@@ -89,6 +89,9 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn secondary" href="/dashboard/reports">Market reports</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
+                {bill.get(m.id)?.stripe_subscription_id && bill.get(m.id)?.stripe_customer_id && (
+                  <form action={manageBilling} style={{ display: 'contents' }}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary" type="submit">Billing</button></form>
+                )}
                 {ownerReviews.has(m.slug) && <Link className="btn secondary" href={`/dashboard/${m.slug}/reviews`}>Reviews ({ownerReviews.get(m.slug)!.count})</Link>}
               </div>
             </div>
@@ -139,9 +142,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <div className="panel" style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
                   <span><b>{planName(plan)}{p?.pro_note === 'founding' ? ' (founding manager)' : ''}</b>{p?.pro_until ? `${p.pro_note === 'founding' ? ' is free for you' : ''} until ${new Date(p.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}: insights, market reports, SMS alerts and more photos.</span>
                   <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {bill.get(m.id)?.stripe_subscription_id && bill.get(m.id)?.stripe_customer_id ? (
-                      <form action={manageBilling}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary small">Billing</button></form>
-                    ) : billing && p?.pro_note === 'founding' ? (
+                    {bill.get(m.id)?.stripe_subscription_id ? null : billing && p?.pro_note === 'founding' ? (
                       <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary small">Keep Pro after the free months</button></form>
                     ) : null}
                   </span>
