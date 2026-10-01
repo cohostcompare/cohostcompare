@@ -7,7 +7,7 @@ export default function Terms() {
   return (
     <main className="legal">
       <h1>Terms of use</h1>
-      <p className="hint">Last updated 30 September 2026</p>
+      <p className="hint">Last updated 1 October 2026</p>
 
       <p>These terms apply when you use cohostcompare.com. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By using the site you agree to these terms. Our <Link href="/privacy">privacy policy</Link> explains how we handle personal information.</p>
 
@@ -31,6 +31,7 @@ export default function Terms() {
         <li>The service is free for owners. There&apos;s no obligation to accept any quote.</li>
         <li>You can send a quote request to up to five managers who operate near the property. Only request quotes for a property you own or are authorised to act for.</li>
         <li>Your full contact details go to a manager only if you accept their quote. Accepting a quote isn&apos;t a contract: any agreement is made directly between you and the manager, on their terms.</li>
+        <li>After we&apos;ve introduced you to a manager whose quote you accepted, you can review that manager. Reviews must be honest, about your own experience, and must not include personal details, links, or offensive or defamatory content. Your review shows on the manager&apos;s profile with your first name and suburb, and the manager can post one public reply. You give us a licence to publish your review. We may remove a review that breaks these rules, but never because a manager asks or pays us to, and reviews never change the order managers appear in.</li>
       </ul>
 
       <h2>5. For managers</h2>
@@ -41,6 +42,7 @@ export default function Terms() {
         <li>Information you add must be accurate and not misleading, including fees, services and credentials. You must hold any licence your state requires for the services you offer.</li>
         <li>You must only upload logos and photos you own or have permission to use, and you give us a licence to display them on the site for as long as they&apos;re on your profile.</li>
         <li>Use owners&apos; details only to respond to their request and provide the services they ask about, and handle them in line with privacy law. Don&apos;t add owners to marketing lists without their consent.</li>
+        <li>Owners who accepted your quote through CoHostCompare can review your business, and published reviews show on your profile. You can post one public reply to each review. Don&apos;t offer owners anything in return for a review, or pressure them to change or remove one. If you think a review breaks our rules, email us and we&apos;ll look at it, but we don&apos;t remove honest reviews and paid plans don&apos;t change this.</li>
         <li>You can ask us to remove your business&apos;s profile at any time by emailing <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a>.</li>
       </ul>
 

@@ -13,6 +13,8 @@ export type PublicManager = {
   postcodes?: string[]; // service areas the manager declares (used when we have no listing data)
   propertyCount: number | null;
   avgRating: number | null;
+  /** Reviews from owners who hired them through CoHostCompare (only set when there's at least one). */
+  ownerReviews?: { avg: number; count: number };
   reviewCount: number | null;
   avgOccupancy: number | null; // 0–1, last 12 months
   avgNightlyRate: number | null; // A$

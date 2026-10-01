@@ -65,6 +65,12 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (error && /situation/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng }).select('id').single());
   if (error && /lat|lng|column/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert(row).select('id').single());
   if (error || !req) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
+  { // Where this owner came from (Google Ads etc.), for the admin ad results. Needs 017; best-effort.
+    const { currentSource, logFunnel } = await import('@/lib/traffic');
+    const { source, campaign } = await currentSource();
+    await db.from('quote_requests').update({ source, campaign }).eq('id', req.id).then(() => {}, () => {});
+    await logFunnel('quote');
+  }
   const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
     managers.map((m) => ({ request_id: req.id, manager_slug: m.slug, manager_name: m.name })),
   ).select('id');

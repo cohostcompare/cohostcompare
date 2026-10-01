@@ -17,12 +17,14 @@ export default function Privacy() {
         <li><b>Quote requests (owners):</b> your name, email, phone number (optional), the property&apos;s address and location, property type, bedrooms, what help you want, timing and any notes you add.</li>
         <li><b>Messages and quotes:</b> messages between you and managers, and the quotes managers send. If you reply to one of our emails about a conversation, we read your reply and add it to that conversation.</li>
         <li><b>Sign-ups and enquiries:</b> the details you give when you ask about a paid plan or partnering with us.</li>
+        <li><b>Reviews:</b> if you review a manager, your rating and review, published on their profile with your first name and suburb only. Your email and full name aren&apos;t shown.</li>
+        <li><b>Partners:</b> for businesses that apply to offer services to owners, the contact details and offer they give us, and a count of how many times their offer is clicked. We never pass owners&apos; details to partners.</li>
         <li><b>Paid plans (managers):</b> billing contact and invoice details. Card details are handled by our payment provider, not stored by us.</li>
         <li><b>Managers:</b> the name, email and phone of people who claim or run a manager profile, anything they add to it (fees, services, logo and photos), and their ABN, which we check on the public Australian Business Register. We also record business contact emails that a manager publishes on its own website, to invite it to claim its profile. Every such email identifies us and has an unsubscribe link, which we honour straight away.</li>
         <li><b>Questions about the rules:</b> the questions you type into our rules tool. Don&apos;t include personal details in them.</li>
         <li><b>Manager sign-ins:</b> for manager accounts, the day, device type, approximate city (from your IP address) and a scrambled version of your IP address, to keep accounts secure and check that logins aren&apos;t shared. We delete these after 12 months.</li>
         <li><b>Searches:</b> we count searches by postcode (with no address or person attached) to show managers how many owners search in their areas.</li>
-        <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We also use the Google Ads tag, which sets cookies so we can tell whether someone who clicked one of our ads went on to request quotes. It doesn&apos;t receive your name, email, address or property details. You can opt out of personalised ads at adssettings.google.com.</li>
+        <li><b>Technical information:</b> basic, cookie-free visit statistics (pages viewed, device type, country), and security logs such as IP addresses. We use a sign-in cookie to keep you signed in. We also use the Google Ads tag, which sets cookies so we can tell whether someone who clicked one of our ads went on to request quotes. Our own cookies record, for 30 days, how you first arrived at the site (for example from a Google ad or a link on another website), with a random session number, so we can see in aggregate which sources lead to quote requests. It doesn&apos;t receive your name, email, address or property details. You can opt out of personalised ads at adssettings.google.com.</li>
         <li><b>Waitlist:</b> if you joined our waitlist, the details you gave then.</li>
       </ul>
 
@@ -33,6 +35,7 @@ export default function Privacy() {
       <ul>
         <li>To run the service: show managers near an address, send your quote requests, deliver quotes and messages, and email you about them.</li>
         <li>To send reminders about requests and quotes you have open. You can ask us to stop these.</li>
+        <li>To ask you, once, to review the manager you chose and to review us (for example on Trustpilot). We ask every owner, whatever their experience. Each request has an unsubscribe link.</li>
         <li>To keep the service safe, fix problems and understand, in aggregate, how it&apos;s used.</li>
         <li>To respond to you when you contact us.</li>
       </ul>

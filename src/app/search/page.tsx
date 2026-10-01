@@ -3,6 +3,7 @@ import AddressSearch from '@/components/AddressSearch';
 import ResultsList from '@/components/ResultsList';
 import { COVER_KM, managersForArea, managersForPostcode, withTestForAdmin } from '@/lib/data';
 import { bump, logSearch } from '@/lib/events';
+import { logFunnel } from '@/lib/traffic';
 
 export const metadata: Metadata = { title: 'Managers near you', robots: { index: false } };
 
@@ -14,9 +15,11 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
   const lat = Number(sp.lat), lng = Number(sp.lng);
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng) && sp.lat && sp.lng;
   const found = hasPoint ? await managersForArea(lat, lng, postcode) : postcode ? await managersForPostcode(postcode) : [];
-  const managers = await withTestForAdmin(found);
+  const { withReviewSummaries } = await import('@/lib/reviews');
+  const managers = await withReviewSummaries(await withTestForAdmin(found));
   await bump(found.map((m) => m.id), 'search');
   if (postcode) await logSearch(postcode, sp.suburb);
+  if (postcode || hasPoint) await logFunnel('search');
   const q = new URLSearchParams();
   if (postcode) q.set('postcode', postcode);
   for (const k of ['street', 'suburb', 'state', 'lat', 'lng'] as const) if (sp[k]) q.set(k, sp[k]!);

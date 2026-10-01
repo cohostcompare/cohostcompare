@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import InterestForm from '@/app/interest/InterestForm';
+import { liveOffers } from '@/lib/partners';
 
 export const metadata: Metadata = {
   title: 'Setting up your short-term rental',
@@ -41,7 +41,11 @@ const STEPS: { title: string; body: React.ReactNode; ask: string }[] = [
   },
 ];
 
-export default function Setup() {
+// Partner offers show only when switched on in /admin/partners and at least one partner is approved.
+export const revalidate = 600;
+
+export default async function Setup() {
+  const offers = await liveOffers();
   return (
     <main style={{ maxWidth: 920, paddingBlock: '16px 64px', display: 'grid', gap: 26 }}>
       <div style={{ display: 'grid', gap: 10, maxWidth: 720 }}>
@@ -69,18 +73,29 @@ export default function Setup() {
         <div><Link className="btn primary" href="/">Compare managers</Link></div>
       </section>
 
-      <section id="partners" style={{ display: 'grid', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 26, scrollMarginTop: 96 }}>
-        <span className="label">Partner offers</span>
-        <h2 style={{ fontSize: 'clamp(24px,3.4vw,30px)', margin: 0 }}>Offers for owners, coming soon</h2>
-        <p style={{ margin: 0, maxWidth: 720 }}>We&apos;re lining up offers from insurers, photographers, cleaners, lock suppliers and stylists. Partner offers will always be labelled as partner offers, and they&apos;ll only appear on pages like this one. They never affect which managers you see, their ratings or how quotes are compared.</p>
-        <div className="facts-grid">
-          <div className="panel" style={{ display: 'grid', gap: 8, alignContent: 'start' }}>
-            <h3 style={{ margin: 0 }}>Business owners: become a partner</h3>
-            <p className="hint" style={{ margin: 0 }}>Offer something useful to owners setting up a short stay? Tell us about it.</p>
-            <InterestForm kind="partner" partner button="Send enquiry" done="Thanks. We’ll be in touch by email." />
+      {offers.length > 0 && (
+        <section id="partners" style={{ display: 'grid', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 26, scrollMarginTop: 96 }}>
+          <span className="label">Partner offers</span>
+          <h2 style={{ fontSize: 'clamp(24px,3.4vw,30px)', margin: 0 }}>Offers for owners setting up</h2>
+          <p style={{ margin: 0, maxWidth: 720 }}>Offers from businesses we&apos;ve checked. They&apos;re partner offers, so each one says if we earn a referral fee when you use it. Partners never affect which managers you see, their ratings or how quotes are compared, and we never share your details with them.</p>
+          <div className="offers">
+            {offers.map((o) => (
+              <article key={o.id} className="panel offer">
+                <div className="offer-head">
+                  {o.logo_url ? <img src={o.logo_url} alt="" width={44} height={44} /> : <span className="av" aria-hidden="true" style={{ width: 44, height: 44, fontSize: 15 }}>{o.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</span>}
+                  <div><span className="offer-tag">Partner offer · {o.category}</span><b>{o.name}</b></div>
+                </div>
+                <h3 style={{ margin: 0, fontSize: 18 }}>{o.offer_title}</h3>
+                <p style={{ margin: 0 }}>{o.offer_body}</p>
+                {o.promo_code && <p style={{ margin: 0 }}>Code: <b className="code">{o.promo_code}</b></p>}
+                {o.areas && <p className="hint" style={{ margin: 0 }}>Available in {o.areas}</p>}
+                <a className="btn secondary small" href={`/go/${o.id}`} rel="sponsored nofollow noopener" target="_blank" style={{ justifySelf: 'start' }}>Get this offer →</a>
+                <p className="hint" style={{ margin: 0, fontSize: 12 }}>{o.referral_fee ? 'We earn a referral fee if you use this offer. It doesn’t change the price you pay.' : 'We don’t earn anything from this offer.'}</p>
+              </article>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 }

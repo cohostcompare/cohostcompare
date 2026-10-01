@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
+import OwnerReviews from '@/components/OwnerReviews';
+import { publishedReviews, stars } from '@/lib/reviews';
 import TrustBadges from '@/components/TrustBadges';
 import ProfileQuote from './ProfileQuote';
 import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
@@ -42,6 +44,8 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const fee = feeLabel(m);
   const areas = await managerAreas(m.slug);
   const hasData = (m.propertyCount ?? 0) > 0;
+  const reviews = await publishedReviews(m.slug);
+  const ravg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
   return (
     <main className="profile" style={{ paddingBottom: 120 }}>
@@ -54,6 +58,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               {m.tagline}
             </p>
             <div style={{ marginTop: 8 }}><TrustBadges m={m} full /></div>
+            {reviews.length > 0 && <a href="#owner-reviews" style={{ display: 'inline-block', marginTop: 6, fontWeight: 600 }}><span className="stars" style={{ color: '#E8A317' }} aria-hidden="true">{stars(ravg)}</span> {ravg.toFixed(1)} from {reviews.length} owner review{reviews.length === 1 ? '' : 's'}</a>}
           </div>
         </div>
 
@@ -100,6 +105,8 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
           <p style={{ margin: 0 }}>{m.about || `${m.name} manages short-term rental homes${m.cities.length ? ` in ${m.cities.join(' and ')}` : ''}.`}</p>
         </section>
+
+        <OwnerReviews name={m.name} reviews={reviews} />
 
         <AreaMap areas={areas} name={m.name} near={sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null} />
 

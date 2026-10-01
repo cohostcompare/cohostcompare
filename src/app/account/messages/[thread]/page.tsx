@@ -10,11 +10,13 @@ import Composer from './Composer';
 export const metadata: Metadata = { title: 'Conversation', robots: { index: false } };
 
 type P = Promise<{ thread: string }>;
+type SP = Promise<{ reviewed?: string }>;
 
 const WHO: Record<string, string> = { owner: 'You', system: 'CoHostCompare' };
 
-export default async function Thread({ params }: { params: P }) {
+export default async function Thread({ params, searchParams }: { params: P; searchParams: SP }) {
   const { thread } = await params;
+  const sp = await searchParams;
   const user = await currentUser();
   if (!user) redirect(`/signin?next=/account/messages/${thread}`);
   const s = await userClient();
@@ -37,6 +39,13 @@ export default async function Thread({ params }: { params: P }) {
     const { data: mc } = await adminClient().from('managers').select('contact_phone').eq('slug', t.manager_slug).maybeSingle();
     contact = { email: (await memberEmails(t.manager_slug))[0] ?? null, phone: mc?.contact_phone ?? null };
   }
+  // Review prompt once introduced (needs 017; hidden until then).
+  let review: { can: boolean; done: boolean } = { can: false, done: false };
+  if (t.status === 'accepted') {
+    const { reviewable } = await import('@/lib/reviews');
+    const r = await reviewable(t.id, user.id).catch(() => null);
+    review = { can: Boolean(r?.ok), done: Boolean(r?.ok && r.existing) };
+  }
   const quoted = Boolean(t.quote && ['quoted', 'accepted'].includes(t.status));
   return (
     <main style={{ maxWidth: 760, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
@@ -50,6 +59,13 @@ export default async function Thread({ params }: { params: P }) {
         </div>
         <a className="btn secondary small" href="#chat">💬 Message {first}</a>
       </div>
+      {sp.reviewed && <div className="panel" style={{ background: 'var(--tint)' }}><b>Thanks for your review.</b> It now shows on <Link href={`/managers/${t.manager_slug}`}>{t.manager_name}&apos;s profile</Link>.</div>}
+      {review.can && !sp.reviewed && (
+        <div className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <span>{review.done ? <>You&apos;ve reviewed {t.manager_name}. You can update it any time.</> : <><b>How is it going with {t.manager_name}?</b> A short review helps other owners choose.</>}</span>
+          <Link className={`btn ${review.done ? 'secondary' : 'primary'} small`} href={`/account/review/${t.id}`}>{review.done ? 'Update review' : `Review ${t.manager_name}`}</Link>
+        </div>
+      )}
       {quoted && (
         <section className="panel" style={{ display: 'grid', gap: 12 }} aria-label="Quote">
           <h2 style={{ fontSize: 20, margin: 0 }}>{t.manager_name}&apos;s quote</h2>

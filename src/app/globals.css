@@ -452,3 +452,25 @@ a.stat-link:hover { border-color: var(--brand); }
 .insight-card .peek span { font-size: 13px; color: #CFE7E2; }
 .insight-card .peek .locked b { filter: blur(5px); }
 @media (max-width: 760px) { .insight-card { grid-template-columns: 1fr; } }
+
+/* Owner reviews */
+.star-pick { display: flex; align-items: center; gap: 2px; }
+.star-pick button { background: none; border: 0; padding: 2px; font-size: 32px; line-height: 1; color: var(--line); cursor: pointer; }
+.star-pick button.on { color: #E8A317; }
+.star-pick button:focus-visible { outline: 2px solid var(--brand); border-radius: 6px; }
+.owner-reviews { display: grid; gap: 14px; }
+.owner-reviews .summary { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.owner-reviews .summary b { font-family: var(--display); font-size: 30px; }
+.owner-review { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 6px; }
+.owner-review .stars, .owner-reviews .stars { color: #E8A317; letter-spacing: 1px; }
+.owner-review .reply { background: var(--tint); border-radius: 10px; padding: 10px 14px; }
+.verified-owner { font-size: 13px; font-weight: 600; color: var(--brand); }
+
+/* Partner offers (/setup) */
+.offers { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.offer { display: grid; gap: 10px; align-content: start; }
+.offer-head { display: flex; gap: 12px; align-items: center; }
+.offer-head img { width: 44px; height: 44px; object-fit: contain; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+.offer-head > div { display: grid; }
+.offer-tag { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.offer .code { font-family: ui-monospace, Menlo, monospace; background: var(--tint); padding: 2px 8px; border-radius: 6px; }

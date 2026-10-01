@@ -47,6 +47,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
     insight.set(m.id, { searches: [...demand.values()].reduce((a, x) => a + x.count, 0), peers: peers ?? 0, reports: reports ?? 0 });
   }
   const events = await eventTotals(managers.map((m) => m.id));
+  const ownerReviews = await (await import('@/lib/reviews')).reviewSummaries(managers.map((m) => m.slug));
   const { data: abns } = await db.from('managers').select('id, abn_verified_at').in('id', managers.map((m) => m.id)); // needs 009
   const verified = new Set((abns || []).filter((a) => a.abn_verified_at).map((a) => a.id));
   const since = Date.now() - 30 * 86400e3;
@@ -88,6 +89,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn secondary" href="/dashboard/reports">Market reports</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
+                {ownerReviews.has(m.slug) && <Link className="btn secondary" href={`/dashboard/${m.slug}/reviews`}>Reviews ({ownerReviews.get(m.slug)!.count})</Link>}
               </div>
             </div>
             {todo.length > 0 && (
