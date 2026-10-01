@@ -49,5 +49,24 @@ export async function updatePartner(_: State, form: FormData): Promise<State> {
   if (error) return { error: 'We couldn’t save that. Try again in a minute.' };
   await sendEmail({ to: 'hello@cohostcompare.com', subject: `Partner offer updated: ${p.name}`, text: `${p.name} (${p.status}) updated their offer:\n\n${o.offer_title}\n${o.offer_body}\n${o.offer_url || ''}${o.promo_code ? `\nCode: ${o.promo_code}` : ''}\n\nCheck it at /admin/partners.` });
   revalidatePath('/setup');
+  revalidatePath(`/partners/manage/${id}`);
   return { ok: 'Saved.' };
+}
+
+export async function resendPartnerLink(_: State, form: FormData): Promise<State> {
+  const email = String(form.get('email') || '').trim().toLowerCase();
+  if (!EMAIL.test(email)) return { error: 'Enter a valid email address.' };
+  const { data } = await adminClient().from('partners').select('id, name').ilike('email', email).neq('status', 'rejected').limit(5);
+  if (data?.length) {
+    await sendEmail({ to: email, subject: 'Your CoHostCompare partner page', text: `Hi,
+
+Here ${data.length === 1 ? 'is the link' : 'are the links'} to your private partner page${data.length === 1 ? '' : 's'}, where you can update your offer and see how many owners clicked it:
+
+${data.map((p) => `${p.name}: ${manageUrl(p.id)}`).join('\n')}
+
+Keep ${data.length === 1 ? 'it' : 'them'} to yourself: anyone with the link can edit your offer.
+
+The CoHostCompare team` });
+  }
+  return { ok: 'If that email belongs to a partner, we’ve sent the link. Check your inbox (and spam folder).' };
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { CATEGORIES, manageOk, type Partner } from '@/lib/partners';
+import OfferCard from '@/components/OfferCard';
+import { getSetting } from '@/lib/partners';
 import { adminClient } from '@/lib/supabase/server';
 import PartnerForm from '../../PartnerForm';
 
@@ -27,11 +29,16 @@ export default async function Manage({ params, searchParams }: { params: Promise
     db.from('partner_clicks').select('id', { count: 'exact', head: true }).eq('partner_id', id),
   ]);
   const partner = p as Partner;
+  const live = await getSetting<boolean>('offers_live', false).catch(() => false);
   return (
     <main style={{ maxWidth: 760, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
       <span className="label" style={{ color: 'var(--brand)' }}>Partner page</span>
       <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>{partner.name}</h1>
-      <p className="panel" style={{ margin: 0, background: partner.status === 'approved' ? 'var(--tint)' : undefined }}><b>Status:</b> {STATUS[partner.status]}</p>
+      <p className="panel" style={{ margin: 0, background: partner.status === 'approved' ? 'var(--tint)' : undefined }}><b>Status:</b> {STATUS[partner.status]}{partner.status === 'approved' && !live ? ' Partner offers haven’t launched to owners yet. We’ll email you when they do.' : ''}</p>
+      <section style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
+        <span className="label">How owners see your offer</span>
+        <OfferCard o={partner} preview />
+      </section>
       <section className="dash-stats" aria-label="Clicks">
         <div className="panel"><b>{d30 ?? 0}</b><span>owners clicked your offer in the last 30 days</span></div>
         <div className="panel"><b>{all ?? 0}</b><span>clicks in total</span></div>

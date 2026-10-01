@@ -482,11 +482,11 @@ a.stat-link:hover { border-color: var(--brand); }
 .feedback-form label.check { display: flex; gap: 8px; align-items: center; font-weight: 400; }
 .feedback-form textarea { width: 100%; }
 .scale { display: flex; flex-wrap: wrap; gap: 6px; }
-.scale button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+.scale button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
 .scale.nps button { width: 40px; height: 40px; padding: 0; border-radius: 10px; }
 .scale button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .scale-ends { display: flex; justify-content: space-between; max-width: 506px; font-size: 13px; color: var(--muted); }
-.fb-pop { position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); background: #fff; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 50px rgba(16,48,47,.18); padding: 20px; display: grid; gap: 10px; animation: fbIn .35s ease-out; }
+.fb-pop { position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 18px 50px rgba(16,48,47,.18); padding: 20px; display: grid; gap: 10px; animation: fbIn .35s ease-out; }
 .fb-pop h2 { font-size: 20px; margin: 0; padding-right: 28px; }
 .fb-pop p { margin: 0; font-size: 15px; }
 .fb-pop .gift { background: var(--tint); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
@@ -500,3 +500,34 @@ a.stat-link:hover { border-color: var(--brand); }
 .nav-progress.on { opacity: 1; animation: navGrow 8s cubic-bezier(.1,.7,.2,1) forwards; }
 @keyframes navGrow { from { width: 0; } 10% { width: 35%; } to { width: 92%; } }
 @media (prefers-reduced-motion: reduce) { .nav-progress.on { animation: none; width: 60%; } }
+
+/* Partners page */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; align-items: start; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(210px, 44%), 1fr)); gap: 12px; }
+.cat { border-radius: 16px; padding: 18px; display: grid; gap: 6px; align-content: start; background: var(--c-bg); border: 1px solid var(--c-line); }
+.cat .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: var(--panel); box-shadow: 0 4px 12px rgba(16,48,47,.08); }
+.cat b { font-size: 16px; }
+.cat span:last-child { font-size: 14px; color: var(--muted); }
+.cat.t1 { --c-bg: #E3F1EC; --c-line: #C5E2D8; }
+.cat.t2 { --c-bg: #FFF1DD; --c-line: #F6DDB4; }
+.cat.t3 { --c-bg: #E8EDFB; --c-line: #CCD6F4; }
+.cat.t4 { --c-bg: #F7E6EF; --c-line: #EDCADD; }
+.cat.t5 { --c-bg: #EAF3DC; --c-line: #D2E6B6; }
+.cat.t6 { --c-bg: #FDE9E3; --c-line: #F5CDBF; }
+.cat.t7 { --c-bg: #EDEAF8; --c-line: #D7D0F0; }
+@media (prefers-color-scheme: dark) {
+  .cat.t1 { --c-bg: #17302A; --c-line: #24473F; } .cat.t2 { --c-bg: #33281A; --c-line: #4A3A22; } .cat.t3 { --c-bg: #1C2338; --c-line: #2A3452; }
+  .cat.t4 { --c-bg: #32202A; --c-line: #4A2F3E; } .cat.t5 { --c-bg: #212D17; --c-line: #33451F; } .cat.t6 { --c-bg: #352219; --c-line: #4D3226; } .cat.t7 { --c-bg: #241F38; --c-line: #362E52; }
+}
+.partner-band { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 32px; align-items: start; background: linear-gradient(135deg, var(--tint), transparent 70%); border-radius: 22px; padding: clamp(20px, 4vw, 36px); }
+@media (max-width: 880px) { .partner-band { grid-template-columns: 1fr; } }
+.steps3 { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.steps3 li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; }
+.steps3 li > span { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-weight: 800; color: var(--on-brand); background: var(--brand); }
+.steps3 li:nth-child(2) > span { background: #C9811E; color: #fff; }
+.steps3 li:nth-child(3) > span { background: #4A63B8; color: #fff; }
+.steps3 p { margin: 4px 0 0; color: var(--muted); }
+.photo-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.photo-pair figure { margin: 0; display: grid; gap: 8px; }
+.photo-pair figcaption { font-weight: 600; }
+@media (max-width: 640px) { .photo-pair { grid-template-columns: 1fr; } }

@@ -78,7 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
           <footer className="site">
             <span>© 2026 CoHostCompare · ABN 52 679 120 059</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/setup">Setting up your rental</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/about">About</Link> · <Link href="/feedback">Feedback</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
+            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/setup">Setting up your rental</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/managers">For managers</Link> · <Link href="/partners">Partner with us</Link> · <Link href="/about">About</Link> · <Link href="/feedback">Feedback</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
             <span>Made in Sydney · hello@cohostcompare.com{SOCIAL.map((x) => <span key={x.url}> · <a href={x.url} rel="me noopener">{x.name}</a></span>)}</span>
           </footer>
         </div>

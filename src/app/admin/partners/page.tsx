@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { getSetting, manageUrl, type Partner } from '@/lib/partners';
+import OfferCard from '@/components/OfferCard';
+import { CATEGORIES, getSetting, manageUrl, type Partner } from '@/lib/partners';
 import { adminClient } from '@/lib/supabase/server';
-import { setOffersLive, setPartner } from './actions';
+import { deletePartner, editPartner, emailPartnerLink, setOffersLive, setPartner } from './actions';
 
 export const metadata: Metadata = { title: 'Partners', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ export default async function AdminPartners() {
         <b>Owner offers are {visible ? 'showing on /setup' : 'hidden'}.</b>
         <span>{visible ? `${approved} approved partner${approved === 1 ? '' : 's'} showing.` : live ? 'Switched on, but nothing shows until you approve a partner.' : `Switched off. ${approved} approved partner${approved === 1 ? '' : 's'} waiting.`}</span>
         <form action={setOffersLive}><input type="hidden" name="live" value={live ? '0' : '1'} /><button className={`btn ${live ? 'secondary' : 'primary'} small`} type="submit">{live ? 'Hide offers from owners' : 'Show offers to owners'}</button></form>
-        <span className="hint">Invite businesses with this link (not linked anywhere on the site): <a href="/partners">www.cohostcompare.com/partners</a>. You can also fill it in yourself for a partner you&apos;ve signed up.</span>
+        <span className="hint">Invite businesses to apply at <a href="/partners">www.cohostcompare.com/partners</a> (also linked in the site footer). You can fill it in yourself for a partner you&apos;ve signed up. Turning offers on emails every approved partner to say they&apos;re live.</span>
       </section>
       {ORDER.map((st) => {
         const list = partners.filter((p) => p.status === st);
@@ -57,7 +58,28 @@ export default async function AdminPartners() {
                   <input name="admin_note" defaultValue={p.admin_note || ''} placeholder="Private note (deal terms…)" className="field" style={{ flex: '1 1 200px' }} />
                   <button className="btn secondary small" type="submit">Save</button>
                 </form>
-                <details><summary className="hint">Partner&apos;s private link</summary><code style={{ overflowWrap: 'anywhere', fontSize: 12 }}>{manageUrl(p.id)}</code></details>
+                <details><summary className="hint">Preview as owners see it</summary><div style={{ maxWidth: 380, marginTop: 8 }}><OfferCard o={p} preview /></div></details>
+                <details><summary className="hint">Edit details</summary>
+                  <form action={editPartner} className="form-grid" style={{ marginTop: 10 }}>
+                    <input type="hidden" name="id" value={p.id} />
+                    {([['name', 'Business name', p.name], ['email', 'Email', p.email], ['contact_name', 'Contact name', p.contact_name], ['phone', 'Phone', p.phone], ['website', 'Website', p.website], ['areas', 'Areas', p.areas], ['offer_title', 'Offer title', p.offer_title], ['offer_url', 'Offer link', p.offer_url], ['promo_code', 'Promo code', p.promo_code], ['logo_url', 'Logo link', p.logo_url]] as const).map(([k, l, v]) => (
+                      <label key={k} style={{ display: 'grid', gap: 4, alignContent: 'start' }}><span className="hint">{l}</span><input className="field" name={k} defaultValue={v || ''} /></label>
+                    ))}
+                    <label style={{ display: 'grid', gap: 4, alignContent: 'start' }}><span className="hint">Category</span><select className="field" name="category" defaultValue={p.category}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>
+                    <label style={{ display: 'grid', gap: 4, gridColumn: '1 / -1' }}><span className="hint">Offer details</span><textarea className="field" name="offer_body" rows={3} defaultValue={p.offer_body || ''} /></label>
+                    <div><button className="btn secondary small" type="submit">Save details</button></div>
+                  </form>
+                </details>
+                <details><summary className="hint">Partner page link</summary>
+                  <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                    <code style={{ overflowWrap: 'anywhere', fontSize: 12 }}>{manageUrl(p.id)}</code>
+                    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <form action={emailPartnerLink}><input type="hidden" name="id" value={p.id} /><button className="linkish" type="submit">Email them this link</button></form>
+                      <a className="linkish" href={manageUrl(p.id)} target="_blank" rel="noopener">Open their partner page</a>
+                      <form action={deletePartner} style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 'auto' }}><input type="hidden" name="id" value={p.id} /><label className="hint" style={{ display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" /> Sure?</label><button className="linkish" type="submit" style={{ color: 'var(--signal)' }}>Delete partner</button></form>
+                    </div>
+                  </div>
+                </details>
               </article>
             ))}
           </section>
