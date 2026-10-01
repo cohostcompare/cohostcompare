@@ -88,6 +88,7 @@ export default function Partners() {
           <details><summary><b>What does it cost?</b></summary><p style={{ margin: '6px 0 0' }}>Applying is free. If we agree a referral fee, it&apos;s only on owners who take up your offer, and we agree it with you before your offer goes live.</p></details>
           <details><summary><b>Can I change my offer later?</b></summary><p style={{ margin: '6px 0 0' }}>Yes. You get a private partner page to update your offer and see your clicks at any time.</p></details>
           <details><summary><b>Do I get owners&apos; contact details?</b></summary><p style={{ margin: '6px 0 0' }}>No. Owners click through to your website or booking page and contact you themselves.</p></details>
+          <details><summary><b>Is there a contract?</b></summary><p style={{ margin: '6px 0 0' }}>Yes, a short plain-English <Link href="/partners/agreement">partner agreement</Link>. Once we approve your application, you accept it in your partner page and your offer goes live. You can end it any time by email.</p></details>
           <details><summary><b>Where do you operate?</b></summary><p style={{ margin: '6px 0 0' }}>Across NSW and Victoria, from Sydney and Melbourne to holiday spots like Byron Bay and the Great Ocean Road, with more areas coming. Tell us where you work and we&apos;ll show your offer to the right owners.</p></details>
         </div>
       </section>

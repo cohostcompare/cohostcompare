@@ -5,8 +5,8 @@ import { adminClient } from '@/lib/supabase/server';
 /*
  Partner offers for owners (SQL 017). Businesses apply at /partners (not linked anywhere until offers go live),
  Ben approves them at /admin/partners, and each partner manages its offer through a private signed link.
- Owners only see offers on /setup, and only when the admin switch "offers_live" is on AND at least one partner
- is approved. Offers are always labelled, and say when we earn a referral fee. They never touch managers,
+ Owners only see offers on /setup, and only when the admin switch "offers_live" is on AND the partner is approved
+ AND has accepted the partner agreement (flow: apply -> Ben approves -> partner accepts the agreement in their portal -> live). Offers are always labelled, and say when we earn a referral fee. They never touch managers,
  rankings, ratings or the quote comparison. Clicks go through /go/[id] so partners can see what they get.
 */
 
@@ -16,7 +16,12 @@ export type Partner = {
   id: string; created_at: string; name: string; contact_name: string | null; email: string; phone: string | null; website: string | null;
   category: string; areas: string | null; offer_title: string | null; offer_body: string | null; offer_url: string | null; promo_code: string | null;
   logo_url: string | null; referral_fee: boolean; admin_note: string | null; status: 'pending' | 'approved' | 'hidden' | 'rejected'; sort: number;
+  fee_terms?: string | null; agreed_at?: string | null; agreed_version?: string | null; agreed_name?: string | null;
 };
+
+/** Bump when the partner agreement (/partners/agreement) changes; partners on an older version are asked to accept again. */
+export const PARTNER_TERMS_VERSION = '2026-10-02';
+export const agreedCurrent = (p: Pick<Partner, 'agreed_at' | 'agreed_version'>) => Boolean(p.agreed_at && p.agreed_version === PARTNER_TERMS_VERSION);
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
 export const manageUrl = (id: string) => `${SITE}/partners/manage/${id}?s=${sign(`partner:${id}`)}`;
@@ -39,7 +44,8 @@ export async function approvedPartners(): Promise<Partner[]> {
 export async function liveOffers(): Promise<Partner[]> {
   try {
     if (!(await getSetting<boolean>('offers_live', false))) return [];
-    return (await approvedPartners()).filter((p) => p.offer_title && (p.offer_url || p.website));
+    // Only partners who've accepted the current partner agreement (SQL 020) show to owners.
+    return (await approvedPartners()).filter((p) => p.offer_title && (p.offer_url || p.website) && p.agreed_at);
   } catch { return []; }
 }
 
@@ -55,7 +61,7 @@ export async function monthlyPartnerReports() {
   if (now.getDate() !== 1) return 0;
   if (!(await getSetting<boolean>('offers_live', false).catch(() => false))) return 0;
   const db = adminClient();
-  const { data } = await db.from('partners').select('id, name, email, contact_name').eq('status', 'approved');
+  const { data } = await db.from('partners').select('id, name, email, contact_name').eq('status', 'approved').not('agreed_at', 'is', null);
   const end = new Date(Date.now() - 2 * 3600e3); // just before midnight Sydney
   const start = new Date(end.getTime() - 31 * 86400e3);
   const month = start.toLocaleDateString('en-AU', { month: 'long', timeZone: 'Australia/Sydney' });

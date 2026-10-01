@@ -20,7 +20,8 @@ export default async function AdminPartners() {
     db.from('partner_clicks').select('partner_id').gte('created_at', new Date(Date.now() - 30 * 86400e3).toISOString()).limit(20000),
   ]);
   const partners = (data || []) as Partner[];
-  const approved = partners.filter((p) => p.status === 'approved').length;
+  const approved = partners.filter((p) => p.status === 'approved' && p.agreed_at).length;
+  const waiting = partners.filter((p) => p.status === 'approved' && !p.agreed_at).length;
   const c30 = new Map<string, number>();
   for (const c of clicks || []) c30.set(c.partner_id, (c30.get(c.partner_id) || 0) + 1);
   const visible = live && approved > 0;
@@ -31,7 +32,8 @@ export default async function AdminPartners() {
       {error && <p className="panel" style={{ margin: 0 }}>Partners start once database update 017 has been run in Supabase.</p>}
       <section className="panel" style={{ display: 'grid', gap: 10, background: visible ? 'var(--tint)' : undefined }}>
         <b>Owner offers are {visible ? 'showing on /setup' : 'hidden'}.</b>
-        <span>{visible ? `${approved} approved partner${approved === 1 ? '' : 's'} showing.` : live ? 'Switched on, but nothing shows until you approve a partner.' : `Switched off. ${approved} approved partner${approved === 1 ? '' : 's'} waiting.`}</span>
+        <span>{visible ? `${approved} partner${approved === 1 ? '' : 's'} showing.` : live ? 'Switched on, but nothing shows until a partner is approved and has accepted the agreement.' : `Switched off. ${approved} partner${approved === 1 ? '' : 's'} ready to show.`}{waiting ? ` ${waiting} approved partner${waiting === 1 ? ' hasn’t' : 's haven’t'} accepted the agreement yet.` : ''}</span>
+        <span className="hint">Flow: a business applies → you approve it here (it gets an email) → it accepts the <a href="/partners/agreement">partner agreement</a> in its partner page → its offer shows to owners while offers are switched on.</span>
         <form action={setOffersLive}><input type="hidden" name="live" value={live ? '0' : '1'} /><button className={`btn ${live ? 'secondary' : 'primary'} small`} type="submit">{live ? 'Hide offers from owners' : 'Show offers to owners'}</button></form>
         <span className="hint">Invite businesses to apply at <a href="/partners">www.cohostcompare.com/partners</a> (also linked in the site footer). You can fill it in yourself for a partner you&apos;ve signed up. Turning offers on emails every approved partner to say they&apos;re live.</span>
       </section>
@@ -45,6 +47,9 @@ export default async function AdminPartners() {
               <article key={p.id} className="panel" style={{ display: 'grid', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
                   <b style={{ fontSize: 17 }}>{p.name}</b><span className="chip">{p.category}</span>
+                  {p.status === 'approved' && (p.agreed_at
+                    ? <span className="chip" style={{ background: 'var(--tint)', color: 'var(--brand)' }}>✓ Agreement accepted {new Date(p.agreed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}{p.agreed_name ? ` by ${p.agreed_name}` : ''}</span>
+                    : <span className="chip" style={{ background: '#FFF1DD', color: '#7A4A06' }}>Waiting for them to accept the agreement</span>)}
                   <span className="hint">{p.contact_name ? `${p.contact_name} · ` : ''}<a href={`mailto:${p.email}`}>{p.email}</a>{p.phone ? ` · ${p.phone}` : ''}{p.website ? <> · <a href={p.website} target="_blank" rel="noopener">website</a></> : null}</span>
                   <span className="hint" style={{ marginLeft: 'auto' }}>{c30.get(p.id) || 0} clicks in 30 days</span>
                 </div>
@@ -55,7 +60,8 @@ export default async function AdminPartners() {
                   <select name="status" defaultValue={p.status} className="field" style={{ width: 'auto' }}>{ORDER.map((o) => <option key={o} value={o}>{o}</option>)}</select>
                   <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="referral_fee" defaultChecked={p.referral_fee} /> We earn a referral fee</label>
                   <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>Order <input name="sort" type="number" defaultValue={p.sort} style={{ width: 70 }} /></label>
-                  <input name="admin_note" defaultValue={p.admin_note || ''} placeholder="Private note (deal terms…)" className="field" style={{ flex: '1 1 200px' }} />
+                  <input name="fee_terms" defaultValue={p.fee_terms || ''} placeholder="Commercial terms shown to them, e.g. A$20 per redeemed code (blank = free)" className="field" style={{ flex: '1 1 260px' }} />
+                  <input name="admin_note" defaultValue={p.admin_note || ''} placeholder="Private note" className="field" style={{ flex: '1 1 160px' }} />
                   <button className="btn secondary small" type="submit">Save</button>
                 </form>
                 <details><summary className="hint">Preview as owners see it</summary><div style={{ maxWidth: 380, marginTop: 8 }}><OfferCard o={p} preview /></div></details>

@@ -531,3 +531,52 @@ a.stat-link:hover { border-color: var(--brand); }
 .photo-pair figure { margin: 0; display: grid; gap: 8px; }
 .photo-pair figcaption { font-weight: 600; }
 @media (max-width: 640px) { .photo-pair { grid-template-columns: 1fr; } }
+
+/* Admin */
+.admin .g-teal { --g: #0F5E57; --g-bg: #E3F1EC; }
+.admin .g-blue { --g: #3557B7; --g-bg: #E8EDFB; }
+.admin .g-amber { --g: #A3640B; --g-bg: #FFF1DD; }
+.admin .g-green { --g: #2F7A2F; --g-bg: #EAF3DC; }
+.admin .g-rose { --g: #A2384F; --g-bg: #F7E6EF; }
+@media (prefers-color-scheme: dark) {
+  .admin .g-teal { --g: #4FB3A6; --g-bg: #17302A; } .admin .g-blue { --g: #8EA6F0; --g-bg: #1C2338; } .admin .g-amber { --g: #E3A24A; --g-bg: #33281A; }
+  .admin .g-green { --g: #8CC77A; --g-bg: #212D17; } .admin .g-rose { --g: #E58BA0; --g-bg: #32202A; }
+}
+.admin-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.admin-group { background: var(--g-bg); border-top: 4px solid var(--g); border-radius: 14px; padding: 12px 14px 14px; display: grid; gap: 4px; align-content: start; }
+.admin-group-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--g); margin-bottom: 2px; }
+.admin-group a { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; padding: 3px 0; display: flex; align-items: center; gap: 8px; }
+.admin-group a:hover { color: var(--g); text-decoration: underline; }
+.admin-group .badge { background: var(--g); color: #fff; border-radius: 999px; font-size: 12px; padding: 1px 8px; font-weight: 700; }
+.admin-needs { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: #FFF4E5; border: 1px solid #F3D3A4; color: #5C3A06; border-radius: 12px; padding: 10px 14px; }
+.admin-needs a { color: #8A4F05; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .admin-needs { background: #33281A; border-color: #4A3A22; color: #F1D9B5; } .admin-needs a { color: #E3A24A; } }
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--k); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; color: var(--ink); text-decoration: none; }
+.kpi > span:first-child { font-size: 13px; font-weight: 600; color: var(--muted); }
+.kpi b { font-family: var(--display); font-size: 32px; line-height: 1.1; }
+.kpi small { color: var(--muted); font-size: 13px; }
+a.kpi:hover { border-color: var(--k); }
+.k-blue { --k: #3557B7; } .k-green { --k: #2F7A2F; } .k-amber { --k: #C9811E; } .k-purple { --k: #6A4FB8; } .k-teal { --k: var(--brand); } .k-rose { --k: #A2384F; } .k-alert { --k: var(--signal); background: #FFF4E5; }
+@media (prefers-color-scheme: dark) { .k-alert { background: #33281A; } }
+.wb-delta { font-size: 13px; color: var(--muted); }
+.wb-delta.up { color: #2F7A2F; } .wb-delta.down { color: #A2384F; }
+@media (prefers-color-scheme: dark) { .wb-delta.up { color: #8CC77A; } .wb-delta.down { color: #E58BA0; } }
+.wb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 12px; }
+.wb { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 10px; display: grid; gap: 8px; }
+.wb-link { color: inherit; text-decoration: none; }
+.wb-head { display: grid; gap: 2px; }
+.wb-title { font-size: 14px; font-weight: 600; color: var(--muted); }
+.wb-now { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.wb-now b { font-family: var(--display); font-size: 26px; }
+.wb svg { width: 100%; height: auto; display: block; overflow: visible; }
+.wb-axis { stroke: var(--line); stroke-width: 1; }
+.wb-mark { fill: color-mix(in srgb, var(--brand) 55%, var(--panel)); }
+.wb-mark.now { fill: var(--brand); }
+.wb-hit { fill: transparent; }
+.wb-bar:hover .wb-mark { fill: var(--ink); }
+.wb-tick { font-size: 10px; fill: var(--muted); }
+.admin-sec { display: grid; gap: 8px; border-top: 4px solid var(--g); scroll-margin-top: 90px; }
+.admin-sec h2 { font-size: 18px; margin: 0; color: var(--g); }
+.admin-sec .row { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
+.admin-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start; }

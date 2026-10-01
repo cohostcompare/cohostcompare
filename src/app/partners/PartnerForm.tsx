@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { applyPartner, resendPartnerLink, updatePartner } from './actions';
+import { acceptAgreement, applyPartner, resendPartnerLink, updatePartner } from './actions';
 
 type P = Partial<{ name: string; contact_name: string | null; email: string; phone: string | null; website: string | null; category: string; areas: string | null; offer_title: string | null; offer_body: string | null; offer_url: string | null; promo_code: string | null; logo_url: string | null }>;
 const L = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
@@ -34,6 +34,7 @@ export default function PartnerForm({ categories, p, manage }: { categories: rea
       </div>
       {state.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}
       {state.ok && manage && <p role="status" style={{ margin: 0, color: 'var(--brand)', fontWeight: 600 }}>{state.ok}</p>}
+      {!manage && <p className="hint" style={{ margin: 0 }}>Once we&apos;ve approved your application, we&apos;ll ask you to accept our <a href="/partners/agreement" target="_blank">partner agreement</a> before your offer goes live.</p>}
       <button className="btn primary" type="submit" disabled={pending} style={{ justifySelf: 'start' }}>{pending ? 'Saving…' : manage ? 'Save changes' : 'Apply to be a partner'}</button>
     </form>
   );
@@ -48,6 +49,21 @@ export function LinkForm() {
       <input className="field" type="email" name="email" required placeholder="you@business.com.au" style={{ flex: '1 1 240px' }} aria-label="Email" />
       <button className="btn secondary" type="submit" disabled={pending}>{pending ? 'Sending…' : 'Email me my link'}</button>
       {state.error && <p role="alert" style={{ margin: 0, flexBasis: '100%', color: 'var(--signal)' }}>{state.error}</p>}
+    </form>
+  );
+}
+
+/** Accepting the partner agreement in the partner page. */
+export function AgreeForm({ id, s, name }: { id: string; s: string; name?: string | null }) {
+  const [state, act, pending] = useActionState(acceptAgreement, {});
+  if (state.ok) return <p style={{ margin: 0, fontWeight: 600, color: 'var(--brand)' }}>{state.ok} Refresh this page to see your offer&apos;s status.</p>;
+  return (
+    <form action={act} style={{ display: 'grid', gap: 12 }}>
+      <input type="hidden" name="id" value={id} /><input type="hidden" name="s" value={s} />
+      <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}><input type="checkbox" name="agree" style={{ marginTop: 4 }} /> <span>I&apos;ve read and accept the <a href="/partners/agreement" target="_blank">partner agreement</a> and the commercial terms above, and I&apos;m authorised to accept them for this business.</span></label>
+      <label style={{ display: 'grid', gap: 4, maxWidth: 360 }}><span style={{ fontWeight: 600, fontSize: 14 }}>Your full name</span><input className="field" name="agreed_name" defaultValue={name || ''} required maxLength={120} /></label>
+      {state.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}
+      <button className="btn primary" type="submit" disabled={pending} style={{ justifySelf: 'start' }}>{pending ? 'Saving…' : 'Accept and continue'}</button>
     </form>
   );
 }

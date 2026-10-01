@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { sendEmail } from '@/lib/email';
-import { CATEGORIES, cleanUrl, manageOk, manageUrl } from '@/lib/partners';
+import { createHash } from 'crypto';
+import { headers } from 'next/headers';
+import { CATEGORIES, cleanUrl, manageOk, manageUrl, PARTNER_TERMS_VERSION } from '@/lib/partners';
 import { adminClient } from '@/lib/supabase/server';
 
 type State = { ok?: string; error?: string };
@@ -69,4 +71,25 @@ Keep ${data.length === 1 ? 'it' : 'them'} to yourself: anyone with the link can 
 The CoHostCompare team` });
   }
   return { ok: 'If that email belongs to a partner, we’ve sent the link. Check your inbox (and spam folder).' };
+}
+
+/** The partner accepts the partner agreement from their partner page (after Ben approves them). */
+export async function acceptAgreement(_: State, form: FormData): Promise<State> {
+  const id = String(form.get('id') || ''), s = String(form.get('s') || '');
+  if (!manageOk(id, s)) return { error: 'This link isn’t valid any more. Email hello@cohostcompare.com.' };
+  if (form.get('agree') !== 'on') return { error: 'Tick the box to confirm you accept the partner agreement.' };
+  const name = t(form, 'agreed_name', 120);
+  if (!name || name.length < 3) return { error: 'Type your full name to accept.' };
+  const db = adminClient();
+  const { data: p } = await db.from('partners').select('name, email, contact_name, status, fee_terms').eq('id', id).maybeSingle();
+  if (!p) return { error: 'We couldn’t find your partner listing.' };
+  if (p.status !== 'approved') return { error: 'Your application hasn’t been approved yet. We’ll email you when it is.' };
+  const ip = ((await headers()).get('x-forwarded-for') || '').split(',')[0].trim();
+  const { error } = await db.from('partners').update({ agreed_at: new Date().toISOString(), agreed_version: PARTNER_TERMS_VERSION, agreed_name: name, agreed_ip_hash: ip ? createHash('sha256').update(ip).digest('hex').slice(0, 24) : null }).eq('id', id);
+  if (error) { console.error('partner agree', error); return { error: 'We couldn’t save that just now. Please try again in a minute.' }; }
+  await sendEmail({ to: p.email, subject: `Welcome to CoHostCompare, ${p.name}`, text: `Hi ${p.contact_name?.split(' ')[0] || 'there'},\n\nThanks for accepting the partner agreement (version ${PARTNER_TERMS_VERSION}), accepted by ${name}. You're all set.\n\nYour partner page is where you update your offer and see how many owners click it:\n${manageUrl(id)}\n\nCommercial terms: ${p.fee_terms || 'free listing, no fees'}.\nThe partner agreement: https://www.cohostcompare.com/partners/agreement\n\nBen Deeley\nFounder, CoHostCompare` });
+  await sendEmail({ to: 'hello@cohostcompare.com', subject: `Partner agreement accepted: ${p.name}`, text: `${name} accepted the partner agreement (version ${PARTNER_TERMS_VERSION}) for ${p.name}.\nCommercial terms: ${p.fee_terms || 'free listing, no fees'}.` });
+  revalidatePath(`/partners/manage/${id}`);
+  revalidatePath('/setup');
+  return { ok: 'Accepted. Welcome aboard.' };
 }

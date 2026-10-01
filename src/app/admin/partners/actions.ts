@@ -16,10 +16,11 @@ export async function setPartner(form: FormData) {
   const { data: before } = await db.from('partners').select('name, email, contact_name, status').eq('id', id).maybeSingle();
   if (!before) return;
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString(), referral_fee: form.get('referral_fee') === 'on', admin_note: String(form.get('admin_note') || '').slice(0, 1000) || null, sort: Number(form.get('sort')) || 100 };
+  if (form.has('fee_terms')) patch.fee_terms = String(form.get('fee_terms') || '').trim().slice(0, 500) || null;
   if (['pending', 'approved', 'hidden', 'rejected'].includes(status)) patch.status = status;
   await db.from('partners').update(patch).eq('id', id);
   if (status === 'approved' && before.status !== 'approved') {
-    await sendEmail({ to: before.email, subject: `${before.name} is approved as a CoHostCompare partner`, text: `Hi ${before.contact_name?.split(' ')[0] || 'there'},\n\nGood news: your offer is approved. It will show to owners in the partner offers on our owner setup guide${(await liveNow()) ? ', starting now' : ' as soon as partner offers launch, and we’ll let you know when that happens'}.\n\nUpdate your offer and see how many owners click it here:\n${manageUrl(id)}\n\nBen Deeley\nFounder, CoHostCompare` });
+    await sendEmail({ to: before.email, subject: `${before.name} is approved as a CoHostCompare partner`, text: `Hi ${before.contact_name?.split(' ')[0] || 'there'},\n\nGood news: we've approved ${before.name} as a CoHostCompare partner.\n\nOne last step: please review and accept our partner agreement in your partner page. Your offer goes live to owners once you do${(await liveNow()) ? '' : ' (partner offers are launching soon, and we’ll let you know when they do)'}:\n${manageUrl(id)}\n\nThat page is also where you'll update your offer and see how many owners click it, so keep the link handy.\n\nBen Deeley\nFounder, CoHostCompare` });
   }
   done();
 }
@@ -36,7 +37,7 @@ export async function setOffersLive(form: FormData) {
   await setSetting('offers_live', on);
   if (on && !was) {
     // Tell approved partners their offer is now in front of owners.
-    const { data } = await adminClient().from('partners').select('id, name, email, contact_name').eq('status', 'approved');
+    const { data } = await adminClient().from('partners').select('id, name, email, contact_name').eq('status', 'approved').not('agreed_at', 'is', null);
     for (const p of data || []) {
       await sendEmail({ to: p.email, subject: `${p.name}'s offer is now live on CoHostCompare`, text: `Hi ${p.contact_name?.split(' ')[0] || 'there'},\n\nPartner offers are now live, and ${p.name}'s offer is showing to owners in our setup guide:\nhttps://www.cohostcompare.com/setup#partners\n\nSee your clicks and update your offer any time here:\n${manageUrl(p.id)}\n\nBen Deeley\nFounder, CoHostCompare` });
     }

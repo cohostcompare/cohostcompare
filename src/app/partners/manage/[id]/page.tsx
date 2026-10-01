@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { CATEGORIES, manageOk, type Partner } from '@/lib/partners';
+import { agreedCurrent, CATEGORIES, manageOk, PARTNER_TERMS_VERSION, type Partner } from '@/lib/partners';
 import OfferCard from '@/components/OfferCard';
 import { getSetting } from '@/lib/partners';
 import { adminClient } from '@/lib/supabase/server';
-import PartnerForm from '../../PartnerForm';
+import PartnerForm, { AgreeForm } from '../../PartnerForm';
 
 export const metadata: Metadata = { title: 'Your partner offer', robots: { index: false, follow: false } };
 export const dynamic = 'force-dynamic';
@@ -34,7 +34,17 @@ export default async function Manage({ params, searchParams }: { params: Promise
     <main style={{ maxWidth: 760, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
       <span className="label" style={{ color: 'var(--brand)' }}>Partner page</span>
       <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>{partner.name}</h1>
-      <p className="panel" style={{ margin: 0, background: partner.status === 'approved' ? 'var(--tint)' : undefined }}><b>Status:</b> {STATUS[partner.status]}{partner.status === 'approved' && !live ? ' Partner offers haven’t launched to owners yet. We’ll email you when they do.' : ''}</p>
+      {partner.status === 'approved' && !agreedCurrent(partner) ? (
+        <section className="panel" style={{ display: 'grid', gap: 12, borderColor: 'var(--brand)', borderWidth: 2 }}>
+          <h2 style={{ fontSize: 22, margin: 0 }}>{partner.agreed_at ? 'Our partner agreement has changed' : 'You’re approved. One last step.'}</h2>
+          <p style={{ margin: 0 }}>{partner.agreed_at ? `We’ve updated the partner agreement (version ${PARTNER_TERMS_VERSION}). Please review and accept it to keep your offer showing.` : 'Please review and accept the partner agreement. Your offer goes live to owners once you do.'}</p>
+          <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '10px 14px' }}><b>Commercial terms:</b> {partner.fee_terms || 'Free listing. No fees.'}</div>
+          <AgreeForm id={id} s={s} name={partner.contact_name} />
+        </section>
+      ) : (
+        <p className="panel" style={{ margin: 0, background: partner.status === 'approved' ? 'var(--tint)' : undefined }}><b>Status:</b> {STATUS[partner.status]}{partner.status === 'approved' && !live ? ' Partner offers haven’t launched to owners yet. We’ll email you when they do.' : ''}</p>
+      )}
+      {partner.agreed_at && <p className="hint" style={{ margin: 0 }}>Partner agreement version {partner.agreed_version} accepted by {partner.agreed_name} on {new Date(partner.agreed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}. Commercial terms: {partner.fee_terms || 'free listing, no fees'}. <a href="/partners/agreement">Read the agreement</a>.</p>}
       <section style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
         <span className="label">How owners see your offer</span>
         <OfferCard o={partner} preview />
