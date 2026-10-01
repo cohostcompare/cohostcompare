@@ -40,7 +40,7 @@ export default function EarningsTool() {
           </div>
           <ul className="earn-trust">
             <li>Free to use</li>
-            <li>No sign-up for your first few estimates</li>
+            <li>No account or sign-up</li>
             <li>No contact details asked for</li>
           </ul>
         </div>

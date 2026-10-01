@@ -30,7 +30,7 @@ async function requestLimit(userId: string, email: string, adding: number, where
   const today = (data || []).filter((r) => r.created_at >= ago(1)).length;
   const reached = (data || []).reduce((n, r) => n + ((r.quote_request_managers as unknown[]) || []).length, 0);
   let msg: string | null = null;
-  if (today >= REQUESTS_PER_DAY) msg = `You've sent ${today} quote requests in the last 24 hours, which is our daily limit. Please try again tomorrow. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
+  if (today >= REQUESTS_PER_DAY) msg = `You've sent ${today} quote requests in the last 24 hours (each request is one property, to up to 5 managers), which is our daily limit. Please try again tomorrow. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
   else if (reached + adding > MANAGERS_PER_MONTH) msg = `This would take you past ${MANAGERS_PER_MONTH} managers contacted in 30 days${reached < MANAGERS_PER_MONTH ? `. You can still ask ${MANAGERS_PER_MONTH - reached} more` : ''}. We limit this so managers can trust every request is genuine. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
   if (msg) {
     await sendEmail({ to: 'hello@cohostcompare.com', subject: 'Quote request limit reached', text: `${email} hit the quote request limit.

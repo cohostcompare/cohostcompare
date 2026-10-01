@@ -29,7 +29,7 @@ export default function Terms() {
       <h2>4. For property owners</h2>
       <ul>
         <li>The service is free for owners. There&apos;s no obligation to accept any quote.</li>
-        <li>You can send a quote request to up to five managers who operate near the property. Only request quotes for a property you own or are authorised to act for. To keep requests genuine, we limit how many you can send (currently 3 in 24 hours and 15 managers in 30 days). Contact us if you need more for several properties.</li>
+        <li>You can send a quote request to up to five managers who operate near the property. Only request quotes for a property you own or are authorised to act for. To keep requests genuine, we limit how many you can send (currently 3 requests in 24 hours, where a request is one property sent to up to five managers, and 15 managers in total over 30 days). Contact us if you need more for several properties.</li>
         <li>Your full contact details go to a manager only if you accept their quote. Accepting a quote isn&apos;t a contract: any agreement is made directly between you and the manager, on their terms.</li>
         <li>After we&apos;ve introduced you to a manager whose quote you accepted, you can review that manager. Reviews must be honest, about your own experience, and must not include personal details, links, or offensive or defamatory content. Your review shows on the manager&apos;s profile with your first name and suburb, and the manager can post one public reply. You give us a licence to publish your review. We may remove a review that breaks these rules, but never because a manager asks or pays us to, and reviews never change the order managers appear in.</li>
       </ul>

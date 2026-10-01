@@ -14,7 +14,7 @@ export default function Earnings() {
         <div style={{ display: 'grid', gap: 10 }}>
           <span className="label" style={{ color: 'var(--brand)' }}>Free earnings estimate</span>
           <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>What could your property earn as a short stay?</h1>
-          <p className="lede">Enter the address and number of bedrooms. We&apos;ll estimate a year&apos;s booking revenue from how similar homes nearby performed over the last 12 months. It&apos;s free and instant, and your first few estimates need no account or contact details.</p>
+          <p className="lede">Enter the address and number of bedrooms. We&apos;ll estimate a year&apos;s booking revenue from how similar homes nearby performed over the last 12 months. It&apos;s free and instant, with no account and no contact details needed.</p>
         </div>
         <Photo name="bondi" ratio="3 / 2" eager sizes="(max-width: 880px) 100vw, 480px" />
       </header>

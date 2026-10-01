@@ -14,7 +14,7 @@ import { adminClient, currentUser } from '@/lib/supabase/server';
  (A global cap on new AirROI lookups per day also sits in src/lib/earnings.ts.)
 */
 const ESTIMATES_ANON = 3;
-const ESTIMATES_SIGNED_IN = 25;
+const ESTIMATES_SIGNED_IN = 10;
 
 export type EstimateResult = Estimate | { error: string; signin?: boolean };
 
