@@ -494,3 +494,16 @@ a.stat-link:hover { border-color: var(--brand); }
 .fb-pop .x { position: absolute; top: 10px; right: 10px; background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px; }
 @keyframes fbIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fb-pop { animation: none; } }
+
+/* Instant click feedback */
+.nav-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--brand); z-index: 100; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.nav-progress.on { opacity: 1; animation: navGrow 8s cubic-bezier(.1,.7,.2,1) forwards; }
+@keyframes navGrow { from { width: 0; } 10% { width: 35%; } to { width: 92%; } }
+.page-loading { display: grid; gap: 14px; padding-block: 24px 80px; max-width: 920px; }
+.sk { background: linear-gradient(90deg, var(--tint) 25%, #eef3f1 50%, var(--tint) 75%); background-size: 200% 100%; border-radius: 10px; animation: skShine 1.2s linear infinite; }
+.sk-title { height: 40px; width: min(60%, 460px); }
+.sk-line { height: 16px; width: min(90%, 680px); }
+.sk-line.short { width: min(50%, 380px); }
+.sk-block { height: 220px; border-radius: 14px; }
+@keyframes skShine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .sk, .nav-progress.on { animation: none; } .nav-progress.on { width: 60%; } }

@@ -6,6 +6,8 @@ import AccountMenu from '@/components/AccountMenu';
 import GoogleTag from '@/components/GoogleTag';
 import TrafficBeacon from '@/components/TrafficBeacon';
 import FeedbackPrompt from '@/components/FeedbackPrompt';
+import NavProgress from '@/components/NavProgress';
+import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import ManagerMenu from '@/components/ManagerMenu';
 import { ORG_JSONLD, SOCIAL } from '@/lib/social';
@@ -24,18 +26,21 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser().catch(() => null);
-  const isManager = user ? Boolean((await adminClient().from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id).then((r) => r.count, () => 0))) : false;
-  let unread = 0;
-  const todos = isManager && user ? await (await import('@/lib/todo')).todosForUser(user.id) : [];
-  const { todoLabel } = await import('@/lib/todo');
-  if (user) {
+  const { todoLabel, todosForUser } = await import('@/lib/todo');
+  // Menu badges, fetched in parallel (each is optional).
+  const ownerUnread = async () => {
     try {
       const db = adminClient();
-      const { data: ts } = await db.from('quote_request_managers').select('id, quote_requests!inner(owner_id)').eq('quote_requests.owner_id', user.id);
+      const { data: ts } = await db.from('quote_request_managers').select('id, quote_requests!inner(owner_id)').eq('quote_requests.owner_id', user!.id);
       const ids = (ts || []).map((t) => t.id);
-      if (ids.length) unread = (await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids).eq('read_by_owner', false).neq('sender', 'owner')).count ?? 0;
-    } catch { /* badge is optional */ }
-  }
+      return ids.length ? (await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids).eq('read_by_owner', false).neq('sender', 'owner')).count ?? 0 : 0;
+    } catch { return 0; }
+  };
+  const [isManager, unread, todos] = user ? await Promise.all([
+    adminClient().from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id).then((r) => Boolean(r.count), () => false),
+    ownerUnread(),
+    todosForUser(user.id), // empty for owners
+  ]) : [false, 0, [] as Awaited<ReturnType<typeof todosForUser>>];
   // Feedback pop-up (src/lib/feedback.ts): checked once per browser session, skipped once answered or snoozed.
   const ask = Boolean(user) && !(await cookies()).get('cc_fb');
   return (
@@ -45,6 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" />
       </head>
       <body>
+        <Suspense fallback={null}><NavProgress /></Suspense>
         <div className="site-header">
           <header className="top wrap wide">
             <Link className="logo" href="/" aria-label="CoHostCompare home">
