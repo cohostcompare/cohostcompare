@@ -124,10 +124,15 @@ export async function runDaily() {
   const sharing = await checkSharing().catch(() => [] as string[]);
   const { count: thanks } = await adminClient().from('feedback').select('id', { count: 'exact', head: true }).in('reward_status', ['to_send', 'manual']).then((r) => r, () => ({ count: 0 }));
   await adminClient().from('rate_events').delete().lt('created_at', new Date(Date.now() - 7 * 86400e3).toISOString()).then(() => {}, () => {}); // 019
+  const { catchUpUnclaimed, draftReminders, newManagerAlerts } = await import('@/lib/ownerJobs');
+  const missed = await catchUpUnclaimed().catch(() => 0);
+  const drafts = await draftReminders().catch(() => 0);
+  const alerts = await newManagerAlerts().catch(() => 0);
+  const onboard = await (await import('@/lib/onboarding')).runOnboarding().catch(() => 0);
   const partnerReports = await (await import('@/lib/partners')).monthlyPartnerReports().catch(() => 0);
   const { sendReviewInvites } = await import('@/lib/reviewInvites');
   const invites = await sendReviewInvites().catch((e) => { console.error('review invites', e); return 0; });
-    const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(expired ? [`Unconfirmed accepted quotes past 48 hours: ${expired} (owners told they can choose another manager).`] : []), ...(sharing.length ? [`Possible shared logins: ${sharing.length} (emailed separately).`] : []), ...(reports.made ? [`Regional reports: made ${reports.made}, emailed ${reports.notified} managers.`] : []), ...(invites ? [`Review invites sent to owners: ${invites}.`] : []), ...(partnerReports ? [`Monthly click reports emailed to ${partnerReports} partners.`] : []), ...(thanks ? [`Feedback thank-yous to send by hand: ${thanks} (Admin → Feedback).`] : [])];
+    const lines = [...(await claimLines()), ...(await managerReminders()), ...(await abnLines()), ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []), ...(expired ? [`Unconfirmed accepted quotes past 48 hours: ${expired} (owners told they can choose another manager).`] : []), ...(sharing.length ? [`Possible shared logins: ${sharing.length} (emailed separately).`] : []), ...(reports.made ? [`Regional reports: made ${reports.made}, emailed ${reports.notified} managers.`] : []), ...(invites ? [`Review invites sent to owners: ${invites}.`] : []), ...(missed ? [`Request emails sent to unclaimed managers (catch-up): ${missed}.`] : []), ...(drafts ? [`Unsent quote request reminders: ${drafts}.`] : []), ...(alerts ? [`New-manager alerts to owners: ${alerts}.`] : []), ...(onboard ? [`Manager onboarding emails: ${onboard}.`] : []), ...(partnerReports ? [`Monthly click reports emailed to ${partnerReports} partners.`] : []), ...(thanks ? [`Feedback thank-yous to send by hand: ${thanks} (Admin → Feedback).`] : [])];
   if (lines.length) {
     await sendEmail({
       to: 'hello@cohostcompare.com',

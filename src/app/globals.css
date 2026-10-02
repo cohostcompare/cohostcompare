@@ -676,3 +676,5 @@ a.kpi:hover { border-color: var(--k); }
 .prop-bar:not(.done) > div:first-child b { color: #7A4504; }
 .prop-bar:not(.done) select[data-empty="1"] { border-color: #E3A24A; }
 @media (prefers-color-scheme: dark) { .prop-bar:not(.done) { background: #2E2412; border-color: #A87428; } .prop-bar:not(.done) > div:first-child b { color: #F3C27A; } }
+.req-foot { display: flex; gap: 10px 20px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; border-top: 1px solid var(--line); padding: 10px 20px 14px; }
+.req-close summary { cursor: pointer; color: var(--muted); font-size: 14px; }

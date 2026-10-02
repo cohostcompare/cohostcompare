@@ -116,6 +116,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     const { source, campaign } = await currentSource();
     await db.from('quote_requests').update({ source, campaign }).eq('id', req.id).then(() => {}, () => {});
     await db.from('quote_requests').update({ availability }).eq('id', req.id).then(() => {}, () => {}); // needs 021
+    await db.from('quote_drafts').update({ done: true }).eq('user_id', user.id).then(() => {}, () => {}); // needs 022
     await logFunnel('quote');
   }
   const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
@@ -156,7 +157,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   for (const t of tRows || []) {
     const to = await memberEmails(t.manager_slug);
     if (!to.length) {
-      const n = await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim()).catch(() => 0);
+      const n = await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim(), t.id).catch(() => 0);
       if (!n) noContact.push(managers.find((m) => m.slug === t.manager_slug)?.name || t.manager_slug);
       continue;
     }

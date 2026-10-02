@@ -16,6 +16,11 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
   const picked = (await Promise.all(slugs.map(publicManager))).filter((m): m is NonNullable<typeof m> => Boolean(m));
   const user = await currentUser();
   const reqs = await (await import('@/lib/requirementsServer')).requirementsFor(picked.map((m) => m.slug));
+  // Remember an unsent request so we can send one gentle reminder (SQL 022; never for admins).
+  if (user?.email && picked.length && !isAdminEmail(user.email)) {
+    const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v && k !== 'managers') as [string, string][]).toString();
+    await (await import('@/lib/supabase/server')).adminClient().from('quote_drafts').upsert({ user_id: user.id, email: user.email, managers: picked.map((m) => m.slug).join(','), names: picked.map((m) => m.name).join(', '), query: q, updated_at: new Date().toISOString(), done: false, reminded_at: null }).then(() => {}, () => {});
+  }
   const here = `/quote?${new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString()}`;
 
   return (

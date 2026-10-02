@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import QuoteSentConversion from '@/components/QuoteSentConversion';
 import { earningsHref } from '@/lib/requirements';
+import { toggleWatch, withdrawRequest } from './owner-actions';
 import QuoteTable, { type QuoteCol } from '@/components/QuoteTable';
 import { managersNear } from '@/lib/data';
 import type { Quote } from '@/lib/quotes';
@@ -131,8 +132,28 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
               </div>
             );
           })()}
+          <div className="req-foot">
+            {(r.quote_request_managers || []).some((m) => ['sent', 'viewed', 'quoted'].includes(m.status)) && (
+              <details className="req-close">
+                <summary>Close this request</summary>
+                <form action={withdrawRequest} style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                  <input type="hidden" name="id" value={r.id} />
+                  <input className="field" name="reason" maxLength={300} placeholder="Optional: why, e.g. I've found a manager" />
+                  <button className="btn secondary small" type="submit" style={{ justifySelf: 'start' }}>Close it and let the managers know</button>
+                </form>
+              </details>
+            )}
+            {r.lat != null && r.lng != null && (
+              <form action={toggleWatch} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="hidden" name="id" value={r.id} /><input type="hidden" name="on" value={(r as { watch_new?: boolean }).watch_new ? '0' : '1'} />
+                <span className="hint">{(r as { watch_new?: boolean }).watch_new ? '✓ We’ll email you when a new manager starts covering this property.' : 'Want more options later?'}</span>
+                <button className="linkish" type="submit">{(r as { watch_new?: boolean }).watch_new ? 'Stop these emails' : 'Email me when new managers cover it'}</button>
+              </form>
+            )}
+          </div>
         </section>
       ))}
+      <p className="hint" style={{ margin: '8px 0 0' }}><Link href="/account/delete">Delete my account</Link></p>
     </main>
   );
 }

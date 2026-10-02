@@ -132,7 +132,7 @@ export async function sendOutreachBatch(limit = DAILY_CAP) {
 }
 
 /** When an owner requests a quote from an unclaimed manager, tell that manager's outreach contacts straight away. */
-export async function notifyUnclaimedOfRequest(slug: string, where: string): Promise<number> {
+export async function notifyUnclaimedOfRequest(slug: string, where: string, threadId?: string): Promise<number> {
   if (!requestEmailsOn()) return 0;
   const db = adminClient();
   const { data: m } = await db.from('managers').select('id, name, claimed').eq('slug', slug).maybeSingle();
@@ -152,6 +152,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string): Pro
     });
     sent++;
   }
+  if (sent && threadId) await db.from('quote_request_managers').update({ unclaimed_notified_at: new Date().toISOString() }).eq('id', threadId).then(() => {}, () => {}); // needs 022
   return sent;
 }
 
