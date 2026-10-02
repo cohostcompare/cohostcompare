@@ -36,7 +36,8 @@ export default function Privacy() {
       <h2>How we use it</h2>
       <ul>
         <li>To run the service: show managers near an address, send your quote requests, deliver quotes and messages, and email you about them.</li>
-        <li>To send reminders about requests and quotes you have open. You can ask us to stop these.</li>
+        <li>To send reminders about requests and quotes you have open, including one reminder if you start a quote request and don&apos;t send it. You can ask us to stop these.</li>
+        <li>If you ask us to, to email you when a new manager starts covering your property. You can turn this off on your requests page.</li>
         <li>To ask you, once, to review the manager you chose and to review us (for example on Trustpilot). We ask every owner, whatever their experience. Each request has an unsubscribe link.</li>
         <li>To keep the service safe, fix problems and understand, in aggregate, how it&apos;s used.</li>
         <li>To respond to you when you contact us.</li>
@@ -62,7 +63,7 @@ export default function Privacy() {
       <p>Where information is stored or processed overseas, we take reasonable steps to make sure it&apos;s handled consistently with the Australian Privacy Principles. We may also disclose information where the law requires it.</p>
 
       <h2>How long we keep it</h2>
-      <p>We keep your account, requests and messages while your account is open, and for up to two years after your last activity so both you and the manager can refer back to them. You can ask us to delete them sooner.</p>
+      <p>We keep your account, requests and messages while your account is open, and for up to two years after your last activity so both you and the manager can refer back to them. You can ask us to delete them sooner, or delete your owner account yourself from your account page. Deleting it removes your account, requests and messages; managers you were introduced to keep the contact details you shared with them.</p>
 
       <h2>Security</h2>
       <p>Information is stored with access controls and encrypted connections. No system is perfectly secure, so if we become aware of a data breach likely to cause serious harm, we&apos;ll tell affected people and the Office of the Australian Information Commissioner as required by law.</p>
