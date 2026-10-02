@@ -9,7 +9,7 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Commits on this repo are authored as Claude; the GitHub app is installed on the org.
 
 ## Services
-- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–023 so far; 022 = owner extras, onboarding, unclaimed request tracking; 023 = paid fees survive owner deletion). RLS on; server uses the secret key via `adminClient()`.
+- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–024 so far; 022 = owner extras, onboarding, unclaimed request tracking; 023 = paid fees survive owner deletion; 024 = function search paths). Claude can also read and apply SQL through the Supabase connector in chat (project hkntldmrckaosytpjakw); Vercel, Stripe and Resend connectors are connected too. RLS on; server uses the secret key via `adminClient()`.
 - Resend sends from hello@ (`src/lib/email.ts`, branded HTML). Supabase Auth email also goes through Resend.
 - Google Maps JS (Places API New) in the browser; AirROI API for listing data (derived, aggregated figures only, attributed "Data source: AirROI (www.airroi.com)"; never show listing-level data or Airbnb photos).
 - Google Ads: tag AW-18486166646 (`src/components/GoogleTag.tsx`, production only); "Quote request sent" conversion fires once per request on /account?sent=&r= (`QuoteSentConversion.tsx`, label in `src/lib/ads.ts`). Search campaign, no Display/partners; enhanced conversions off.
