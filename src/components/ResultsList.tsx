@@ -1,22 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import QuoteBar from '@/components/QuoteBar';
 import TrustBadges from '@/components/TrustBadges';
 import { areaKey, usePicks } from '@/lib/client/picks';
 import type { NearbyManager } from '@/lib/types';
+import { AVAILABILITY, FULL, PROPERTY_KEY, PROPERTY_TYPES, mismatches, type PropertyDetails } from '@/lib/requirements';
 
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
 export default function ResultsList({ managers, query }: { managers: NearbyManager[]; query: string }) {
   const { picks, toggle, has, full } = usePicks(areaKey(query));
   const [open, setOpen] = useState<string | null>(null);
+  // The owner's property, remembered in this browser and passed on to the quote form.
+  const [prop, setProp] = useState<PropertyDetails>({});
+  useEffect(() => { try { setProp(JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') || {}); } catch { /* none */ } }, []);
+  const update = (k: keyof PropertyDetails, v: unknown) => {
+    const next = { ...prop, [k]: v === '' ? null : v } as PropertyDetails;
+    setProp(next);
+    try { localStorage.setItem(PROPERTY_KEY, JSON.stringify(next)); } catch { /* fine */ }
+  };
+  const anyReqs = managers.some((m) => m.requirements);
+  const told = Boolean(prop.availability || prop.type || prop.beds != null || prop.services?.length);
+  const why = new Map(managers.map((m) => [m.slug, mismatches(m.requirements, prop)]));
+  const fits = managers.filter((m) => !why.get(m.slug)!.length);
+  const others = managers.filter((m) => why.get(m.slug)!.length);
 
-  return (
-    <>
-      <div className="results">
-        {managers.map((m) => {
+  const card = (m: NearbyManager) => {
           const fee = feeText(m);
           const on = has(m.slug);
           const isOpen = open === m.slug;
@@ -33,6 +44,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                 {(m.claimed || m.verified) && <div style={{ margin: '4px 0 2px' }}><TrustBadges m={m} compact /></div>}
                 {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you{m.nearbyRating ? ` · ${m.nearbyRating.toFixed(2)} ★ nearby` : ''}</p>}
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
+                {why.get(m.slug)!.length > 0 && <p className="mismatch">{why.get(m.slug)!.join(' · ')}</p>}
                 <div className="meta">
                   {m.ownerReviews && <span><b style={{ color: '#B97C00' }}>{m.ownerReviews.avg.toFixed(1)} ★</b> from {m.ownerReviews.count} owner review{m.ownerReviews.count === 1 ? '' : 's'}</span>}
                   {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
@@ -44,10 +56,14 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                 <div className="fee">
                   {fee ? <><span className="n">{fee}</span><span className="s">management fee{m.claimed ? '' : ' (from their website)'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
                 </div>
+                {why.get(m.slug)!.length ? (
+                  <span className="btn secondary add above" aria-disabled="true" style={{ opacity: 0.6, pointerEvents: 'none' }}>Doesn&apos;t take this property</span>
+                ) : (
                 <button type="button" className={`btn ${on ? 'primary' : 'secondary'} add above`} aria-pressed={on}
                   onClick={() => toggle({ slug: m.slug, name: m.name })} disabled={!on && full}>
                   {on ? '✓ Added to quote' : full ? '5 already picked' : '+ Add to quote'}
                 </button>
+                )}
                 <span className="more" aria-hidden="true">{isOpen ? 'Show less ↑' : 'More details ↓'}</span>
               </div>
 
@@ -73,9 +89,34 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
               )}
             </article>
           );
-        })}
+  };
+
+  return (
+    <>
+      {anyReqs && (
+        <section className="prop-bar" aria-label="Your property">
+          <div><b>Your property</b><span className="hint">{told ? 'Showing managers who take on a property like yours first.' : 'Some managers here only take on certain properties. Tell us about yours to see who will.'}</span></div>
+          <div className="prop-fields">
+            <label>Type<select className="field" value={prop.type || ''} onChange={(e) => update('type', e.target.value)}><option value="">Any</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select></label>
+            <label>Bedrooms<select className="field" value={prop.beds ?? ''} onChange={(e) => update('beds', e.target.value === '' ? '' : Number(e.target.value))}><option value="">Any</option>{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select></label>
+            <label>Available for guests<select className="field" value={prop.availability || ''} onChange={(e) => update('availability', e.target.value)}><option value="">Not sure</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label.replace(' (for example, holidays only)', '')}</option>)}</select></label>
+            <label>Help wanted<select className="field" value={prop.services?.length ? (prop.services.includes(FULL) ? 'full' : 'some') : ''} onChange={(e) => update('services', e.target.value === 'full' ? [FULL] : e.target.value === 'some' ? ['Some services'] : [])}><option value="">Not sure</option><option value="full">Full management</option><option value="some">Only some services</option></select></label>
+          </div>
+        </section>
+      )}
+      <div className="results" style={others.length ? { marginBottom: 16 } : undefined}>
+        {fits.map(card)}
       </div>
-      <QuoteBar picks={picks} query={query} />
+      {others.length > 0 && (
+        <section style={{ display: 'grid', gap: 12, marginTop: 8 }}>
+          <div className="others-head">
+            <h2 style={{ fontSize: 20, margin: 0 }}>Also in this area, but {others.length === 1 ? 'doesn’t' : 'don’t'} take on a property like yours</h2>
+            <span className="hint">These managers run homes near you, but their requirements don&apos;t match the details you&apos;ve given. If you&apos;re happy to change something, like how much of the year it&apos;s available, update your property above and they&apos;ll move up.</span>
+          </div>
+          <div className="results others">{others.map(card)}</div>
+        </section>
+      )}
+      <QuoteBar picks={picks.filter((p) => !why.get(p.slug)?.length)} query={query} />
     </>
   );
 }

@@ -32,7 +32,7 @@ export default async function AreaPage({ params }: { params: P }) {
   const a = await area((await params).slug);
   if (!a) notFound();
   const [near, all] = await Promise.all([managersNear(a.lat, a.lng), areas()]);
-  const managers = await (await import('@/lib/reviews')).withReviewSummaries(near);
+  const managers = await (await import('@/lib/requirementsServer')).withRequirements(await (await import('@/lib/reviews')).withReviewSummaries(near));
   await bump(managers.map((m) => m.id), 'search');
   const q = new URLSearchParams({ lat: String(a.lat), lng: String(a.lng), suburb: a.label });
 

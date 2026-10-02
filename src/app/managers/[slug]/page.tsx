@@ -45,6 +45,8 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const areas = await managerAreas(m.slug);
   const hasData = (m.propertyCount ?? 0) > 0;
   const reviews = await publishedReviews(m.slug);
+  const reqs = (await (await import('@/lib/requirementsServer')).requirementsFor([m.slug])).get(m.slug);
+  const { describe } = await import('@/lib/requirements');
   const ravg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
   return (
@@ -105,6 +107,15 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
           <p style={{ margin: 0 }}>{m.about || `${m.name} manages short-term rental homes${m.cities.length ? ` in ${m.cities.join(' and ')}` : ''}.`}</p>
         </section>
+
+        {reqs && (
+          <section className="panel" style={{ display: 'grid', gap: 8 }}>
+            <h2 style={{ fontSize: 20, margin: 0 }}>Properties {m.name} takes on</h2>
+            {describe(reqs).length > 0 && <ul className="ticks" style={{ margin: 0 }}>{describe(reqs).map((x) => <li key={x}>{x}</li>)}</ul>}
+            {reqs.note && <p style={{ margin: 0 }}>{reqs.note}</p>}
+            <p className="hint" style={{ margin: 0 }}>Set by {m.name}. Requests for properties outside these can&apos;t be sent to them.</p>
+          </section>
+        )}
 
         <OwnerReviews name={m.name} reviews={reviews} />
 

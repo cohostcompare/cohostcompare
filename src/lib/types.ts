@@ -15,6 +15,8 @@ export type PublicManager = {
   avgRating: number | null;
   /** Reviews from owners who hired them through CoHostCompare (only set when there's at least one). */
   ownerReviews?: { avg: number; count: number };
+  /** What properties they take on (only set when they've set any). */
+  requirements?: import('@/lib/requirements').Requirements;
   reviewCount: number | null;
   avgOccupancy: number | null; // 0–1, last 12 months
   avgNightlyRate: number | null; // A$

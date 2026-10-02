@@ -87,6 +87,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <Link className="btn primary" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
                 <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
                 <Link className="btn secondary" href="/dashboard/reports">Market reports</Link>
+                <Link className="btn secondary" href={`/dashboard/${m.slug}/requirements`}>Requirements</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
                 <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
                 {bill.get(m.id)?.stripe_subscription_id && bill.get(m.id)?.stripe_customer_id && (

@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email';
 import { inboundOn, threadReplyTo } from '@/lib/inbound';
 import { smsManager } from '@/lib/sms';
+import { availabilityLabel } from '@/lib/requirements';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
 const SITUATIONS = ['I own the property', 'I’m buying it now (under contract or about to settle)', "I'm buying it now (under contract or about to settle)", 'I’m planning to buy a property', "I'm planning to buy a property"];
@@ -71,6 +72,18 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
   if (!services.length) return { error: 'Choose at least one service you want.' };
 
+  // Managers' requirements (SQL 021): never send a request a manager has said they won't take on.
+  const availability = String(form.get('availability') || '');
+  {
+    const { requirementsFor } = await import('@/lib/requirementsServer');
+    const { mismatches, AVAILABILITY } = await import('@/lib/requirements');
+    if (!AVAILABILITY.some((a) => a.v === availability)) return { error: 'Choose how much of the year the property will be available for guests.' };
+    const reqs = await requirementsFor(managers.map((m) => m.slug));
+    const details = { availability, type: String(form.get('property_type') || ''), beds: bedrooms, services, situation: String(form.get('situation') || '') };
+    const unfit = managers.map((m) => ({ m, why: mismatches(reqs.get(m.slug), details) })).filter((x) => x.why.length);
+    if (unfit.length) return { error: `${unfit.map((u) => `${u.m.name}: ${u.why.join('; ')}`).join('. ')}. Remove ${unfit.length === 1 ? 'them' : 'them'} or change your property details.` };
+  }
+
   const limited = await requestLimit(user.id, user.email, managers.length, `${suburb} ${stateCode} ${postcode}`);
   if (limited) return { error: limited };
 
@@ -102,6 +115,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     const { currentSource, logFunnel } = await import('@/lib/traffic');
     const { source, campaign } = await currentSource();
     await db.from('quote_requests').update({ source, campaign }).eq('id', req.id).then(() => {}, () => {});
+    await db.from('quote_requests').update({ availability }).eq('id', req.id).then(() => {}, () => {}); // needs 021
     await logFunnel('quote');
   }
   const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
@@ -119,6 +133,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     `Property: ${row.address}`,
     `Type: ${row.property_type}, ${bedrooms} bedroom${bedrooms === 1 ? '' : 's'}`,
     `Listed now: ${row.currently_listed}`,
+    `Available for guests: ${availabilityLabel(availability)}`,
     `Wants: ${services.join(', ')}`,
     situation ? `Owner: ${situation.replace(/^I’m|^I'm/, 'They’re').replace(/^I own/, 'They own')}` : '',
     `Start: ${row.start_timing}`,
@@ -148,7 +163,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
-      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}\nListed now: ${row.currently_listed}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
+      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}\nListed now: ${row.currently_listed}\nAvailable for guests: ${availabilityLabel(availability)}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
       cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
       replyTo: threadReplyTo(t.id, 'm'),
     });

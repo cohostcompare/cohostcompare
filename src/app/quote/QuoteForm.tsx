@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import PlacesInput from '@/components/PlacesInput';
 import { submitQuoteRequest } from './actions';
 import { checkCoverage } from './coverage';
+import { AVAILABILITY, PROPERTY_KEY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
@@ -12,7 +13,7 @@ const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: 
 
 type Addr = { street: string; suburb: string; state: string; postcode: string; lat: number | null; lng: number | null };
 
-type M = { slug: string; name: string; claimed?: boolean };
+type M = { slug: string; name: string; claimed?: boolean; requirements?: Requirements | null };
 
 export default function QuoteForm({ managers, initial, email }: { managers: M[]; initial: Addr; email: string }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
@@ -20,6 +21,23 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
   const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode) && initial.lat != null);
   const [editing, setEditing] = useState(!known);
   const [removed, setRemoved] = useState<string[]>([]);
+  // Property details: prefilled from what the owner told us on the results page (this browser only).
+  const [ptype, setPtype] = useState<string>('Apartment');
+  const [beds, setBeds] = useState<number>(2);
+  const [avail, setAvail] = useState<string>('');
+  const [services, setServices] = useState<string[]>([SERVICES[0]]);
+  const [situation, setSituation] = useState<string>(SITUATIONS[0]);
+  useEffect(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') as PropertyDetails;
+      if (p.type && (PROPERTY_TYPES as readonly string[]).includes(p.type)) setPtype(p.type);
+      if (typeof p.beds === 'number') setBeds(p.beds);
+      if (p.availability) setAvail(p.availability);
+      if (p.services?.length && !p.services.includes(SERVICES[0])) setServices([]);
+    } catch { /* none */ }
+  }, []);
+  const details: PropertyDetails = { type: ptype, beds, availability: avail || null, services, situation };
+  const toggleService = (s: string) => setServices(services.includes(s) ? services.filter((x) => x !== s) : [...services, s]);
   const active = managers.filter((m) => !removed.includes(m.slug));
   const located = addr.lat != null && addr.lng != null;
   const [coveredSlugs, setCoveredSlugs] = useState<string[] | null>(null);
@@ -31,7 +49,10 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
   }, [addr.lat, addr.lng, addr.postcode, located, managers]);
   const checking = located && coveredSlugs === null;
   const uncovered = located && coveredSlugs ? active.filter((m) => !coveredSlugs.includes(m.slug)) : [];
-  const covered = located && coveredSlugs ? active.filter((m) => coveredSlugs.includes(m.slug)) : [];
+  const coveredAll = located && coveredSlugs ? active.filter((m) => coveredSlugs.includes(m.slug)) : [];
+  // Managers whose requirements this property doesn't meet can't be sent the request.
+  const unfit = coveredAll.map((m) => ({ m, why: mismatches(m.requirements, details) })).filter((x) => x.why.length);
+  const covered = coveredAll.filter((m) => !unfit.some((u) => u.m.slug === m.slug));
   // Typing over the suburb or postcode means we no longer know exactly where the property is.
   const set = (k: 'street' | 'suburb' | 'state' | 'postcode') => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setAddr({ ...addr, [k]: e.target.value, ...(k === 'suburb' || k === 'postcode' ? { lat: null, lng: null } : {}) });
@@ -47,10 +68,8 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
         <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
       </div>
       <label style={L}>Which best describes you?
-        <select className="field" name="situation" defaultValue="I own the property">
-          <option>I own the property</option>
-          <option>I&apos;m buying it now (under contract or about to settle)</option>
-          <option>I&apos;m planning to buy a property</option>
+        <select className="field" name="situation" value={situation} onChange={(e) => setSituation(e.target.value)}>
+          {SITUATIONS.map((x) => <option key={x}>{x}</option>)}
         </select>
       </label>
 
@@ -105,10 +124,13 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       )}
       <div style={grid(150)}>
         <label style={L}>Property type
-          <select className="field" name="property_type"><option>Apartment</option><option>House</option><option>Townhouse</option><option>Granny flat or studio</option></select>
+          <select className="field" name="property_type" value={ptype} onChange={(e) => setPtype(e.target.value)}>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
         </label>
         <label style={L}>Bedrooms
-          <select className="field" name="bedrooms" defaultValue="2">{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select>
+          <select className="field" name="bedrooms" value={beds} onChange={(e) => setBeds(Number(e.target.value))}>{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select>
+        </label>
+        <label style={L}>Available for guests
+          <select className="field" name="availability" value={avail} onChange={(e) => setAvail(e.target.value)} required><option value="" disabled>Choose one</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label}</option>)}</select>
         </label>
       </div>
       <div style={grid(200)}>
@@ -121,17 +143,25 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       </div>
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 8 }}>
         <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>What do you want help with?</legend>
-        {SERVICES.map((s, i) => (
+        {SERVICES.map((s) => (
           <label key={s} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input type="checkbox" name="services" value={s} defaultChecked={i === 0} style={{ width: 18, height: 18, accentColor: 'var(--brand)' }} /> {s}
+            <input type="checkbox" name="services" value={s} checked={services.includes(s)} onChange={() => toggleService(s)} style={{ width: 18, height: 18, accentColor: 'var(--brand)' }} /> {s}
           </label>
         ))}
       </fieldset>
+      {unfit.length > 0 && (
+        <div role="alert" style={{ border: '1px solid var(--signal)', borderRadius: 10, padding: '12px 14px', display: 'grid', gap: 8 }}>
+          <b>{unfit.map((u) => u.m.name).join(' and ')} {unfit.length === 1 ? 'doesn’t' : 'don’t'} take on a property like this.</b>
+          {unfit.map((u) => <span key={u.m.slug} className="hint">{u.m.name}: {u.why.join(' · ')}</span>)}
+          <span className="hint">{covered.length ? `If these details are right, remove ${unfit.length === 1 ? 'them' : 'them'} and your request goes to ${covered.map((m) => m.name).join(', ')}.` : 'If these details are right, search again for managers who take on properties like yours.'} Or change the details above if you&apos;re happy to.</span>
+          {covered.length > 0 && <div><button type="button" className="btn secondary" onClick={() => setRemoved([...removed, ...unfit.map((u) => u.m.slug)])}>Remove {unfit.length === 1 ? unfit[0].m.name : 'them'}</button></div>}
+        </div>
+      )}
       <label style={L}>Anything else managers should know? (optional)
         <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
       </label>
-      <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || covered.length === 0}>
-        {pending ? 'Sending…' : checking ? 'Checking coverage…' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
+      <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || unfit.length > 0 || covered.length === 0 || !avail}>
+        {pending ? 'Sending…' : checking ? 'Checking coverage…' : !avail ? 'Choose how much of the year it’s available' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
       <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept. By sending, you agree to our <a href="/terms">terms</a>.</p>

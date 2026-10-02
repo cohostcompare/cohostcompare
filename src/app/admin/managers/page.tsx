@@ -65,7 +65,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
           <div key={m.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '6px 12px', padding: '12px 16px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>
             <div style={{ minWidth: 0 }}>
               <b>{m.published ? <Link href={`/managers/${m.slug}`}>{m.name}</Link> : m.name}</b>
-              <span className="hint"> · {m.published ? 'Visible' : 'Hidden'}{m.claimed ? ' · Claimed' : ''}{m.website ? ` · ${m.website.replace(/^https?:\/\//, '')}` : ''}</span>
+              <span className="hint"> · {m.published ? 'Visible' : 'Hidden'}{m.claimed ? ' · Claimed' : ''}{m.website ? ` · ${m.website.replace(/^https?:\/\//, '')}` : ''} · <Link href={`/admin/managers/${m.id}/requirements`}>Requirements</Link></span>
               {abnOf.get(m.id)?.abn && (
                 <div className="hint">ABN {abnOf.get(m.id)!.abn}{abnOf.get(m.id)!.abn_name ? ` · registered to ${abnOf.get(m.id)!.abn_name}` : ''} · {abnOf.get(m.id)!.abn_verified_at ? 'verified' : 'not verified'}{' '}
                   <form action={setVerified} style={{ display: 'inline' }}>

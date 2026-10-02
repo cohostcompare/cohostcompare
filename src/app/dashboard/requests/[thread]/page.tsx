@@ -5,6 +5,7 @@ import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, 
 import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
 import { DeclineForm, ManagerComposer, QuoteForm } from './Forms';
+import { availabilityLabel } from '@/lib/requirements';
 
 export const metadata: Metadata = { title: 'Quote request', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
         <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '10px 20px', margin: 0 }}>
           <div><dt className="label">Property</dt><dd style={{ margin: 0 }}>{req.property_type}, {Number(req.bedrooms) === 0 ? 'studio' : `${req.bedrooms} bedrooms`}</dd></div>
           <div><dt className="label">Listed now</dt><dd style={{ margin: 0 }}>{req.currently_listed}</dd></div>
+          {req.availability && <div><dt className="label">Available for guests</dt><dd style={{ margin: 0 }}>{availabilityLabel(req.availability)}</dd></div>}
           <div><dt className="label">Wants help with</dt><dd style={{ margin: 0 }}>{(req.services || []).join(', ')}</dd></div>
           <div><dt className="label">Timing</dt><dd style={{ margin: 0 }}>{req.start_timing}</dd></div>
           {req.situation && <div><dt className="label">Owner</dt><dd style={{ margin: 0 }}>{String(req.situation).replace(/^I own the property/, 'Owns the property').replace(/^I’m buying it now|^I'm buying it now/, 'Buying it now').replace(/^I’m planning to buy a property|^I'm planning to buy a property/, 'Planning to buy')}</dd></div>}
