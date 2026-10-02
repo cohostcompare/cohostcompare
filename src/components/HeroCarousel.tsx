@@ -5,10 +5,10 @@ import { PHOTOS, src, type PhotoName } from '@/components/Photo';
 
 const SLIDES: { name: PhotoName; place: string }[] = [
   { name: 'bondi', place: 'Bondi, Sydney' },
-  { name: 'byron', place: 'Byron Bay' },
   { name: 'yarra', place: 'Melbourne' },
-  { name: 'bluemountains', place: 'Blue Mountains' },
+  { name: 'byron', place: 'Byron Bay' },
   { name: 'greatoceanroad', place: 'Great Ocean Road' },
+  { name: 'bluemountains', place: 'Blue Mountains' },
 ];
 
 /** Auto-rotating hero photos of launch areas. Pauses on hover and for people who prefer reduced motion. */
