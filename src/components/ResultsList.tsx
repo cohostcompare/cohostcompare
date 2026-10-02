@@ -6,7 +6,7 @@ import QuoteBar from '@/components/QuoteBar';
 import TrustBadges from '@/components/TrustBadges';
 import { areaKey, usePicks } from '@/lib/client/picks';
 import type { NearbyManager } from '@/lib/types';
-import { AVAILABILITY, FULL, PROPERTY_KEY, PROPERTY_TYPES, mismatches, type PropertyDetails } from '@/lib/requirements';
+import { AVAILABILITY, FULL, PROPERTY_KEY, PROPERTY_TYPES, earningsHref, mismatches, type PropertyDetails } from '@/lib/requirements';
 
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
@@ -35,6 +35,19 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
   const fits = managers.filter((m) => !why.get(m.slug)!.length);
   const others = managers.filter((m) => why.get(m.slug)!.length);
+
+  // "What could it earn?" nudge: if someone's been looking at results for a while without picking anyone.
+  const qp = new URLSearchParams(query);
+  const placeLabel = [qp.get('street'), qp.get('suburb')].filter(Boolean).join(', ') || (qp.get('postcode') ? `postcode ${qp.get('postcode')}` : '');
+  const earnLink = earningsHref({ lat: qp.get('lat'), lng: qp.get('lng'), place: placeLabel, beds: prop.beds });
+  const [earnNudge, setEarnNudge] = useState(false);
+  useEffect(() => {
+    if (!qp.get('lat')) return;
+    try { if (sessionStorage.getItem('cc_earn_nudge')) return; } catch { /* fine */ }
+    const t = setTimeout(() => setEarnNudge(true), 75000);
+    return () => clearTimeout(t);
+  }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
+  const closeEarn = () => { setEarnNudge(false); try { sessionStorage.setItem('cc_earn_nudge', '1'); } catch { /* fine */ } };
 
   const card = (m: NearbyManager) => {
           const fee = feeText(m);
@@ -135,6 +148,14 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
           </div>
           <div className="results others">{others.map(card)}</div>
         </section>
+      )}
+      {earnNudge && picks.length === 0 && (
+        <aside className="earn-nudge" role="dialog" aria-label="Earnings estimate">
+          <button type="button" className="x" aria-label="Close" onClick={closeEarn}>×</button>
+          <b>While you compare: what could {placeLabel ? placeLabel.split(',')[0] : 'this property'} earn?</b>
+          <span className="hint">A free estimate of yearly booking income for this address, from how similar homes nearby did over the last 12 months.</span>
+          <a className="earn-pill" href={earnLink} onClick={closeEarn}>See what it could earn →</a>
+        </aside>
       )}
       <QuoteBar picks={complete ? picks.filter((p) => !why.get(p.slug)?.length) : []} query={query} />
     </>

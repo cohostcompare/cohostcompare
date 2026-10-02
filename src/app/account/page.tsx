@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import QuoteSentConversion from '@/components/QuoteSentConversion';
+import { earningsHref } from '@/lib/requirements';
 import QuoteTable, { type QuoteCol } from '@/components/QuoteTable';
 import { managersNear } from '@/lib/data';
 import type { Quote } from '@/lib/quotes';
@@ -52,7 +53,20 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
         <Link className="btn secondary" href="/">New search</Link>
       </div>
       {sp.sent && sp.r && <QuoteSentConversion requestId={sp.r} />}
-      {sp.sent && <div className="panel" style={{ background: 'var(--tint)' }}><b>Request sent to {sp.sent} manager{sp.sent === '1' ? '' : 's'}.</b> We&apos;ve emailed you a copy. Open a manager below to message them; quotes and replies appear here.</div>}
+      {sp.sent && (() => {
+        const just = (requests || []).find((r) => r.id === sp.r) || (requests || [])[0];
+        return (
+          <div className="panel" style={{ background: 'var(--tint)', display: 'grid', gap: 12 }}>
+            <span><b>Request sent to {sp.sent} manager{sp.sent === '1' ? '' : 's'}.</b> We&apos;ve emailed you a copy. Open a manager below to message them; quotes and replies appear here.</span>
+            {just?.lat != null && just?.lng != null && (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+                <span>While you wait for quotes, see what {just.address ? just.address.split(',')[0] : 'your property'} could earn. We&apos;ll work it out from your address and bedrooms.</span>
+                <a className="earn-pill" href={earningsHref({ lat: just.lat, lng: just.lng, place: just.address, beds: just.bedrooms })}>See what it could earn →</a>
+              </div>
+            )}
+          </div>
+        );
+      })()}
       {!requests?.length ? (
         <div className="panel">No requests yet. <a href="/">Search for managers</a> near your property to get started.</div>
       ) : requests.map((r) => (

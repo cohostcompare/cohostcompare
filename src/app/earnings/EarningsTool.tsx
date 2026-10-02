@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import PlacesInput, { type PickedPlace } from '@/components/PlacesInput';
 import type { Estimate } from '@/lib/earnings';
 import { getEstimate, type EstimateResult } from './actions';
 
 const money = (n: number) => `A$${Math.round(n).toLocaleString('en-AU')}`;
 
-export default function EarningsTool() {
-  const [place, setPlace] = useState<PickedPlace | null>(null);
-  const [beds, setBeds] = useState(2);
+export default function EarningsTool({ initial }: { initial?: { lat: number; lng: number; label: string; beds: number } | null }) {
+  // Arriving from search results or a sent quote request: the address is known, so estimate straight away.
+  const [place, setPlace] = useState<PickedPlace | null>(initial ? { formatted: initial.label, street: '', suburb: initial.label, state: '', postcode: '', lat: initial.lat, lng: initial.lng } : null);
+  const [beds, setBeds] = useState(initial?.beds ?? 2);
   const [res, setRes] = useState<EstimateResult | null>(null);
   const [pending, start] = useTransition();
 
@@ -18,10 +19,11 @@ export default function EarningsTool() {
     if (!p || p.lat == null || p.lng == null) { setRes({ error: 'Pick an address or suburb from the suggestions.' }); return; }
     start(async () => setRes(await getEstimate(p.lat!, p.lng!, b)));
   };
+  useEffect(() => { if (initial) run(place, beds); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const q = place ? new URLSearchParams(Object.fromEntries(Object.entries({ postcode: place.postcode, suburb: place.suburb, state: place.state, street: place.street, lat: place.lat != null ? String(place.lat) : '', lng: place.lng != null ? String(place.lng) : '' }).filter(([, v]) => v)) as Record<string, string>) : null;
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div id="estimate" style={{ display: 'grid', gap: 18, scrollMarginTop: 90 }}>
       <div className="panel earn-tool">
         <div className="earn-form">
           <h2>Get your estimate</h2>
@@ -36,6 +38,7 @@ export default function EarningsTool() {
           </fieldset>
           <div style={{ display: 'grid', gap: 6 }}>
             <label className="label" htmlFor="earn-addr">Property address or suburb</label>
+            {initial && place?.lat === initial.lat && <span className="hint" style={{ margin: 0 }}>Estimating for <b>{initial.label || 'your property'}</b>. Search below to try another address.</span>}
             <PlacesInput id="earn-addr" kind="any" placeholder="Start typing an address or suburb" onPick={(p) => { setPlace(p); run(p, beds); }} buttonLabel={pending ? 'Working it out…' : 'Estimate earnings'} />
           </div>
           <ul className="earn-trust">

@@ -84,3 +84,13 @@ export function mismatches(r: Requirements | null | undefined, d: PropertyDetail
 
 /** Owner's property details remembered in this browser between the search results and the quote form. */
 export const PROPERTY_KEY = 'cc_property';
+
+/** Link to the earnings estimate for a known place, which runs the estimate straight away. */
+export function earningsHref(p: { lat?: number | string | null; lng?: number | string | null; place?: string | null; beds?: number | string | null }) {
+  const q = new URLSearchParams();
+  if (p.lat != null && p.lng != null && p.lat !== '' && p.lng !== '') { q.set('lat', String(p.lat)); q.set('lng', String(p.lng)); }
+  if (p.place) q.set('place', String(p.place).slice(0, 120));
+  if (p.beds != null && p.beds !== '' && !Number.isNaN(Number(p.beds))) q.set('beds', String(Math.min(5, Math.max(0, Number(p.beds)))));
+  const s = q.toString();
+  return `/earnings${s ? `?${s}` : ''}#estimate`;
+}
