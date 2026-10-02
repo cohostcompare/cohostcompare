@@ -28,7 +28,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
   const askForDetails = () => {
     setNudge(true);
     barRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    (barRef.current?.querySelector('select[data-empty="1"]') as HTMLSelectElement | null)?.focus({ preventScroll: true });
+    (barRef.current?.querySelector('select[data-empty="1"]') as HTMLSelectElement | null ?? barRef.current?.querySelector('select') as HTMLSelectElement | null)?.focus({ preventScroll: true });
     setTimeout(() => setNudge(false), 2400);
   };
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
@@ -65,7 +65,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
                   {fee ? <><span className="n">{fee}</span><span className="s">management fee{m.claimed ? '' : ' (from their website)'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
                 </div>
                 {!complete ? (
-                  <button type="button" className="btn secondary add above is-locked" aria-disabled="true" onClick={askForDetails} title="Add your property details at the top first">+ Add to quote</button>
+                  <button type="button" className="btn secondary add above has-tip" onClick={askForDetails} data-tip="Add your property details at the top first, so we can check this manager takes on a property like yours" aria-describedby="prop-step">+ Add to quote</button>
                 ) : why.get(m.slug)!.length ? (
                   <span className="btn secondary add above" aria-disabled="true" style={{ opacity: 0.6, pointerEvents: 'none' }}>Doesn&apos;t take this property</span>
                 ) : (
@@ -105,7 +105,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
     <>
       <section ref={barRef} id="your-property" className={`prop-bar${complete ? ' done' : ''}${nudge ? ' nudge' : ''}`} aria-label="Your property">
         <div>
-          <b>{complete ? 'Your property' : 'Step 1: tell us about your property'}</b>
+          <b id="prop-step">{complete ? 'Your property' : 'Step 1: tell us about your property'}</b>
           <span className="hint">{complete ? 'Change anything here and the list updates straight away.' : 'Some managers only take on certain properties. Add these four details to see who can quote, then add up to 5 managers to your quote.'}</span>
         </div>
         <div className="prop-fields">
@@ -114,7 +114,7 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
           <label>Available for guests<select className="field" data-empty={prop.availability ? undefined : '1'} value={prop.availability || ''} onChange={(e) => update('availability', e.target.value)}><option value="" disabled>Choose</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label.replace(' (for example, holidays only)', '')}</option>)}</select></label>
           <label>Help wanted<select className="field" data-empty={prop.services?.length ? undefined : '1'} value={prop.services?.length ? (prop.services.includes(FULL) ? 'full' : 'some') : ''} onChange={(e) => update('services', e.target.value === 'full' ? [FULL] : ['Some services'])}><option value="" disabled>Choose</option><option value="full">Full management</option><option value="some">Only some services</option></select></label>
         </div>
-        {nudge && <p role="alert" className="prop-nudge">Add your property details here first, then you can add managers to your quote.</p>}
+        {nudge && <p role="alert" className="prop-nudge">{complete ? 'Change any detail here and the list updates straight away.' : 'Add your property details here first, then you can add managers to your quote.'}</p>}
       </section>
       {complete && (
         <div className="fit-banner" role="status">
@@ -129,7 +129,8 @@ export default function ResultsList({ managers, query }: { managers: NearbyManag
         <section id="not-matching" style={{ display: 'grid', gap: 12, marginTop: 8, scrollMarginTop: 90 }}>
           <div className="others-head">
             <h2 style={{ fontSize: 20, margin: 0 }}>Also in this area, but {others.length === 1 ? 'doesn’t' : 'don’t'} take on a property like yours</h2>
-            <span className="hint">These managers run homes near you, but their requirements don&apos;t match your property. Each one shows why. If you&apos;re happy to change something, like how much of the year it&apos;s available, <a href="#your-property">update your property</a> and they&apos;ll move up.</span>
+            <span className="hint" style={{ fontSize: 15 }}>These managers run homes near you, but their requirements don&apos;t match your property. Each one shows why. If you&apos;re happy to change something, like how much of the year it&apos;s available, update your property details and they&apos;ll move up.</span>
+            <div><a className="btn primary" href="#your-property" onClick={(e) => { e.preventDefault(); askForDetails(); }}>↑ Update your property details</a></div>
           </div>
           <div className="results others">{others.map(card)}</div>
         </section>

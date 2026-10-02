@@ -607,6 +607,10 @@ a.kpi:hover { border-color: var(--k); }
 .prop-bar.nudge { box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 30%, transparent); }
 .prop-bar select[data-empty="1"] { border-color: var(--brand); }
 .prop-nudge { margin: 0; font-weight: 600; color: var(--brand); }
-.btn.is-locked { opacity: .55; cursor: not-allowed; }
+/* Hover/focus explanation on buttons that need a step first */
+.has-tip { position: relative; }
+.has-tip::after { content: attr(data-tip); position: absolute; right: 0; bottom: calc(100% + 8px); width: 240px; padding: 8px 10px; border-radius: 10px; background: var(--ink); color: var(--panel); font-size: 13px; font-weight: 500; line-height: 1.35; text-align: left; white-space: normal; box-shadow: 0 8px 24px rgba(16,48,47,.25); opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity .15s, transform .15s; z-index: 30; }
+.has-tip:hover::after, .has-tip:focus-visible::after { opacity: 1; transform: none; }
+@media (hover: none) { .has-tip::after { display: none; } }
 .fit-banner { display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--brand); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; }
 .fit-banner a { font-weight: 700; color: var(--signal); }
