@@ -71,13 +71,13 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                   e.preventDefault(); setOpen(isOpen ? null : m.slug);
                 }}>{m.name}</Link></h2>
                 {(m.claimed || m.verified) && <div style={{ margin: '4px 0 2px' }}><TrustBadges m={m} compact /></div>}
-                {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}><span className={sort === 'homes' ? 'sort-hit' : undefined}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you</span>{m.nearbyRating ? <> · <span className={sort === 'rating' ? 'sort-hit' : undefined}>{m.nearbyRating.toFixed(2)} ★ guest rating nearby</span></> : ''}</p>}
+                {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}><span className={sort === 'homes' ? 'sort-hit' : undefined}><b>{m.nearby}</b> home{m.nearby === 1 ? '' : 's'} they run near you</span>{m.nearbyRating ? <> · <span className={sort === 'rating' ? 'sort-hit' : undefined}>{m.nearbyRating.toFixed(2)} ★ guest rating nearby</span></> : ''}</p>}
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
                 {why.get(m.slug)!.length > 0 && <p className="mismatch">{why.get(m.slug)!.join(' · ')}</p>}
                 <div className="meta">
                   {m.ownerReviews && <span><b style={{ color: '#B97C00' }}>{m.ownerReviews.avg.toFixed(1)} ★</b> from {m.ownerReviews.count} owner review{m.ownerReviews.count === 1 ? '' : 's'}</span>}
                   {m.avgRating != null && <span className={sort === 'overall' || (sort === 'rating' && !m.nearbyRating) ? 'sort-hit' : undefined}><b>{m.avgRating.toFixed(2)} ★</b> overall, from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
-                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> Airbnb homes tracked</span>}
+                  {m.propertyCount != null && <span><b>{m.propertyCount}</b> Airbnb homes in total</span>}
                   {m.avgNightlyRate != null && <span className={sort === 'nightly' ? 'sort-hit' : undefined}><b>A${Math.round(m.avgNightlyRate)}</b> typical nightly rate</span>}
                 </div>
                 <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
@@ -143,7 +143,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
             {hasOwnerReviews && <option value="owner">Highest owner reviews</option>}
           </select>
         </label>
-        <span className="hint">{sort === 'rating' ? 'Based on the homes each manager runs near this address (highlighted on each card).' : sort === 'overall' ? 'Based on all of each manager’s homes.' : 'Managers without this figure go last.'}</span>
+        <span className="hint">{sort === 'rating' ? 'Based on the homes each manager runs near this address (highlighted on each card).' : sort === 'overall' ? 'Based on all of each manager’s homes.' : sort === 'homes' ? 'Counts only the homes within 4 km of this address, not their whole portfolio (highlighted on each card).' : 'Highlighted on each card. Managers without this figure go last.'}</span>
       </div>
       {complete && (
         <div className="fit-banner" role="status">
