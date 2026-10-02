@@ -119,6 +119,27 @@ export async function unreachedThreads(): Promise<{ manager: string; reason: 'no
   return data.filter((t) => un.has(t.manager_slug)).map((t) => { const r = reach.get(t.manager_slug) || 'no-email'; return { manager: t.manager_name, reason: r === 'ok' ? 'retrying' as const : r }; });
 }
 
+export type OutreachStats = { contacted: number; emails: number; replied: number; claimed: number; unsubscribed: number; bounced: number; queued: number; finished: number; sentWeek: number };
+/** How the outreach sequence is doing (contacts that have had at least one email). */
+export async function outreachStats(): Promise<OutreachStats> {
+  const { data } = await adminClient().from('outreach_contacts').select('manager_id, step, status, last_sent_at, managers(claimed)').limit(5000);
+  const rows = (data || []) as unknown as { manager_id: string; step: number; status: string; last_sent_at: string | null; managers: { claimed: boolean } | { claimed: boolean }[] | null }[];
+  const sent = rows.filter((r) => r.step > 0);
+  const claimedMgrs = new Set(sent.filter((r) => (Array.isArray(r.managers) ? r.managers[0] : r.managers)?.claimed || r.status === 'claimed').map((r) => r.manager_id));
+  const weekAgo = Date.now() - 7 * 86400e3;
+  return {
+    contacted: new Set(sent.map((r) => r.manager_id)).size,
+    emails: sent.reduce((s, r) => s + r.step, 0),
+    replied: sent.filter((r) => r.status === 'replied').length,
+    claimed: claimedMgrs.size,
+    unsubscribed: sent.filter((r) => r.status === 'unsubscribed').length,
+    bounced: sent.filter((r) => r.status === 'bounced').length,
+    queued: rows.filter((r) => r.step === 0 && r.status === 'active').length,
+    finished: sent.filter((r) => r.status === 'finished').length,
+    sentWeek: sent.filter((r) => r.last_sent_at && new Date(r.last_sent_at).getTime() > weekAgo).length,
+  };
+}
+
 export async function suppressed(email: string) {
   const { data } = await adminClient().from('email_suppressions').select('email').eq('email', email.toLowerCase()).maybeSingle();
   return Boolean(data);

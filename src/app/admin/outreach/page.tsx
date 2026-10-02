@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { DAILY_CAP, OUTREACH_START, SEQUENCE, outreachOn, requestEmailsOn, type Ctx } from '@/lib/outreach';
+import { DAILY_CAP, OUTREACH_START, SEQUENCE, outreachOn, outreachStats, requestEmailsOn, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
 import { addContact, approveResearched, sendNow, setStatus, testEmail } from './actions';
@@ -24,6 +24,7 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
   const have = new Set((contacts || []).map((c) => `${((Array.isArray(c.managers) ? c.managers[0] : c.managers) as { slug: string } | null)?.slug}|${c.email}`));
   const pending = RESEARCHED_CONTACTS.filter((c) => !have.has(`${c.slug}|${c.email}`));
   const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+  const stats = await outreachStats();
   const counts = (contacts || []).reduce<Record<string, number>>((a, c) => ({ ...a, [c.status]: (a[c.status] || 0) + 1 }), {});
   const sample: Ctx = { manager: 'Example Stays', slug: 'example', first: 'Sam', homes: 24, rating: 4.86, suburbs: ['Bondi', 'Coogee'], waiting: 0, email: 'sam@example.com.au', source: 'https://example.com.au/contact' };
   const i = Math.min(Math.max(Number(sp.preview || 1), 1), SEQUENCE.length) - 1;
@@ -42,6 +43,15 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
 
+      {stats.contacted > 0 && (
+        <section className="kpis" aria-label="Outreach results">
+          <div className="kpi k-blue"><span>Managers emailed</span><b>{stats.contacted}</b><small>{stats.emails} emails in total · {stats.sentWeek} contacts emailed this week</small></div>
+          <div className="kpi k-green"><span>Claimed</span><b>{stats.claimed}</b><small>{Math.round((stats.claimed / stats.contacted) * 100)}% of managers emailed</small></div>
+          <div className="kpi k-amber"><span>Replied</span><b>{stats.replied}</b><small>marked as replied (check hello@)</small></div>
+          <div className={`kpi ${stats.unsubscribed + stats.bounced > stats.contacted * 0.05 ? 'k-alert' : 'k-teal'}`}><span>Unsubscribed or bounced</span><b>{stats.unsubscribed + stats.bounced}</b><small>{stats.unsubscribed} unsubscribed · {stats.bounced} bounced{stats.unsubscribed + stats.bounced > stats.contacted * 0.05 ? ' · above 5%, check the wording and addresses' : ''}</small></div>
+          <div className="kpi k-teal"><span>Still to start</span><b>{stats.queued}</b><small>{stats.finished} finished all five emails</small></div>
+        </section>
+      )}
       <div className="chips">{Object.entries(counts).map(([k, v]) => <span key={k} className="chip">{k}: {v}</span>)}</div>
 
       <form action={addContact} className="panel" style={{ display: 'grid', gap: 10 }}>
