@@ -10,10 +10,13 @@ const HOUR = 3600e3;
 const ago = (h: number) => new Date(Date.now() - h * HOUR).toISOString();
 const suppressed = async (email: string) => Boolean((await adminClient().from('email_suppressions').select('email').eq('email', email.toLowerCase()).maybeSingle()).data);
 
-/** Request emails to unclaimed managers that were missed (e.g. sent while these emails were off). Last 14 days. */
+/** Catch-up only covers requests made after this moment. Everything before it was testing (Ben, 2 Oct 2026), so it's never emailed. */
+const CATCHUP_FROM = '2026-10-02T05:00:00Z'; // 3pm 2 Oct 2026 Sydney
+
+/** Request emails to unclaimed managers that were missed (e.g. a send failed). Last 14 days, never before CATCHUP_FROM. */
 export async function catchUpUnclaimed(limit = 40) {
   const db = adminClient();
-  const { data, error } = await db.from('quote_request_managers').select('id, manager_slug, quote_requests(suburb, state)').in('status', ['sent', 'viewed']).is('unclaimed_notified_at', null).gte('created_at', ago(14 * 24)).neq('manager_slug', TEST_SLUG).limit(200);
+  const { data, error } = await db.from('quote_request_managers').select('id, manager_slug, quote_requests(suburb, state)').in('status', ['sent', 'viewed']).is('unclaimed_notified_at', null).gte('created_at', ago(14 * 24) > CATCHUP_FROM ? ago(14 * 24) : CATCHUP_FROM).neq('manager_slug', TEST_SLUG).limit(200);
   if (error || !data?.length) return 0;
   const { notifyUnclaimedOfRequest, requestEmailsOn } = await import('@/lib/outreach');
   if (!requestEmailsOn()) return 0;
