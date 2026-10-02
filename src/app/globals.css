@@ -671,3 +671,8 @@ a.kpi:hover { border-color: var(--k); }
 @keyframes nudgePulse { 0%, 100% { transform: none; } 50% { transform: scale(1.012); } }
 @media (prefers-color-scheme: dark) { .prop-bar.nudge { background: #2E2412; } .prop-nudge { background: #3A2A12; color: #F3C27A; border-color: #6B4A1C; } }
 @media (prefers-reduced-motion: reduce) { .prop-bar.nudge { animation: none; } }
+/* Until the four property details are in, the bar is amber from the start (teal once complete); clicking "Add to quote" adds the glow and pulse. */
+.prop-bar:not(.done) { background: #FFF6E8; border-color: #E3A24A; }
+.prop-bar:not(.done) > div:first-child b { color: #7A4504; }
+.prop-bar:not(.done) select[data-empty="1"] { border-color: #E3A24A; }
+@media (prefers-color-scheme: dark) { .prop-bar:not(.done) { background: #2E2412; border-color: #A87428; } .prop-bar:not(.done) > div:first-child b { color: #F3C27A; } }
