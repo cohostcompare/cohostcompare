@@ -37,6 +37,14 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
     } catch { /* none */ }
   }, []);
   const details: PropertyDetails = { type: ptype, beds, availability: avail || null, services, situation };
+  // Keep the search results' "Your property" bar in step with changes made here.
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setLoaded(true); }, []);
+  useEffect(() => {
+    if (!loaded || !avail) return; // only once the owner has filled it in
+    try { localStorage.setItem(PROPERTY_KEY, JSON.stringify({ type: ptype, beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null })); } catch { /* fine */ }
+  }, [loaded, ptype, beds, avail, services]);
+  const searchHref = `/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}), ...(addr.lat != null && addr.lng != null ? { lat: String(addr.lat), lng: String(addr.lng) } : {}) }).toString()}#your-property`;
   const toggleService = (s: string) => setServices(services.includes(s) ? services.filter((x) => x !== s) : [...services, s]);
   const active = managers.filter((m) => !removed.includes(m.slug));
   const located = addr.lat != null && addr.lng != null;
@@ -154,7 +162,10 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
           <b>{unfit.map((u) => u.m.name).join(' and ')} {unfit.length === 1 ? 'doesn’t' : 'don’t'} take on a property like this.</b>
           {unfit.map((u) => <span key={u.m.slug} className="hint">{u.m.name}: {u.why.join(' · ')}</span>)}
           <span className="hint">{covered.length ? `If these details are right, remove ${unfit.length === 1 ? 'them' : 'them'} and your request goes to ${covered.map((m) => m.name).join(', ')}.` : 'If these details are right, search again for managers who take on properties like yours.'} Or change the details above if you&apos;re happy to.</span>
-          {covered.length > 0 && <div><button type="button" className="btn secondary" onClick={() => setRemoved([...removed, ...unfit.map((u) => u.m.slug)])}>Remove {unfit.length === 1 ? unfit[0].m.name : 'them'}</button></div>}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {covered.length > 0 && <button type="button" className="btn secondary" onClick={() => setRemoved([...removed, ...unfit.map((u) => u.m.slug)])}>Remove {unfit.length === 1 ? unfit[0].m.name : 'them'}</button>}
+            <a className="btn secondary" href={searchHref}>Back to search results to change your property</a>
+          </div>
         </div>
       )}
       <label style={L}>Anything else managers should know? (optional)
