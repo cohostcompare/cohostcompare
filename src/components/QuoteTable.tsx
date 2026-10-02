@@ -52,8 +52,8 @@ export default function QuoteTable({ quotes }: { quotes: QuoteCol[] }) {
 
   return (
     <div style={{ display: 'grid', gap: 8 }}>
-      <div style={{ overflowX: 'auto' }}>
-        <table className="qtable">
+      <div style={{ overflowX: 'auto' }} tabIndex={0} role="region" aria-label="Quote comparison" className="scroll-region">
+        <table className={`qtable${multi ? ' multi' : ''}`}>
           {multi && (
             <thead>
               <tr><th scope="col"><span className="sr-only">Item</span></th>{quotes.map((x) => (

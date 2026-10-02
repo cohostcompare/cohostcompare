@@ -57,7 +57,7 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
       {!paid && <p className="hint" style={{ margin: 0 }}>You&apos;re on the Free plan: it includes 4 accepted clients a month, then {feeText} each. <a href="/managers#pricing">Pro</a> includes unlimited clients.</p>}
       {!locked && (paid ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
-          <input className="field" name="template_name" placeholder="Template name, e.g. Standard 2-bed" style={{ maxWidth: 260, minHeight: 38 }} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} />
+          <input className="field" name="template_name" aria-label="Template name" placeholder="Template name, e.g. Standard 2-bed" style={{ maxWidth: 260, minHeight: 38 }} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} />
           <button className="btn secondary small" formAction={tAction} disabled={tPending}>{tPending ? 'Saving…' : 'Save as template'}</button>
           {tState?.ok && <span style={{ color: 'var(--brand)', fontWeight: 600 }}>{tState.ok}</span>}
           {tState?.error && <span role="alert" style={{ color: 'var(--signal)' }}>{tState.error}</span>}

@@ -26,7 +26,7 @@ export default async function Reviews({ params }: { params: Promise<{ slug: stri
           <form action={replyToReview} style={{ display: 'grid', gap: 8 }}>
             <input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="id" value={r.id} />
             <label style={{ display: 'grid', gap: 4 }}><span className="label">Your public reply</span>
-              <textarea name="reply" rows={3} maxLength={2000} defaultValue={r.manager_reply || ''} placeholder="Thank the owner, or respond to any concerns." /></label>
+              <textarea className="field" name="reply" rows={3} maxLength={2000} defaultValue={r.manager_reply || ''} placeholder="Thank the owner, or respond to any concerns." /></label>
             <button className="btn secondary small" type="submit" style={{ justifySelf: 'start' }}>{r.manager_reply ? 'Update reply' : 'Post reply'}</button>
           </form>
         </article>

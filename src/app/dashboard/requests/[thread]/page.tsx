@@ -84,7 +84,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
           <h2>Chat with {first}</h2>
           <span className="hint">{first} gets your message by email and replies here. Owner messages also come to you by email{t.status !== 'accepted' ? ', and their contact details are shared when they accept your quote' : ''}.</span>
         </div>
-        <div className="chat-log">
+        <div className="chat-log" tabIndex={0} role="log" aria-label="Messages">
           {(msgs || []).map((x) => x.sender === 'system' ? (
             <p key={x.id} className="chat-note">{/^Quote request sent\./.test(x.body) ? `${first} sent you this request` : x.body} · {new Date(x.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</p>
           ) : (

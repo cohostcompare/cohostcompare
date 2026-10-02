@@ -26,7 +26,7 @@ function CityFees({ m, city }: { m: Market; city: string }) {
   const rows = m.areaList.filter((a) => a.city === city && a.managers > 0).sort((a, b) => b.managers - a.managers);
   if (!rows.length) return null;
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0} role="region" aria-label="Table, scrolls sideways on small screens">
       <table className="data-table">
         <caption className="hint" style={{ textAlign: 'left', captionSide: 'bottom', paddingTop: 6 }}>Managers running homes within 4 km of each area. Fees are only where the manager publishes one. Nightly rates are estimates from public listings over the last 12 months. Updated {fmtDate(m.asOf)}.</caption>
         <thead><tr><th scope="col">Area</th><th scope="col">Managers</th><th scope="col">Published fees</th><th scope="col">Typical fee</th><th scope="col">Typical nightly rate</th></tr></thead>

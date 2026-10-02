@@ -75,7 +75,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
                 {why.get(m.slug)!.length > 0 && <p className="mismatch">{why.get(m.slug)!.join(' · ')}</p>}
                 <div className="meta">
-                  {m.ownerReviews && <span><b style={{ color: '#B97C00' }}>{m.ownerReviews.avg.toFixed(1)} ★</b> from {m.ownerReviews.count} owner review{m.ownerReviews.count === 1 ? '' : 's'}</span>}
+                  {m.ownerReviews && <span><b style={{ color: 'var(--signal)' }}>{m.ownerReviews.avg.toFixed(1)} ★</b> from {m.ownerReviews.count} owner review{m.ownerReviews.count === 1 ? '' : 's'}</span>}
                   {m.avgRating != null && <span className={sort === 'overall' || (sort === 'rating' && !m.nearbyRating) ? 'sort-hit' : undefined}><b>{m.avgRating.toFixed(2)} ★</b> overall, from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
                   {m.propertyCount != null && <span><b>{m.propertyCount}</b> Airbnb homes in total</span>}
                   {m.avgNightlyRate != null && <span className={sort === 'nightly' ? 'sort-hit' : undefined}><b>A${Math.round(m.avgNightlyRate)}</b> typical nightly rate</span>}
@@ -110,7 +110,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                     {m.reviewCount != null && <div><b>{m.reviewCount.toLocaleString('en-AU')}</b><span>guest reviews</span></div>}
                     {m.licensedAgent && <div><b>Licensed</b><span>real estate agency</span></div>}
                   </div>
-                  {(m.photos?.length ?? 0) > 0 && <div className="gallery">{m.photos!.slice(0, 4).map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>}
+                  {(m.photos?.length ?? 0) > 0 && <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.slice(0, 4).map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>}
                   {m.services.length > 0 && <div><div className="label">Services</div><div className="chips" style={{ marginTop: 6 }}>{m.services.map((s) => <span className="chip" key={s}>{s}</span>)}</div></div>}
                   <div className="actions">
                     <Link className="btn primary" href={profile}>View full profile →</Link>

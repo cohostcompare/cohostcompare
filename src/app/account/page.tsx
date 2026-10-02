@@ -138,7 +138,7 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
                 <summary>Close this request</summary>
                 <form action={withdrawRequest} style={{ display: 'grid', gap: 8, marginTop: 8 }}>
                   <input type="hidden" name="id" value={r.id} />
-                  <input className="field" name="reason" maxLength={300} placeholder="Optional: why, e.g. I've found a manager" />
+                  <input className="field" name="reason" aria-label="Reason for closing (optional)" maxLength={300} placeholder="Optional: why, e.g. I've found a manager" />
                   <button className="btn secondary small" type="submit" style={{ justifySelf: 'start' }}>Close it and let the managers know</button>
                 </form>
               </details>

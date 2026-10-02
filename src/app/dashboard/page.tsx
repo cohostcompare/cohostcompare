@@ -131,8 +131,8 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                     <span className="go">{plan === 'free' ? 'See what’s inside →' : 'Open insights →'}</span>
                   </div>
                   <div className="peek">
-                    <div className={plan === 'free' ? 'locked' : ''}><b>{ins.searches}</b><span>owner searches in your postcodes, last 30 days</span></div>
-                    <div className={plan === 'free' ? 'locked' : ''}><b>{ins.peers}</b><span>other managers covering your postcodes</span></div>
+                    <div className={plan === 'free' ? 'locked' : ''}>{plan === 'free' ? <><b aria-hidden="true">000</b><span className="sr-only">Available with Pro: </span></> : <b>{ins.searches}</b>}<span>owner searches in your postcodes, last 30 days</span></div>
+                    <div className={plan === 'free' ? 'locked' : ''}>{plan === 'free' ? <><b aria-hidden="true">00</b><span className="sr-only">Available with Pro: </span></> : <b>{ins.peers}</b>}<span>other managers covering your postcodes</span></div>
                     <div><b>{ins.reports}</b><span>market report{ins.reports === 1 ? '' : 's'} for your regions</span></div>
                   </div>
                 </Link>
@@ -169,7 +169,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 </div>
                 <div className="meter" aria-hidden="true"><span style={{ width: `${score}%` }} /></div>
                 <p className="hint" style={{ margin: 0 }}>Owners compare fees, terms and photos first, so complete profiles get asked for more quotes.</p>
-                <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}>{label}</li>)}</ul>
+                <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}><span className="sr-only">{ok ? 'Done: ' : 'To do: '}</span>{label}</li>)}</ul>
               </div>
             )}
             <div id="requests" style={{ display: 'grid', gap: 8, scrollMarginTop: 96 }}>

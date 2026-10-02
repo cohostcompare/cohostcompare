@@ -97,7 +97,7 @@ export default async function Thread({ params, searchParams }: { params: P; sear
           <h2>Chat with {t.manager_name}</h2>
           <span className="hint">Ask about fees, availability or how they&apos;d run your place. They get your message by email and reply here, and we email you when they do.</span>
         </div>
-        <div className="chat-log">
+        <div className="chat-log" tabIndex={0} role="log" aria-label="Messages">
           {(msgs || []).map((m) => m.sender === 'system' ? (
             <p key={m.id} className="chat-note">{systemText(m.body, t.manager_name)} · {new Date(m.created_at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}</p>
           ) : (

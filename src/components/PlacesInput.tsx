@@ -84,7 +84,7 @@ const TYPES = {
  * - pick straight away when they choose a suggestion.
  * Falls back to `fallback` if Google can't load.
  */
-export default function PlacesInput({ kind, placeholder, onPick, id, fallback, buttonLabel }: { kind: 'address' | 'suburb' | 'any'; placeholder: string; onPick: (p: PickedPlace) => void; id?: string; fallback?: React.ReactNode; buttonLabel?: string }) {
+export default function PlacesInput({ kind, placeholder, onPick, id, fallback, buttonLabel, label }: { kind: 'address' | 'suburb' | 'any'; placeholder: string; onPick: (p: PickedPlace) => void; id?: string; fallback?: React.ReactNode; buttonLabel?: string; label?: string }) {
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
   const lib = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -168,7 +168,7 @@ export default function PlacesInput({ kind, placeholder, onPick, id, fallback, b
     <div className="pl">
       <div className="pl-row">
         <div className="pl-box">
-          <input id={id} className="field" type="text" autoComplete="off" placeholder={status === 'loading' ? 'Loading…' : placeholder}
+          <input id={id} aria-label={label} className="field" type="text" autoComplete="off" placeholder={status === 'loading' ? 'Loading…' : placeholder}
             role="combobox" aria-expanded={open && items.length > 0} aria-controls={listId} aria-autocomplete="list"
             aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
             value={text} disabled={status === 'loading'}

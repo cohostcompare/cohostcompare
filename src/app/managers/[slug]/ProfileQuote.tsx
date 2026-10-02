@@ -50,7 +50,7 @@ export default function ProfileQuote({ slug, name, query, requirements, fresh }:
         <Link className="btn secondary" href={back}>← Back to results</Link>
         <p className="hint" style={{ margin: 0 }}>Your contact details are only shared with a manager if you accept their quote.</p>
       </div>
-      <QuoteBar picks={complete ? picks : []} query={query} backHref={complete && picks.length && picks.length < 5 ? back : undefined} />
+      <QuoteBar picks={complete ? picks : []} query={query} backHref={complete && picks.length && picks.length < 5 ? back : undefined} emptyAction={{ label: `Add ${name.length > 22 ? 'this manager' : name} ↓`, href: '#add-to-quote' }} />
     </>
   );
 }

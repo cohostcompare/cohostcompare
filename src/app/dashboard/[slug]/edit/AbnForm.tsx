@@ -12,7 +12,7 @@ export default function AbnForm({ slug, abn, verified }: { slug: string; abn: st
       <p className="hint" style={{ margin: 0 }}>Enter your ABN. We check it on the Australian Business Register, and if the registered name matches your business, your profile shows a <b>✓ Verified business</b> badge. Your ABN itself isn&apos;t shown publicly.</p>
       {verified && <p style={{ margin: 0, color: 'var(--brand)', fontWeight: 700 }}>✓ Verified</p>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <input className="field" name="abn" defaultValue={abn || ''} inputMode="numeric" placeholder="11-digit ABN" style={{ maxWidth: 240 }} />
+        <input className="field" name="abn" aria-label="ABN" defaultValue={abn || ''} inputMode="numeric" placeholder="11-digit ABN" style={{ maxWidth: 240 }} />
         <button className="btn secondary" type="submit" disabled={pending}>{pending ? 'Checking…' : 'Save and verify'}</button>
       </div>
       {state?.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}

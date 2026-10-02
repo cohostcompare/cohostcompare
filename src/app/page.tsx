@@ -45,19 +45,19 @@ export default function Home() {
         </div>
         <ol>
           <li>
-            <span className="num">01</span>
+            <span className="num" aria-hidden="true">01</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
             <h3>Search</h3>
             <p>Type your address. See every manager running homes near you, not just the ones who advertise.</p>
           </li>
           <li>
-            <span className="num">02</span>
+            <span className="num" aria-hidden="true">02</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
             <h3>Compare</h3>
             <p>Fees, guest ratings, homes nearby and platforms, side by side, from the same data for everyone.</p>
           </li>
           <li>
-            <span className="num">03</span>
+            <span className="num" aria-hidden="true">03</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
             <h3>Choose</h3>
             <p>Describe your property once. Get quotes back in one format, ask questions, and accept the best fit.</p>

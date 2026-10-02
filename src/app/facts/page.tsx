@@ -56,7 +56,7 @@ export default async function Facts() {
 
       <section style={{ display: 'grid', gap: 10 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>By city</h2>
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Figures by city">
           <table className="data-table">
             <thead><tr><th scope="col">City or region</th><th scope="col">Areas</th><th scope="col">Managers</th><th scope="col">Published fees</th><th scope="col">Typical fee</th><th scope="col">Typical nightly rate</th></tr></thead>
             <tbody>{m.cities.map((c) => (
@@ -68,7 +68,7 @@ export default async function Facts() {
 
       <section style={{ display: 'grid', gap: 10 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>By area</h2>
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Figures by area">
           <table className="data-table">
             <thead><tr><th scope="col">Area</th><th scope="col">Managers</th><th scope="col">Homes they run nearby</th><th scope="col">Published fees</th><th scope="col">Typical fee</th><th scope="col">Typical nightly rate</th><th scope="col">Guest rating nearby</th></tr></thead>
             <tbody>{areas.map((a) => (

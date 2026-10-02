@@ -63,7 +63,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
     knowsAbout: ['Short-term rental management', 'Airbnb management', ...m.services].slice(0, 12),
   };
   return (
-    <main className="profile" style={{ paddingBottom: 120 }}>
+    <main className="profile" style={{ paddingBottom: 'calc(var(--qb-h, 120px) + 24px)' }}>
       <JsonLd data={[ld, breadcrumbs([['Home', '/'], ['Managers', '/areas'], [m.name, `/managers/${m.slug}`]])]} />
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -112,7 +112,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
 
         {(m.photos?.length ?? 0) > 0 && (
           <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
-            <div className="gallery">{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
+            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
             <p className="hint" style={{ margin: 0 }}>Photos supplied by {m.name}.</p>
           </section>
         )}
@@ -171,7 +171,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
         {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>
 
-      <aside className="sticky">
+      <aside className="sticky" id="add-to-quote" style={{ scrollMarginTop: 80 }}>
         <ProfileQuote slug={m.slug} name={m.name} query={back.toString()} requirements={reqs ?? null} fresh={isAdminEmail(user?.email)} />
       </aside>
     </main>
