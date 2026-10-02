@@ -652,7 +652,9 @@ a.kpi:hover { border-color: var(--k); }
 .sort-row label { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; }
 .sort-row select { width: auto; min-width: 250px; }
 .cmp { table-layout: fixed; }
-.cmp thead th:first-child, .cmp tbody th { width: 190px; }
+.cmp thead th:first-child, .cmp tbody th { width: 160px; }
+.cmp tbody th { min-width: 0; }
+.cmp th, .cmp td { overflow-wrap: break-word; }
 .sort-hit { background: #FFF1DC; color: #7A4504; border-radius: 6px; padding: 0 5px; }
 @media (prefers-color-scheme: dark) { .sort-hit { background: #3A2A12; color: #F3C27A; } }
 .btn.btn-big { min-height: 52px; padding: 0 26px; font-size: 17px; box-shadow: 0 6px 18px color-mix(in srgb, var(--brand) 35%, transparent); }

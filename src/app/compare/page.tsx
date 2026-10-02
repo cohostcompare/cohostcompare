@@ -82,7 +82,7 @@ export default async function Compare({ searchParams }: { searchParams: SP }) {
       </div>
       {!ms.length ? <p className="panel" style={{ margin: 0 }}>Nothing to compare yet. <Link href={results}>Pick managers from your results</Link>.</p> : (
         <div className="cmp-wrap">
-          <table className="cmp" style={{ minWidth: 190 + ms.length * 190 }}>
+          <table className="cmp" style={{ minWidth: 160 + ms.length * 150 }}>
             <thead>
               <tr>
                 <th scope="col" className="cmp-corner"><span className="hint">{ms.length} manager{ms.length === 1 ? '' : 's'}</span></th>
