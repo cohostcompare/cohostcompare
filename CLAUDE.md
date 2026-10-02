@@ -9,12 +9,12 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Commits on this repo are authored as Claude; the GitHub app is installed on the org.
 
 ## Services
-- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–021 so far). RLS on; server uses the secret key via `adminClient()`.
+- Supabase (Sydney), project hkntldmrckaosytpjakw. SQL migrations in `supabase/00N_*.sql`, run by hand in the SQL editor (001–022 so far; 022 = owner extras, onboarding, unclaimed request tracking). RLS on; server uses the secret key via `adminClient()`.
 - Resend sends from hello@ (`src/lib/email.ts`, branded HTML). Supabase Auth email also goes through Resend.
 - Google Maps JS (Places API New) in the browser; AirROI API for listing data (derived, aggregated figures only, attributed "Data source: AirROI (www.airroi.com)"; never show listing-level data or Airbnb photos).
 - Google Ads: tag AW-18486166646 (`src/components/GoogleTag.tsx`, production only); "Quote request sent" conversion fires once per request on /account?sent=&r= (`QuoteSentConversion.tsx`, label in `src/lib/ads.ts`). Search campaign, no Display/partners; enhanced conversions off.
 - Anthropic API (claude-haiku-4-5) for the rules Q&A at `/api/ask-rules`, grounded only on `src/lib/rules.ts`.
-- Vercel env: AIRROI_API_KEY, ADMIN_TOKEN, SUPABASE_SECRET_KEY, RESEND_API_KEY, CRON_SECRET, ANTHROPIC_API_KEY, ABN_LOOKUP_GUID. Optional switches: OUTREACH_ENABLED=1 (manager outreach, paused until Ben says), INBOUND_DOMAIN + RESEND_INBOUND_SECRET (email reply tracking), CLICKSEND_USERNAME + CLICKSEND_API_KEY + SMS_FROM (SMS alerts).
+- Vercel env: AIRROI_API_KEY, ADMIN_TOKEN, SUPABASE_SECRET_KEY, RESEND_API_KEY, CRON_SECRET, ANTHROPIC_API_KEY, ABN_LOOKUP_GUID. Switches: manager outreach sequence starts automatically 8am Tue 6 Oct 2026 Sydney (`OUTREACH_START` in `src/lib/outreach.ts`; OUTREACH_ENABLED=0 stops it, =1 forces on); request emails to unclaimed managers are on unless REQUEST_EMAILS=0. Optional: INBOUND_DOMAIN + RESEND_INBOUND_SECRET (email reply tracking), CLICKSEND_USERNAME + CLICKSEND_API_KEY + SMS_FROM (SMS alerts).
 - Reply tracking (`src/lib/inbound.ts`, `/api/inbound`): conversation emails carry a signed Reply-To on INBOUND_DOMAIN; Resend posts `email.received`, the reply is added to the thread. Outreach replies stop the sequence.
 - Error alerts: `src/instrumentation.ts` → `src/lib/alerts.ts` emails hello@ (production only, max once per 6h per error). Never put secrets in chat or code.
 - Daily cron `/api/cron/daily` (vercel.json, production only): owner/manager nudges and the hello@ digest.
@@ -46,6 +46,11 @@ Neutral marketplace where Australian property owners compare short-term-rental (
 - Shortlist comparison /compare?managers=…&(search params): 2–5 picked managers in columns (fee, homes and rating nearby, ratings, owner reviews, nightly rate, signed-in-only setup/term/notice/cleaning/owner stays, platforms, services, requirements), factual tags only (lowest fee, most homes nearby, highest rating nearby), remove ×, add more, request quotes. Linked from the QuoteBar ("Compare N") and the quote form, which also has "Back to results to add more managers".
 - Declining a request needs at least one standard reason (`src/lib/declineReasons.ts`) and a note; both go to the owner.
 - No paid placement anywhere. Never gate the verified badge, visibility in results or lead volume behind payment.
+
+- Owner extras (`src/app/account/owner-actions.ts`, `src/lib/ownerJobs.ts`, SQL 022): close a request (threads → withdrawn, managers told), "email me when new managers cover it" (weekly), self-serve account deletion at /account/delete (blocked for manager members), one reminder for unsent quote drafts (`quote_drafts`), daily catch-up of missed request emails to unclaimed managers (14 days).
+- Manager onboarding (`src/lib/onboarding.ts`, daily cron): 3 emails at days 2, 6, 12 after claiming, at least 3 days apart; managers claimed 14+ days before 022 were marked done.
+- Admin: /admin/owners (owners list from quote requests) and /admin/revenue (unlocks by month, Pro MRR snapshot).
+- SEO and AI: /guides (content in `src/lib/guides.tsx`, live fee figures), /rules/[state], /facts (live dated figures), /llms.txt, area pages with intro + FAQ. Live figures from `src/lib/market.ts` (cached 6h; only figures already public: manager counts, published fees, homes nearby, nightly rate, rating; never revenue/occupancy, which are a paid perk). JSON-LD via `src/components/JsonLd.tsx` + `src/lib/seo.ts` (breadcrumbs, FAQPage, ItemList, Article, Organization on profiles; never star ratings). One positioning line: `POSITIONING` in `src/lib/seo.ts`. Share images via `src/lib/og.tsx`. Every indexable page sets `alternates.canonical`.
 
 ## Style
 Plain Australian English, short sentences, sentence case. Brand: teal #0F5E57, ink #10302F, Bricolage Grotesque + Figtree. Photos: Unsplash via `src/components/Photo.tsx` (no landmarks with image-use restrictions).

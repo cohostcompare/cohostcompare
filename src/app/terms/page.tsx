@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Terms of use', description: 'The terms for using CoHostCompare, for property owners and short-term rental managers.' };
+export const metadata: Metadata = { title: 'Terms of use', description: 'The terms for using CoHostCompare, for property owners and short-term rental managers.', alternates: { canonical: '/terms' } };
 
 export default function Terms() {
   return (

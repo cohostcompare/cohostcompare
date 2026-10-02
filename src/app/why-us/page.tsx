@@ -4,6 +4,7 @@ import Photo from '@/components/Photo';
 
 export const metadata: Metadata = {
   title: 'Why use us',
+  alternates: { canonical: '/why-us' },
   description: 'A neutral, transparent way to compare short-term rental managers: every manager, every platform, real performance data and no pay-to-rank.',
 };
 

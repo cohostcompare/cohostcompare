@@ -1,7 +1,26 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd from '@/components/JsonLd';
+import { POSITIONING, faqPage } from '@/lib/seo';
 import AddressSearch from '@/components/AddressSearch';
 import HeroCarousel from '@/components/HeroCarousel';
 import Photo from '@/components/Photo';
+
+export const metadata: Metadata = {
+  title: { absolute: 'CoHostCompare: compare Airbnb and short-term rental managers in Australia' },
+  description: 'Compare the Airbnb and short-term rental managers who cover your address: fees, guest ratings and homes they run nearby, side by side. Request up to five quotes free. Neutral: no paid rankings.',
+  alternates: { canonical: '/' },
+};
+
+const faqs: [string, string][] = [
+  ['What is CoHostCompare?', POSITIONING],
+  ['Is it free for owners?', 'Yes. Owners never pay. Searching, comparing and requesting quotes are free, and there are no sales calls: managers reply in your inbox here.'],
+  ['How do you decide which managers cover my address?', 'A manager covers your address if they already run at least one short-term rental within 4 km of it, based on public listing data. Some also cover areas they list on their own website.'],
+  ['Can managers pay to rank higher?', 'No. No manager can pay for placement, ranking, ratings or badges. You choose how results are sorted, for example by guest rating near you or homes nearby.'],
+  ['Where do the ratings and home counts come from?', 'From public guest ratings on the short-term rental listings each manager runs, over the last 12 months, via AirROI. They are estimates, and we never show individual listings.'],
+  ['When does a manager get my contact details?', 'Only after you accept their quote. Until then you message them through CoHostCompare.'],
+  ['Which areas do you cover?', 'Sydney, Melbourne and holiday areas across New South Wales and Victoria, from Byron Bay and the Blue Mountains to the Great Ocean Road and Daylesford. More areas are coming.'],
+];
 
 export default function Home() {
   return (
@@ -84,6 +103,15 @@ export default function Home() {
           <p style={{ margin: 0, color: 'var(--muted)' }}>We&apos;re not a manager, and we don&apos;t earn more when you pick one over another. Every manager&apos;s figures come from the same public data, shown the same way, and every quote comes back in the same format.</p>
           <p style={{ margin: 0 }}><Link href="/why-us">Why use us →</Link></p>
         </div>
+      </section>
+
+      <section className="band" aria-labelledby="home-faq" style={{ maxWidth: 820 }}>
+        <JsonLd data={faqPage(faqs)} />
+        <h2 id="home-faq" style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 12px' }}>Common questions</h2>
+        <div className="faq-list">
+          {faqs.map(([q, a]) => <details key={q} className="faq"><summary>{q}</summary><p>{a}</p></details>)}
+        </div>
+        <p style={{ margin: '16px 0 0' }}><Link href="/guides">Guides for owners →</Link> · <Link href="/facts">Market facts →</Link></p>
       </section>
     </main>
   );

@@ -4,6 +4,7 @@ import Photo from '@/components/Photo';
 
 export const metadata: Metadata = {
   title: 'How it works',
+  alternates: { canonical: '/how-it-works' },
   description: 'Find, compare and get quotes from short-term rental managers who cover your property, in one place and without sales calls.',
 };
 

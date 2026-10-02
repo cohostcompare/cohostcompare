@@ -678,3 +678,31 @@ a.kpi:hover { border-color: var(--k); }
 @media (prefers-color-scheme: dark) { .prop-bar:not(.done) { background: #2E2412; border-color: #A87428; } .prop-bar:not(.done) > div:first-child b { color: #F3C27A; } }
 .req-foot { display: flex; gap: 10px 20px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; border-top: 1px solid var(--line); padding: 10px 20px 14px; }
 .req-close summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+
+/* Guides, rules and facts pages */
+.prose { display: grid; gap: 12px; font-size: 17px; line-height: 1.65; min-width: 0; }
+.prose h2 { font-size: clamp(22px, 3vw, 28px); margin: 18px 0 0; }
+.prose h3 { font-size: 19px; margin: 8px 0 0; }
+.prose p, .prose ul, .prose ol { margin: 0; }
+.prose ul, .prose ol { padding-left: 22px; display: grid; gap: 6px; }
+.guide-stat { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.guide-stat > div { background: var(--tint); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; }
+.guide-stat b { font-size: 26px; font-family: var(--display, inherit); color: var(--brand); }
+.guide-stat span { font-size: 14px; color: var(--muted); line-height: 1.35; }
+.guide-note { background: var(--tint); border-radius: 10px; padding: 8px 12px; font-size: 15px; }
+.guide-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.guide-card { display: grid; gap: 8px; text-decoration: none; color: inherit; align-content: start; transition: border-color .15s, transform .15s; }
+.guide-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+.guide-card b { font-size: 20px; color: var(--ink, inherit); }
+.guide-card span { color: var(--muted); font-size: 15px; }
+.guide-card .more { color: var(--brand); font-weight: 700; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 12px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.data-table th, .data-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.data-table thead th { background: var(--tint); font-size: 13px; text-transform: uppercase; letter-spacing: .03em; }
+.data-table tbody th { font-weight: 600; }
+.data-table caption { padding: 6px 12px 10px; }
+details.faq { border-top: 1px solid var(--line); padding-top: 10px; }
+details.faq summary { cursor: pointer; font-weight: 700; font-size: 17px; }
+details.faq p { margin: 6px 0 0; color: var(--muted); }
+.faq-list { display: grid; gap: 10px; }

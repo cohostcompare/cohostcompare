@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Privacy policy', description: 'How CoHostCompare collects, uses and protects personal information.' };
+export const metadata: Metadata = { title: 'Privacy policy', description: 'How CoHostCompare collects, uses and protects personal information.', alternates: { canonical: '/privacy' } };
 
 export default function Privacy() {
   return (

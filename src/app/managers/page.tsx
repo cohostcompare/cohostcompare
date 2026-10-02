@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { faqPage } from '@/lib/seo';
 import ManagerSignup from '@/components/ManagerSignup';
 import Photo from '@/components/Photo';
 import InterestForm from '@/app/interest/InterestForm';
@@ -6,6 +8,7 @@ import { SUCCESS_FEE_TEXT, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, founding
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
+  alternates: { canonical: '/managers' },
   description: 'Get found by property owners looking for a short-term rental manager in your area. Free listing during launch.',
 };
 
@@ -95,6 +98,7 @@ export default function ForManagers() {
         </div>
       </section>
       <section style={{ borderTop: '1px solid var(--line)', paddingBlock: 48, maxWidth: 760 }}>
+        <JsonLd data={faqPage(faqs)} />
         <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 20px' }}>Questions managers ask</h2>
         <div style={{ display: 'grid', gap: 18 }}>
           {faqs.map(([q, a]) => (

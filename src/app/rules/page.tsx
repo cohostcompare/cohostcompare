@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import AskRules from '@/components/AskRules';
 import Photo from '@/components/Photo';
 import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Short-term rental rules in your area',
   description: 'Plain-English guide to Airbnb and short-term rental rules in each Australian state: registration, night caps, levies and strata rules.',
+  alternates: { canonical: '/rules' },
 };
 
 type SP = Promise<{ q?: string }>;
@@ -37,17 +39,18 @@ export default async function Rules({ searchParams }: { searchParams: SP }) {
       )}
 
       <nav aria-label="States" className="chips">
-        {RULES.map((r) => <a key={r.code} className="chip" href={`#${r.code}`} style={{ textDecoration: 'none' }}>{r.name}</a>)}
+        {RULES.map((r) => <a key={r.code} className="chip" href={`/rules/${r.code}`} style={{ textDecoration: 'none' }}>{r.name}</a>)}
       </nav>
 
       {RULES.map((r) => (
         <section key={r.code} id={r.code} className="panel" style={{ display: 'grid', gap: 10, scrollMarginTop: 96 }}>
-          <h2 style={{ fontSize: 24, margin: 0 }}>{r.name}</h2>
+          <h2 style={{ fontSize: 24, margin: 0 }}><Link href={`/rules/${r.code}`} style={{ color: 'inherit' }}>{r.name}</Link></h2>
           <p style={{ margin: 0, fontWeight: 500 }}>{r.summary}</p>
           <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
             {r.points.map((p) => <li key={p}>{p}</li>)}
           </ul>
           {r.watch && <p style={{ margin: 0, background: 'var(--tint)', borderRadius: 10, padding: '8px 12px', fontSize: 14 }}><b>Coming up:</b> {r.watch.join(' ')}</p>}
+          <p style={{ margin: 0 }}><Link href={`/rules/${r.code}`}>{r.name} rules in full →</Link></p>
           <p className="hint" style={{ margin: 0 }}>Official sources: {r.sources.map((s, i) => <span key={s.url}>{i ? '; ' : ''}<a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></span>)}</p>
         </section>
       ))}

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
+import JsonLd from '@/components/JsonLd';
+import { SITE, breadcrumbs } from '@/lib/seo';
 import OwnerReviews from '@/components/OwnerReviews';
 import { publishedReviews, stars } from '@/lib/reviews';
 import TrustBadges from '@/components/TrustBadges';
@@ -24,6 +26,7 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
   return {
     title: `${m.name}: short-term rental manager in ${m.cities.join(' and ')}`,
     description: `${m.name}: ${m.propertyCount ? `${m.propertyCount} homes tracked` : 'short-term rental manager'}${m.avgRating ? `, rated ${m.avgRating.toFixed(2)} by guests` : ''}. Compare with other managers and request a quote.`,
+    alternates: { canonical: `/managers/${m.slug}` },
   };
 }
 
@@ -49,8 +52,19 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const { describe } = await import('@/lib/requirements');
   const ravg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: m.name,
+    url: `${SITE}/managers/${m.slug}`,
+    ...(m.about || m.tagline ? { description: (m.about || m.tagline).slice(0, 500) } : {}),
+    ...(m.logoUrl ? { logo: m.logoUrl } : {}),
+    areaServed: [...new Set([...m.cities, ...areas.slice(0, 10).map((x) => x.area)])].map((n) => ({ '@type': 'Place', name: n })),
+    knowsAbout: ['Short-term rental management', 'Airbnb management', ...m.services].slice(0, 12),
+  };
   return (
     <main className="profile" style={{ paddingBottom: 120 }}>
+      <JsonLd data={[ld, breadcrumbs([['Home', '/'], ['Managers', '/areas'], [m.name, `/managers/${m.slug}`]])]} />
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
