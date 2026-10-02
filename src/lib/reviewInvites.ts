@@ -2,7 +2,6 @@ import 'server-only';
 import { TEST_SLUG } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { unsubscribeUrl } from '@/lib/outreach';
-import { SOCIAL } from '@/lib/social';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
@@ -19,6 +18,7 @@ const DAY = 86400e3;
 const ago = (d: number) => new Date(Date.now() - d * DAY).toISOString();
 const first = (n: unknown) => String(n || '').split(' ')[0] || 'there';
 export const TRUSTPILOT_WRITE = 'https://www.trustpilot.com/evaluate/cohostcompare.com';
+export const PRODUCTREVIEW_WRITE = 'https://www.productreview.com.au/listings/cohostcompare/write-review';
 
 type T = { id: string; manager_name: string; manager_slug: string; status: string; accepted_at: string | null };
 type R = { id: string; created_at: string; owner_name: string; owner_email: string; suburb: string | null; quote_request_managers: T[] };
@@ -29,7 +29,7 @@ export async function sendReviewInvites(limit = 40) {
     .select('id, created_at, owner_name, owner_email, suburb, quote_request_managers(id, manager_name, manager_slug, status, accepted_at)')
     .is('review_invited_at', null).gte('created_at', ago(90)).lte('created_at', ago(7)).order('created_at').limit(300);
   if (error || !data?.length) return 0; // error = 017 not run yet
-  const productReview = SOCIAL.find((s) => s.name === 'ProductReview')?.url;
+  const productReview = PRODUCTREVIEW_WRITE;
   let sent = 0;
   for (const r of data as unknown as R[]) {
     if (sent >= limit) break;

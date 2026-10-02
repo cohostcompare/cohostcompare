@@ -2,7 +2,7 @@
 export const SOCIAL: { name: string; url: string }[] = [
   { name: 'LinkedIn', url: 'https://www.linkedin.com/company/cohostcompare' },
   { name: 'Trustpilot', url: 'https://www.trustpilot.com/review/cohostcompare.com' },
-  // { name: 'ProductReview', url: 'https://www.productreview.com.au/listings/cohostcompare' },
+  { name: 'ProductReview', url: 'https://www.productreview.com.au/listings/cohostcompare' },
 ];
 
 export const ORG_JSONLD = {
