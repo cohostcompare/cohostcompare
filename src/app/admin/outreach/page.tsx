@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
-import { DAILY_CAP, SEQUENCE, outreachOn, type Ctx } from '@/lib/outreach';
+import { DAILY_CAP, OUTREACH_START, SEQUENCE, outreachOn, requestEmailsOn, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
 import { addContact, approveResearched, sendNow, setStatus, testEmail } from './actions';
@@ -35,7 +35,9 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
         <h1 style={{ fontSize: 34, margin: 0 }}>Manager outreach</h1>
         <p className="hint" style={{ margin: '4px 0 0' }}>Five emails over about 24 days inviting unclaimed managers to claim their profile. Sent automatically each morning, up to {DAILY_CAP} a day. Stops when they claim, unsubscribe or you mark them as replied (their replies land in hello@). Only add addresses a business publishes on its own website.</p>
       </div>
-      {!outreachOn() && <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>Outreach is paused.</b> No emails go to managers (including the instant &ldquo;an owner wants a quote&rdquo; email) until OUTREACH_ENABLED is set to 1 in Vercel. Approved contacts stay queued. Test emails to hello@ still work.</div>}
+      {!outreachOn() ? (
+        <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>The outreach sequence is paused{process.env.OUTREACH_ENABLED === '0' ? '' : ` until ${new Date(OUTREACH_START).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}`}.</b> Approved contacts stay queued until then. {requestEmailsOn() ? 'The instant “an owner wants a quote” email to unclaimed managers is on.' : 'The instant “an owner wants a quote” email is also off (REQUEST_EMAILS=0).'} Test emails to hello@ still work.</div>
+      ) : <div role="status" className="panel" style={{ background: 'var(--tint)' }}><b>Outreach is on.</b> Up to {DAILY_CAP} emails a day go out with the daily run. Set OUTREACH_ENABLED=0 in Vercel to stop it.</div>}
       {error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>Run supabase/009_launch_features.sql first. ({error.message})</div>}
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}

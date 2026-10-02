@@ -13,8 +13,21 @@ import { adminClient } from '@/lib/supabase/server';
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
 const GAPS_DAYS = [3, 4, 7, 10]; // after emails 1-4
 export const DAILY_CAP = Number(process.env.OUTREACH_DAILY_CAP || 30);
-/** Master switch: nothing is sent to managers unless OUTREACH_ENABLED=1 in Vercel. */
-export const outreachOn = () => process.env.OUTREACH_ENABLED === '1';
+/*
+ Two switches:
+ - The cold outreach sequence (5 emails inviting managers to claim) starts on OUTREACH_START (Ben: Tuesday 6 Oct 2026,
+   after the long weekend; the daily cron runs about 9am Sydney). OUTREACH_ENABLED=0 in Vercel stops it at any time; =1 forces it on.
+ - Request emails ("an owner wants a quote from you") to unclaimed managers are on now: they're triggered by a real
+   owner's request. REQUEST_EMAILS=0 in Vercel turns them off.
+*/
+export const OUTREACH_START = '2026-10-05T21:00:00Z'; // 8am Tuesday 6 October, Sydney (AEDT)
+export const outreachOn = () => {
+  const v = (process.env.OUTREACH_ENABLED || '').trim();
+  if (v === '0') return false;
+  if (v === '1') return true;
+  return Date.now() >= new Date(OUTREACH_START).getTime();
+};
+export const requestEmailsOn = () => (process.env.REQUEST_EMAILS || '').trim() !== '0';
 
 export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; suburbs: string[]; waiting: number; email: string; source: string; contactId?: string };
 
@@ -120,7 +133,7 @@ export async function sendOutreachBatch(limit = DAILY_CAP) {
 
 /** When an owner requests a quote from an unclaimed manager, tell that manager's outreach contacts straight away. */
 export async function notifyUnclaimedOfRequest(slug: string, where: string): Promise<number> {
-  if (!outreachOn()) return 0;
+  if (!requestEmailsOn()) return 0;
   const db = adminClient();
   const { data: m } = await db.from('managers').select('id, name, claimed').eq('slug', slug).maybeSingle();
   if (!m || m.claimed) return 0;
