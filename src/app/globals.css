@@ -733,3 +733,11 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
   .req-row { grid-template-columns: minmax(0, 1fr); }
   .req-row > :nth-child(even) { text-align: left !important; }
 }
+
+.slow-note { margin: 4px 0 0; font-size: 13px; color: var(--signal); font-weight: 600; }
+.slow-dot { color: var(--signal); font-weight: 700; }
+
+.req-why { display: grid; gap: 6px; }
+.req-fix summary { cursor: pointer; font-weight: 600; color: var(--brand); }
+.req-fix-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.req-fix-form .field { flex: 1 1 220px; min-height: 38px; }

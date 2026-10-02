@@ -31,7 +31,7 @@ export default async function Compare({ searchParams }: { searchParams: SP }) {
     const m = near ?? (await publicManager(s));
     if (m) found.push(m as M);
   }
-  const ms = await withRequirements(await withReviewSummaries(found));
+  const ms = await (await import('@/lib/reach')).withReach(await withRequirements(await withReviewSummaries(found)));
   const user = await currentUser();
   const gated = new Map<string, GatedDetails | null>();
   if (user) for (const m of ms) gated.set(m.slug, await gatedDetails(m.slug));
@@ -93,6 +93,7 @@ export default async function Compare({ searchParams }: { searchParams: SP }) {
                       <div className="av" aria-hidden="true" style={m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : undefined}>{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
                       <Link href={`/managers/${m.slug}?${keep.toString()}`} className="cmp-name">{m.name}</Link>
                       {(m.claimed || m.verified) && <TrustBadges m={m} compact />}
+                      {m.slowReply && <span className="slow-note">May be slow to reply</span>}
                     </div>
                   </th>
                 ))}

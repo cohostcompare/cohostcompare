@@ -50,6 +50,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const reviews = await publishedReviews(m.slug);
   const reqs = (await (await import('@/lib/requirementsServer')).requirementsFor([m.slug])).get(m.slug);
   const { describe } = await import('@/lib/requirements');
+  const slow = (await (await import('@/lib/reach')).withReach([m]))[0].slowReply;
   const ravg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
   const ld = {
@@ -74,6 +75,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               {m.tagline}
             </p>
             <div style={{ marginTop: 8 }}><TrustBadges m={m} full /></div>
+            {slow && <p className="slow-note" style={{ marginTop: 6 }}>Not on CoHostCompare yet, so may be slow to reply. We'll still pass your request on.</p>}
             {reviews.length > 0 && <a href="#owner-reviews" style={{ display: 'inline-block', marginTop: 6, fontWeight: 600 }}><span className="stars" style={{ color: '#E8A317' }} aria-hidden="true">{stars(ravg)}</span> {ravg.toFixed(1)} from {reviews.length} owner review{reviews.length === 1 ? '' : 's'}</a>}
           </div>
         </div>

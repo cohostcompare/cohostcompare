@@ -29,6 +29,7 @@ export type PublicManager = {
   replies?: number;
   verified?: boolean; // ABN checked on the Australian Business Register
   claimed: boolean;
+  slowReply?: boolean; // unclaimed and we have no email for them (src/lib/reach.ts)
   dataAsOf: string | null;
   logoUrl?: string | null;
   photos?: string[];

@@ -71,6 +71,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                   e.preventDefault(); setOpen(isOpen ? null : m.slug);
                 }}>{m.name}</Link></h2>
                 {(m.claimed || m.verified) && <div style={{ margin: '4px 0 2px' }}><TrustBadges m={m} compact /></div>}
+                {m.slowReply && <p className="slow-note">Not on CoHostCompare yet, so may be slow to reply</p>}
                 {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}><span className={sort === 'homes' ? 'sort-hit' : undefined}><b>{m.nearby}</b> home{m.nearby === 1 ? '' : 's'} they run near you</span>{m.nearbyRating ? <> · <span className={sort === 'rating' ? 'sort-hit' : undefined}>{m.nearbyRating.toFixed(2)} ★ guest rating nearby</span></> : ''}</p>}
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
                 {why.get(m.slug)!.length > 0 && <p className="mismatch">{why.get(m.slug)!.join(' · ')}</p>}

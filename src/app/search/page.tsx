@@ -19,7 +19,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
   const found = hasPoint ? await managersForArea(lat, lng, postcode) : postcode ? await managersForPostcode(postcode) : [];
   const { withReviewSummaries } = await import('@/lib/reviews');
   const { withRequirements } = await import('@/lib/requirementsServer');
-  const managers = await withRequirements(await withReviewSummaries(await withTestForAdmin(found)));
+  const managers = await (await import('@/lib/reach')).withReach(await withRequirements(await withReviewSummaries(await withTestForAdmin(found))));
   await bump(found.map((m) => m.id), 'search');
   if (postcode) await logSearch(postcode, sp.suburb);
   if (postcode || hasPoint) await logFunnel('search');

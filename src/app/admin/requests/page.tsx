@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin';
 import { TEST_SLUG } from '@/lib/data';
 import { CATCHUP_FROM, unclaimedReach, requestEmailsOn } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
-import { deleteRequest } from './actions';
+import { addEmailAndNotify, cantReach, deleteRequest } from './actions';
 
 export const metadata: Metadata = { title: 'Quote requests', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 */
 const OVERDUE_HOURS = 48;
 
-type SP = Promise<{ f?: string; d?: string; q?: string }>;
+type SP = Promise<{ f?: string; d?: string; q?: string; done?: string; error?: string }>;
 type T = { id: string; manager_slug: string; manager_name: string; status: string; created_at: string; accepted_at: string | null; quoted_at: string | null; manager_reminded_at: string | null; unclaimed_notified_at?: string | null };
 type R = { id: string; created_at: string; owner_name: string; owner_email: string; owner_phone: string | null; address: string | null; suburb: string | null; postcode: string; property_type: string | null; bedrooms: number | null; source: string | null; quote_request_managers: T[] };
 
@@ -98,6 +98,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
         <select className="field" name="d" defaultValue={days} style={{ width: 'auto' }}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="all">All time</option></select>
         <button className="btn secondary" type="submit">Filter</button>
       </form>
+      {(sp.done || sp.error) && <p role="status" className="panel" style={{ margin: 0, borderColor: sp.error ? 'var(--signal)' : 'var(--brand)' }}>{sp.done || sp.error}</p>}
       {error && <p className="panel" style={{ margin: 0 }}>Couldn&apos;t load requests: {error.message}</p>}
       <p className="hint" style={{ margin: 0 }}>{rows.length} request{rows.length === 1 ? '' : 's'}. Overdue means a manager hasn&apos;t quoted, declined or replied {OVERDUE_HOURS} hours after the request. Claimed managers get a reminder email at that point; unclaimed ones appear in your daily email to chase by hand. &ldquo;Manager not told&rdquo; means an unclaimed manager couldn&apos;t be emailed about the request at all, with the reason on each one.</p>
       {rows.map((r) => (
@@ -127,7 +128,28 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
                   {!claimed.has(t.manager_slug) && t.manager_slug !== TEST_SLUG && <span className="st st-lost" title="Not claimed: they can't see the request on CoHostCompare. Contact them by hand.">Unclaimed</span>}
                   {late && t.manager_reminded_at && <span className="hint" style={{ fontSize: 12 }}>reminded {ago(t.manager_reminded_at)} ago</span>}
                   {!claimed.has(t.manager_slug) && t.unclaimed_notified_at && <span className="hint" style={{ fontSize: 12 }}>emailed {ago(t.unclaimed_notified_at)} ago</span>}
-                  {nt && <span className="req-why"><b>{nt.short}.</b> {nt.long}{nt.short.includes('no email') && <> <Link href="/admin/outreach">Add an email →</Link></>}</span>}
+                  {nt && (
+                    <div className="req-why">
+                      <span><b>{nt.short}.</b> {nt.long}</span>
+                      <details className="req-fix">
+                        <summary>Found an email? Send them the request</summary>
+                        <form action={addEmailAndNotify} className="req-fix-form">
+                          <input type="hidden" name="thread" value={t.id} />
+                          <input className="field" type="email" name="email" required placeholder="info@business.com.au" aria-label={`Email for ${t.manager_name}`} />
+                          <input className="field" type="url" name="source" required placeholder="Page where they publish it (https://…)" aria-label="Web page where the email is published" />
+                          <button className="btn primary small" type="submit">Add and send request</button>
+                        </form>
+                      </details>
+                      <details className="req-fix">
+                        <summary>Can&apos;t reach them? Tell the owner</summary>
+                        <form action={cantReach} className="req-fix-form">
+                          <input type="hidden" name="thread" value={t.id} />
+                          <span className="hint">Removes {t.manager_name} from this request and emails the owner a link to add another manager. It can&apos;t be undone.</span>
+                          <button className="btn secondary small" type="submit">Remove and tell the owner</button>
+                        </form>
+                      </details>
+                    </div>
+                  )}
                 </div>
               );
             })}

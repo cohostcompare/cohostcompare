@@ -15,7 +15,7 @@ const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: 
 
 type Addr = { street: string; suburb: string; state: string; postcode: string; lat: number | null; lng: number | null };
 
-type M = { slug: string; name: string; claimed?: boolean; requirements?: Requirements | null };
+type M = { slug: string; name: string; claimed?: boolean; slowReply?: boolean; requirements?: Requirements | null };
 
 export default function QuoteForm({ managers, initial, email, fresh }: { managers: M[]; initial: Addr; email: string; fresh?: boolean }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
@@ -77,11 +77,12 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
         <div className="pick-chips">
           {active.map((m) => (
             <span key={m.slug} className="pick-chip">
-              {m.name}
+              {m.name}{m.slowReply && <span className="slow-dot" title="Not on CoHostCompare yet, so may be slow to reply"> *</span>}
               {active.length > 1 && <button type="button" aria-label={`Remove ${m.name}`} title={`Remove ${m.name}`} onClick={() => { setRemoved([...removed, m.slug]); removePick(m.slug); }}>×</button>}
             </span>
           ))}
         </div>
+        {active.some((m) => m.slowReply) && <p className="slow-note" style={{ margin: '2px 0 0' }}>* {active.filter((m) => m.slowReply).map((m) => m.name).join(', ')} {active.filter((m) => m.slowReply).length === 1 ? 'isn’t' : 'aren’t'} on CoHostCompare yet, so may be slow to reply. We&apos;ll still pass your request on, and tell you if we can&apos;t reach {active.filter((m) => m.slowReply).length === 1 ? 'them' : 'one of them'}.</p>}
         {located && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
             {active.length < 5 && <a className="btn secondary small" href={searchHref.replace('#your-property', '')}>← Back to results to add more managers</a>}
