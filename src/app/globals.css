@@ -614,3 +614,8 @@ a.kpi:hover { border-color: var(--k); }
 @media (hover: none) { .has-tip::after { display: none; } }
 .fit-banner { display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--brand); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; }
 .fit-banner a { font-weight: 700; color: var(--signal); }
+/* Homepage earnings link, matching the "What could I earn?" menu item */
+.earn-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 999px; background: #FFF1DC; color: #7A4504; box-shadow: inset 0 0 0 1px #F2C98A; font-weight: 700; text-decoration: none; }
+.earn-pill:hover { background: #FFE6C2; text-decoration: underline; }
+.earn-pill .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; flex: none; }
+@media (prefers-color-scheme: dark) { .earn-pill { background: #3A2A12; color: #F3C27A; box-shadow: inset 0 0 0 1px #6B4A1C; } .earn-pill:hover { background: #4A3517; } }

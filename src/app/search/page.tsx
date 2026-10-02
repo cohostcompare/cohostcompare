@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import AddressSearch from '@/components/AddressSearch';
 import ResultsList from '@/components/ResultsList';
+import { isAdminViewer } from '@/lib/admin';
 import { COVER_KM, managersForArea, managersForPostcode, withTestForAdmin } from '@/lib/data';
 import { bump, logSearch } from '@/lib/events';
 import { logFunnel } from '@/lib/traffic';
@@ -37,7 +38,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
         </div>
       </div>
       {managers.length > 0 ? (
-        <ResultsList managers={managers} query={q.toString()} />
+        <ResultsList managers={managers} query={q.toString()} fresh={await isAdminViewer()} />
       ) : (
         <div className="empty" style={{ marginBottom: 48 }}>
           <h2 style={{ marginTop: 0, fontSize: 22 }}>No managers found near here yet</h2>

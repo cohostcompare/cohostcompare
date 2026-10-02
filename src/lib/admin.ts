@@ -17,3 +17,8 @@ export async function requireAdmin(next = '/admin') {
   if (!isAdminEmail(user.email)) redirect('/');
   return user;
 }
+
+/** True when the signed-in viewer is an admin (never throws). */
+export async function isAdminViewer() {
+  try { return isAdminEmail((await currentUser())?.email); } catch { return false; }
+}

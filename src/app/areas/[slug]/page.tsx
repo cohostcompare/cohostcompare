@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DataSource from '@/components/DataSource';
 import ResultsList from '@/components/ResultsList';
+import { isAdminViewer } from '@/lib/admin';
 import { area, areas } from '@/lib/areas';
 import { COVER_KM, managersNear } from '@/lib/data';
 import { bump } from '@/lib/events';
@@ -67,7 +68,7 @@ export default async function AreaPage({ params }: { params: P }) {
         </section>
       )}
 
-      {managers.length ? <ResultsList managers={managers} query={q.toString()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
+      {managers.length ? <ResultsList managers={managers} query={q.toString()} fresh={await isAdminViewer()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
 
       <section className="facts-grid" style={{ marginBlock: '28px 18px' }}>
         {rules && (

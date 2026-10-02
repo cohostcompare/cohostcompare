@@ -15,7 +15,7 @@ type Addr = { street: string; suburb: string; state: string; postcode: string; l
 
 type M = { slug: string; name: string; claimed?: boolean; requirements?: Requirements | null };
 
-export default function QuoteForm({ managers, initial, email }: { managers: M[]; initial: Addr; email: string }) {
+export default function QuoteForm({ managers, initial, email, fresh }: { managers: M[]; initial: Addr; email: string; fresh?: boolean }) {
   const [state, action, pending] = useActionState(submitQuoteRequest, {});
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
   const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode) && initial.lat != null);
@@ -28,6 +28,7 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
   const [services, setServices] = useState<string[]>([SERVICES[0]]);
   const [situation, setSituation] = useState<string>(SITUATIONS[0]);
   useEffect(() => {
+    if (fresh) return; // admins always see the first-time experience
     try {
       const p = JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') as PropertyDetails;
       if (p.type && (PROPERTY_TYPES as readonly string[]).includes(p.type)) setPtype(p.type);
@@ -35,13 +36,13 @@ export default function QuoteForm({ managers, initial, email }: { managers: M[];
       if (p.availability) setAvail(p.availability);
       if (p.services?.length && !p.services.includes(SERVICES[0])) setServices([]);
     } catch { /* none */ }
-  }, []);
+  }, [fresh]);
   const details: PropertyDetails = { type: ptype, beds, availability: avail || null, services, situation };
   // Keep the search results' "Your property" bar in step with changes made here.
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setLoaded(true); }, []);
   useEffect(() => {
-    if (!loaded || !avail) return; // only once the owner has filled it in
+    if (!loaded || !avail || fresh) return; // only once the owner has filled it in; never for admins
     try { localStorage.setItem(PROPERTY_KEY, JSON.stringify({ type: ptype, beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null })); } catch { /* fine */ }
   }, [loaded, ptype, beds, avail, services]);
   const searchHref = `/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}), ...(addr.lat != null && addr.lng != null ? { lat: String(addr.lat), lng: String(addr.lng) } : {}) }).toString()}#your-property`;

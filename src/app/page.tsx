@@ -12,7 +12,7 @@ export default function Home() {
           <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare every short-term rental manager for your property.</h1>
           <p className="lede">See the managers who cover your address, with fees, platforms and real guest ratings side by side. Then request quotes from up to five managers in one go. Free for owners, and neutral: no manager can pay to change their rating.</p>
           <div className="hero-search"><AddressSearch /></div>
-          <p style={{ margin: 0 }}><Link href="/earnings"><b>Not listed yet? See what your property could earn →</b></Link></p>
+          <p style={{ margin: 0 }}><Link href="/earnings" className="earn-pill"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn →</Link></p>
         </div>
         <div className="hero-photo">
           <HeroCarousel sizes="(max-width: 880px) 100vw, 520px" />

@@ -10,16 +10,17 @@ import { AVAILABILITY, FULL, PROPERTY_KEY, PROPERTY_TYPES, mismatches, type Prop
 
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
-export default function ResultsList({ managers, query }: { managers: NearbyManager[]; query: string }) {
+export default function ResultsList({ managers, query, fresh }: { managers: NearbyManager[]; query: string; fresh?: boolean }) {
   const { picks, toggle, has, full } = usePicks(areaKey(query));
   const [open, setOpen] = useState<string | null>(null);
   // The owner's property, remembered in this browser and passed on to the quote form.
   const [prop, setProp] = useState<PropertyDetails>({});
-  useEffect(() => { try { setProp(JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') || {}); } catch { /* none */ } }, []);
+  // Admins always get the first-time owner experience (nothing remembered).
+  useEffect(() => { if (fresh) return; try { setProp(JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') || {}); } catch { /* none */ } }, [fresh]);
   const update = (k: keyof PropertyDetails, v: unknown) => {
     const next = { ...prop, [k]: v === '' ? null : v } as PropertyDetails;
     setProp(next);
-    try { localStorage.setItem(PROPERTY_KEY, JSON.stringify(next)); } catch { /* fine */ }
+    if (!fresh) try { localStorage.setItem(PROPERTY_KEY, JSON.stringify(next)); } catch { /* fine */ }
   };
   // All four property details are needed before any manager can be added to a quote.
   const complete = Boolean(prop.type && prop.beds != null && (prop.beds as unknown) !== '' && prop.availability && prop.services?.length);
