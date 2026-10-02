@@ -12,6 +12,7 @@ export default function QuoteBar({ picks, query, backHref }: { picks: Pick[]; qu
       <div className="wrap">
         <span style={{ minWidth: 0 }}>
           {picks.length === 0 ? `Pick up to ${MAX_PICKS} managers to request quotes from.` : <><b>{picks.length} of {MAX_PICKS} picked:</b> {picks.map((p) => p.name).join(', ')}</>}
+          {picks.length === 1 && <span className="compare-tip">Pick one more to compare them side by side</span>}
           {backHref && <> · <Link href={backHref}>Back to results to add more</Link></>}
         </span>
         {picks.length ? (
