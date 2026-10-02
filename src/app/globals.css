@@ -648,3 +648,8 @@ a.kpi:hover { border-color: var(--k); }
 .cmp-locked { background: var(--tint) !important; text-align: center !important; vertical-align: middle !important; }
 .cmp-locked > * { display: block; margin: 4px auto; }
 .cmp-locked .btn { display: inline-flex; }
+.sort-row { display: flex; gap: 6px 14px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.sort-row label { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; }
+.sort-row select { width: auto; min-width: 250px; }
+.cmp { table-layout: fixed; }
+.cmp thead th:first-child, .cmp tbody th { width: 190px; }

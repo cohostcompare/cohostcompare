@@ -34,7 +34,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
         <div>
           <h1>{managers.length} manager{managers.length === 1 ? '' : 's'} near {place || 'this area'}</h1>
           <span className="hint">
-            {hasPoint ? `Managers running homes within ${COVER_KM} km, most active nearby first.` : 'Pick your address from the suggestions for the most accurate results.'} No manager can pay for a higher place.
+            {hasPoint ? `Managers running homes within ${COVER_KM} km. Sort them however you like.` : 'Pick your address from the suggestions for the most accurate results.'} No manager can pay for a higher place.
           </span>
         </div>
       </div>

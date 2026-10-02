@@ -54,7 +54,7 @@ export default async function AreaPage({ params }: { params: P }) {
         <div>
           <Link href="/areas" className="hint">← All areas</Link>
           <h1>Short-term rental managers in {a.label}</h1>
-          <span className="hint">{managers.length} manager{managers.length === 1 ? '' : 's'} running homes within {COVER_KM} km of central {a.label}, most active nearby first. No manager can pay for a higher place. For results around your exact address, <Link href="/">search your address</Link>.</span>
+          <span className="hint">{managers.length} manager{managers.length === 1 ? '' : 's'} running homes within {COVER_KM} km of central {a.label}. Sort them however you like. No manager can pay for a higher place. For results around your exact address, <Link href="/">search your address</Link>.</span>
         </div>
       </div>
 

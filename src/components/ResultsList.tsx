@@ -28,8 +28,20 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
     setTimeout(() => setNudge(false), 2400);
   };
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
-  const fits = managers.filter((m) => !why.get(m.slug)!.length);
-  const others = managers.filter((m) => why.get(m.slug)!.length);
+  // Sorting is the owner's choice; it never uses anything a manager pays for. Default: highest guest rating near you.
+  const hasOwnerReviews = managers.some((m) => m.ownerReviews);
+  const [sort, setSort] = useState<'rating' | 'homes' | 'nightly' | 'owner'>('rating');
+  const val = (m: NearbyManager): number | null => sort === 'rating' ? (m.nearbyRating ?? m.avgRating ?? null)
+    : sort === 'homes' ? (m.nearby || null) : sort === 'nightly' ? (m.avgNightlyRate ?? null) : (m.ownerReviews?.avg ?? null);
+  const sorted = managers.map((m, i) => ({ m, i })).sort((a, b) => {
+    const x = val(a.m), y = val(b.m);
+    if (x == null && y == null) return a.i - b.i;
+    if (x == null) return 1;
+    if (y == null) return -1;
+    return y - x || (b.m.nearby || 0) - (a.m.nearby || 0) || a.i - b.i;
+  }).map((x) => x.m);
+  const fits = sorted.filter((m) => !why.get(m.slug)!.length);
+  const others = sorted.filter((m) => why.get(m.slug)!.length);
 
   // "What could it earn?" nudge: if someone's been looking at results for a while without picking anyone.
   const qp = new URLSearchParams(query);
@@ -120,6 +132,17 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
         <PropertyFields prop={prop} update={update} />
         {nudge && <p role="alert" className="prop-nudge">{complete ? 'Change any detail here and the list updates straight away.' : 'Add your property details here first, then you can add managers to your quote.'}</p>}
       </section>
+      <div className="sort-row">
+        <label>Sort by
+          <select className="field" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
+            <option value="rating">Highest guest rating near you</option>
+            <option value="homes">Most homes they run near you</option>
+            <option value="nightly">Highest typical nightly rate</option>
+            {hasOwnerReviews && <option value="owner">Highest owner reviews</option>}
+          </select>
+        </label>
+        <span className="hint">{sort === 'rating' ? 'Managers without ratings nearby use their overall rating, or go last.' : 'Managers without this figure go last.'}</span>
+      </div>
       {complete && (
         <div className="fit-banner" role="status">
           <span><b>{fits.length} manager{fits.length === 1 ? '' : 's'}</b> {fits.length === 1 ? 'takes' : 'take'} on a property like yours and can quote.</span>
