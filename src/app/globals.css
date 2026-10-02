@@ -628,3 +628,23 @@ a.kpi:hover { border-color: var(--k); }
 .pick-chip button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--panel); color: var(--ink); font-size: 16px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
 .pick-chip button:hover { background: var(--signal); color: #fff; }
 .pick-chip:only-child { padding-right: 14px; }
+
+/* Shortlist comparison */
+.cmp-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.cmp { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 640px; font-size: 14.5px; }
+.cmp th, .cmp td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+.cmp tbody th { position: sticky; left: 0; background: var(--surface); font-weight: 600; width: 180px; min-width: 150px; z-index: 1; }
+.cmp thead th { background: var(--panel); position: sticky; top: 0; z-index: 2; }
+.cmp .cmp-corner { position: sticky; left: 0; z-index: 3; background: var(--surface); }
+.cmp tbody tr:last-child th, .cmp tbody tr:last-child td { border-bottom: 0; }
+.cmp tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface) 45%, var(--panel)); }
+.cmp-head { position: relative; display: grid; gap: 6px; justify-items: start; padding-right: 26px; }
+.cmp-head .av { width: 40px; height: 40px; font-size: 14px; }
+.cmp-name { font-family: var(--display); font-size: 17px; font-weight: 800; color: var(--ink); text-decoration: none; }
+.cmp-name:hover { text-decoration: underline; }
+.cmp-x { position: absolute; top: -4px; right: -4px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.cmp-x:hover { background: var(--signal); color: #fff; border-color: var(--signal); }
+.cmp-tag { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--brand); background: var(--tint); border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+.cmp-locked { background: var(--tint) !important; text-align: center !important; vertical-align: middle !important; }
+.cmp-locked > * { display: block; margin: 4px auto; }
+.cmp-locked .btn { display: inline-flex; }

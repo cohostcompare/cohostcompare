@@ -82,7 +82,12 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
             </span>
           ))}
         </div>
-        {active.length === 1 && <span className="hint">To send to someone else instead, go back to the search results and pick another manager.</span>}
+        {located && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+            {active.length < 5 && <a className="btn secondary small" href={searchHref.replace('#your-property', '')}>← Back to results to add more managers</a>}
+            {active.length > 1 && <a className="btn secondary small" href={`/compare?${new URLSearchParams({ ...Object.fromEntries(new URL(searchHref, 'https://x').searchParams), managers: active.map((m) => m.slug).join(',') }).toString()}`}>Compare them side by side</a>}
+          </div>
+        )}
       </div>
       <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>

@@ -15,7 +15,10 @@ export default function QuoteBar({ picks, query, backHref }: { picks: Pick[]; qu
           {backHref && <> · <Link href={backHref}>Back to results to add more</Link></>}
         </span>
         {picks.length ? (
-          <Link className="btn primary" href={`/quote?${q.toString()}`}>Request {picks.length > 1 ? `${picks.length} quotes` : 'a quote'}</Link>
+          <span style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {picks.length > 1 && <Link className="btn secondary" href={`/compare?${q.toString()}`}>Compare {picks.length}</Link>}
+            <Link className="btn primary" href={`/quote?${q.toString()}`}>Request {picks.length > 1 ? `${picks.length} quotes` : 'a quote'}</Link>
+          </span>
         ) : (
           <button className="btn primary" type="button" disabled>Request a quote</button>
         )}
