@@ -30,8 +30,8 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
   // Sorting is the owner's choice; it never uses anything a manager pays for. Default: highest guest rating near you.
   const hasOwnerReviews = managers.some((m) => m.ownerReviews);
-  const [sort, setSort] = useState<'rating' | 'homes' | 'nightly' | 'owner'>('rating');
-  const val = (m: NearbyManager): number | null => sort === 'rating' ? (m.nearbyRating ?? m.avgRating ?? null)
+  const [sort, setSort] = useState<'rating' | 'overall' | 'homes' | 'nightly' | 'owner'>('rating');
+  const val = (m: NearbyManager): number | null => sort === 'rating' ? (m.nearbyRating ?? m.avgRating ?? null) : sort === 'overall' ? (m.avgRating ?? null)
     : sort === 'homes' ? (m.nearby || null) : sort === 'nightly' ? (m.avgNightlyRate ?? null) : (m.ownerReviews?.avg ?? null);
   const sorted = managers.map((m, i) => ({ m, i })).sort((a, b) => {
     const x = val(a.m), y = val(b.m);
@@ -71,12 +71,12 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                   e.preventDefault(); setOpen(isOpen ? null : m.slug);
                 }}>{m.name}</Link></h2>
                 {(m.claimed || m.verified) && <div style={{ margin: '4px 0 2px' }}><TrustBadges m={m} compact /></div>}
-                {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you{m.nearbyRating ? ` · ${m.nearbyRating.toFixed(2)} ★ nearby` : ''}</p>}
+                {m.nearby > 0 && <p style={{ margin: '4px 0 0', fontWeight: 600, color: 'var(--brand)', fontSize: 14 }}>{m.nearby} home{m.nearby === 1 ? '' : 's'} managed near you{m.nearbyRating ? <> · <span className={sort === 'rating' ? 'sort-hit' : undefined}>{m.nearbyRating.toFixed(2)} ★ guest rating nearby</span></> : ''}</p>}
                 {!m.propertyCount && <p className="hint" style={{ margin: '4px 0 0' }}>Covers this area, as stated on its website. No listing figures yet.</p>}
                 {why.get(m.slug)!.length > 0 && <p className="mismatch">{why.get(m.slug)!.join(' · ')}</p>}
                 <div className="meta">
                   {m.ownerReviews && <span><b style={{ color: '#B97C00' }}>{m.ownerReviews.avg.toFixed(1)} ★</b> from {m.ownerReviews.count} owner review{m.ownerReviews.count === 1 ? '' : 's'}</span>}
-                  {m.avgRating != null && <span><b>{m.avgRating.toFixed(2)} ★</b> from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
+                  {m.avgRating != null && <span className={sort === 'overall' || (sort === 'rating' && !m.nearbyRating) ? 'sort-hit' : undefined}><b>{m.avgRating.toFixed(2)} ★</b> overall, from {m.reviewCount?.toLocaleString('en-AU')} reviews</span>}
                   {m.propertyCount != null && <span><b>{m.propertyCount}</b> Airbnb homes tracked</span>}
                 </div>
                 <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.cities.map((c) => <span className="chip" key={c} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{c}</span>)}</div>
@@ -136,12 +136,13 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
         <label>Sort by
           <select className="field" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
             <option value="rating">Highest guest rating near you</option>
+            <option value="overall">Highest guest rating overall</option>
             <option value="homes">Most homes they run near you</option>
             <option value="nightly">Highest typical nightly rate</option>
             {hasOwnerReviews && <option value="owner">Highest owner reviews</option>}
           </select>
         </label>
-        <span className="hint">{sort === 'rating' ? 'Managers without ratings nearby use their overall rating, or go last.' : 'Managers without this figure go last.'}</span>
+        <span className="hint">{sort === 'rating' ? 'Based on the homes each manager runs near this address (highlighted on each card).' : sort === 'overall' ? 'Based on all of each manager’s homes.' : 'Managers without this figure go last.'}</span>
       </div>
       {complete && (
         <div className="fit-banner" role="status">
