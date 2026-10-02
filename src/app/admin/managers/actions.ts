@@ -18,6 +18,8 @@ export async function setVisibility(form: FormData) {
   if (error) redirect(`/admin/managers?q=${encodeURIComponent(q)}&error=${encodeURIComponent(error.message)}`);
   await db.from('manager_edits').insert({ manager_id: id, user_id: admin.id, changes: { published: show, reason: reason || null, by: 'admin' } });
   revalidatePath('/admin/managers');
+  const back = String(form.get('back') || '');
+  if (back.startsWith('/admin/')) redirect(back);
   redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${show ? 'shown' : 'hidden'}`);
 }
 

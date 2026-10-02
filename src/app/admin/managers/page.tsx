@@ -48,6 +48,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
       <Link href="/admin" className="hint">← Admin</Link>
       <div>
         <h1 style={{ fontSize: 34, margin: 0 }}>Managers</h1>
+        <p style={{ margin: '4px 0 0' }}><Link href="/admin/managers/audit">Run the manager audit →</Link> <span className="hint">checks each manager&apos;s website to flag hotels or booking sites.</span></p>
         <p className="hint" style={{ margin: '4px 0 0' }}>Hide a manager to remove them from search results, their public profile and new quote requests (for example, if they ask to be removed). Their data is kept, and you can show them again at any time.</p>
       </div>
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
