@@ -35,7 +35,7 @@ export default function EmailSignIn({ next = '/account', intro, mode = 'signin' 
   async function social(provider: 'google' | 'azure' | 'apple') {
     setError('');
     const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`, ...(provider === 'azure' ? { scopes: 'email' } : {}) } });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`, ...(provider === 'azure' ? { scopes: 'email', queryParams: { prompt: 'select_account' } } : {}), ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}) } });
     if (error) setError(`We couldn't start ${LABEL[provider]} sign-in. Use your email instead.`);
   }
 
