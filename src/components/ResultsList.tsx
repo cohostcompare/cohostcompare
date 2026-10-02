@@ -25,7 +25,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
     setNudge(true);
     barRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     (barRef.current?.querySelector('select[data-empty="1"]') as HTMLSelectElement | null ?? barRef.current?.querySelector('select') as HTMLSelectElement | null)?.focus({ preventScroll: true });
-    setTimeout(() => setNudge(false), 2400);
+    setTimeout(() => setNudge(false), 5000);
   };
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
   // Sorting is the owner's choice; it never uses anything a manager pays for. Default: highest guest rating near you.
