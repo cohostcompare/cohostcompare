@@ -4,7 +4,8 @@ import { useActionState, useEffect, useState } from 'react';
 import PlacesInput from '@/components/PlacesInput';
 import { submitQuoteRequest } from './actions';
 import { checkCoverage } from './coverage';
-import { AVAILABILITY, PROPERTY_KEY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
+import { AVAILABILITY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
+import { loadProperty, saveProperty } from '@/lib/client/property';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
@@ -28,9 +29,8 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   const [services, setServices] = useState<string[]>([SERVICES[0]]);
   const [situation, setSituation] = useState<string>(SITUATIONS[0]);
   useEffect(() => {
-    if (fresh) return; // admins always see the first-time experience
     try {
-      const p = JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') as PropertyDetails;
+      const p = loadProperty(fresh); // admins: this tab only
       if (p.type && (PROPERTY_TYPES as readonly string[]).includes(p.type)) setPtype(p.type);
       if (typeof p.beds === 'number') setBeds(p.beds);
       if (p.availability) setAvail(p.availability);
@@ -42,8 +42,8 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setLoaded(true); }, []);
   useEffect(() => {
-    if (!loaded || !avail || fresh) return; // only once the owner has filled it in; never for admins
-    try { localStorage.setItem(PROPERTY_KEY, JSON.stringify({ type: ptype, beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null })); } catch { /* fine */ }
+    if (!loaded || !avail) return; // only once the owner has filled it in
+    saveProperty(fresh, { type: ptype, beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null });
   }, [loaded, ptype, beds, avail, services]);
   const searchHref = `/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}), ...(addr.lat != null && addr.lng != null ? { lat: String(addr.lat), lng: String(addr.lng) } : {}) }).toString()}#your-property`;
   const toggleService = (s: string) => setServices(services.includes(s) ? services.filter((x) => x !== s) : [...services, s]);

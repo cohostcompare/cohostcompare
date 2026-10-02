@@ -158,7 +158,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
       </div>
 
       <aside className="sticky">
-        <ProfileQuote slug={m.slug} name={m.name} query={back.toString()} />
+        <ProfileQuote slug={m.slug} name={m.name} query={back.toString()} requirements={reqs ?? null} fresh={isAdminEmail(user?.email)} />
       </aside>
     </main>
   );

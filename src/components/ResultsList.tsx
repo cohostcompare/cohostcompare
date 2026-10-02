@@ -6,24 +6,19 @@ import QuoteBar from '@/components/QuoteBar';
 import TrustBadges from '@/components/TrustBadges';
 import { areaKey, usePicks } from '@/lib/client/picks';
 import type { NearbyManager } from '@/lib/types';
-import { AVAILABILITY, FULL, PROPERTY_KEY, PROPERTY_TYPES, earningsHref, mismatches, type PropertyDetails } from '@/lib/requirements';
+import PropertyFields from '@/components/PropertyFields';
+import { isComplete, useProperty } from '@/lib/client/property';
+import { earningsHref, mismatches } from '@/lib/requirements';
 
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
 export default function ResultsList({ managers, query, fresh }: { managers: NearbyManager[]; query: string; fresh?: boolean }) {
   const { picks, toggle, has, full } = usePicks(areaKey(query));
   const [open, setOpen] = useState<string | null>(null);
-  // The owner's property, remembered in this browser and passed on to the quote form.
-  const [prop, setProp] = useState<PropertyDetails>({});
-  // Admins always get the first-time owner experience (nothing remembered).
-  useEffect(() => { if (fresh) return; try { setProp(JSON.parse(localStorage.getItem(PROPERTY_KEY) || '{}') || {}); } catch { /* none */ } }, [fresh]);
-  const update = (k: keyof PropertyDetails, v: unknown) => {
-    const next = { ...prop, [k]: v === '' ? null : v } as PropertyDetails;
-    setProp(next);
-    if (!fresh) try { localStorage.setItem(PROPERTY_KEY, JSON.stringify(next)); } catch { /* fine */ }
-  };
+  // The owner's property (src/lib/client/property.ts): remembered for owners, per tab for admins.
+  const { prop, update } = useProperty(fresh);
   // All four property details are needed before any manager can be added to a quote.
-  const complete = Boolean(prop.type && prop.beds != null && (prop.beds as unknown) !== '' && prop.availability && prop.services?.length);
+  const complete = isComplete(prop);
   const barRef = useRef<HTMLElement>(null);
   const [nudge, setNudge] = useState(false);
   const askForDetails = () => {
@@ -122,12 +117,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
           <b id="prop-step">{complete ? 'Your property' : 'Step 1: tell us about your property'}</b>
           <span className="hint">{complete ? 'Change anything here and the list updates straight away.' : 'Some managers only take on certain properties. Add these four details to see who can quote, then add up to 5 managers to your quote.'}</span>
         </div>
-        <div className="prop-fields">
-          <label>Type<select className="field" data-empty={prop.type ? undefined : '1'} value={prop.type || ''} onChange={(e) => update('type', e.target.value)}><option value="" disabled>Choose</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select></label>
-          <label>Bedrooms<select className="field" data-empty={prop.beds != null ? undefined : '1'} value={prop.beds ?? ''} onChange={(e) => update('beds', Number(e.target.value))}><option value="" disabled>Choose</option>{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select></label>
-          <label>Available for guests<select className="field" data-empty={prop.availability ? undefined : '1'} value={prop.availability || ''} onChange={(e) => update('availability', e.target.value)}><option value="" disabled>Choose</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label.replace(' (for example, holidays only)', '')}</option>)}</select></label>
-          <label>Help wanted<select className="field" data-empty={prop.services?.length ? undefined : '1'} value={prop.services?.length ? (prop.services.includes(FULL) ? 'full' : 'some') : ''} onChange={(e) => update('services', e.target.value === 'full' ? [FULL] : ['Some services'])}><option value="" disabled>Choose</option><option value="full">Full management</option><option value="some">Only some services</option></select></label>
-        </div>
+        <PropertyFields prop={prop} update={update} />
         {nudge && <p role="alert" className="prop-nudge">{complete ? 'Change any detail here and the list updates straight away.' : 'Add your property details here first, then you can add managers to your quote.'}</p>}
       </section>
       {complete && (
