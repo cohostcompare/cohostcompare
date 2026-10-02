@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { TEST_SLUG } from '@/lib/data';
+import { CATCHUP_FROM, unclaimedReach, requestEmailsOn } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { deleteRequest } from './actions';
 
@@ -15,13 +16,13 @@ export const dynamic = 'force-dynamic';
 const OVERDUE_HOURS = 48;
 
 type SP = Promise<{ f?: string; d?: string; q?: string }>;
-type T = { id: string; manager_slug: string; manager_name: string; status: string; created_at: string; accepted_at: string | null; quoted_at: string | null; manager_reminded_at: string | null };
+type T = { id: string; manager_slug: string; manager_name: string; status: string; created_at: string; accepted_at: string | null; quoted_at: string | null; manager_reminded_at: string | null; unclaimed_notified_at?: string | null };
 type R = { id: string; created_at: string; owner_name: string; owner_email: string; owner_phone: string | null; address: string | null; suburb: string | null; postcode: string; property_type: string | null; bedrooms: number | null; source: string | null; quote_request_managers: T[] };
 
 const STATUS: Record<string, [string, string]> = {
   sent: ['Waiting', 'st-wait'], viewed: ['Viewed, no quote', 'st-wait'], quoted: ['Quoted', 'st-quoted'], accepted: ['Accepted', 'st-won'], declined: ['Declined', 'st-lost'], withdrawn: ['Withdrawn', 'st-lost'],
 };
-const FILTERS: [string, string][] = [['', 'All'], ['waiting', 'Waiting for quotes'], ['overdue', `Overdue (${OVERDUE_HOURS}h+)`], ['quoted', 'Has quotes'], ['accepted', 'Accepted'], ['test', 'Test requests']];
+const FILTERS: [string, string][] = [['', 'All'], ['waiting', 'Waiting for quotes'], ['unreached', 'Manager not told'], ['overdue', `Overdue (${OVERDUE_HOURS}h+)`], ['quoted', 'Has quotes'], ['accepted', 'Accepted'], ['test', 'Test requests']];
 
 export default async function AdminRequests({ searchParams }: { searchParams: SP }) {
   await requireAdmin('/admin/requests');
@@ -30,23 +31,36 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
   const days = ['7', '30', '90', 'all'].includes(sp.d || '') ? sp.d! : '30';
   const q = (sp.q || '').trim().toLowerCase();
   const db = adminClient();
-  let query = db.from('quote_requests').select('id, created_at, owner_name, owner_email, owner_phone, address, suburb, postcode, property_type, bedrooms, source, quote_request_managers(id, manager_slug, manager_name, status, created_at, accepted_at, quoted_at, manager_reminded_at)').order('created_at', { ascending: false }).limit(1000);
+  let query = db.from('quote_requests').select('id, created_at, owner_name, owner_email, owner_phone, address, suburb, postcode, property_type, bedrooms, source, quote_request_managers(id, manager_slug, manager_name, status, created_at, accepted_at, quoted_at, manager_reminded_at, unclaimed_notified_at)').order('created_at', { ascending: false }).limit(1000);
   if (days !== 'all') query = query.gte('created_at', new Date(Date.now() - Number(days) * 86400e3).toISOString());
   const { data, error } = await query; // source needs 017
   const all = (data || []) as unknown as R[];
   const slugs = [...new Set(all.flatMap((r) => r.quote_request_managers.map((t) => t.manager_slug)))];
   const { data: ms } = slugs.length ? await db.from('managers').select('slug, claimed').in('slug', slugs) : { data: [] };
   const claimed = new Set((ms || []).filter((m) => m.claimed).map((m) => m.slug));
+  const reach = await unclaimedReach(slugs.filter((s) => !claimed.has(s) && s !== TEST_SLUG));
+  const emailsOn = requestEmailsOn();
+  /** Why an unclaimed manager may not know about a request yet (null = they've been told, or it no longer matters). */
+  const notTold = (t: T): { short: string; long: string } | null => {
+    if (claimed.has(t.manager_slug) || t.manager_slug === TEST_SLUG || !['sent', 'viewed'].includes(t.status) || t.unclaimed_notified_at || t.created_at < CATCHUP_FROM) return null;
+    const r = reach.get(t.manager_slug);
+    if (r === 'no-email') return { short: 'Not told: no email on file', long: 'We have no contact email for this manager, so they don’t know about the request. Add one in Outreach and they’re told within a day, or contact them by hand.' };
+    if (r === 'unsubscribed') return { short: 'Not told: unsubscribed', long: 'Every contact for this manager has unsubscribed from our emails. Phone them or use their website’s contact form.' };
+    if (!emailsOn) return { short: 'Not told: request emails off', long: 'Request emails to unclaimed managers are switched off (REQUEST_EMAILS=0 in Vercel).' };
+    return { short: 'Not told yet: retrying', long: 'The email didn’t go through. The 8am daily run retries it for 14 days.' };
+  };
 
   const overdue = (t: T) => ['sent', 'viewed'].includes(t.status) && Date.now() - new Date(t.created_at).getTime() > OVERDUE_HOURS * 3600e3;
   const isTest = (r: R) => r.quote_request_managers.length > 0 && r.quote_request_managers.every((t) => t.manager_slug === TEST_SLUG);
-  const counts = { all: 0, waiting: 0, overdue: 0, quoted: 0, accepted: 0, test: 0, overdueThreads: 0 };
+  const counts = { all: 0, waiting: 0, overdue: 0, quoted: 0, accepted: 0, test: 0, overdueThreads: 0, unreached: 0, unreachedThreads: 0 };
   for (const r of all) {
     if (isTest(r)) { counts.test++; continue; }
     counts.all++;
     const ts = r.quote_request_managers;
     if (ts.some((t) => ['sent', 'viewed'].includes(t.status))) counts.waiting++;
     if (ts.some(overdue)) counts.overdue++;
+    if (ts.some(notTold)) counts.unreached++;
+    counts.unreachedThreads += ts.filter(notTold).length;
     counts.overdueThreads += ts.filter(overdue).length;
     if (ts.some((t) => ['quoted', 'accepted'].includes(t.status))) counts.quoted++;
     if (ts.some((t) => t.status === 'accepted')) counts.accepted++;
@@ -57,6 +71,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
     const ts = r.quote_request_managers;
     if (f === 'waiting' && !ts.some((t) => ['sent', 'viewed'].includes(t.status))) return false;
     if (f === 'overdue' && !ts.some(overdue)) return false;
+    if (f === 'unreached' && !ts.some(notTold)) return false;
     if (f === 'quoted' && !ts.some((t) => ['quoted', 'accepted'].includes(t.status))) return false;
     if (f === 'accepted' && !ts.some((t) => t.status === 'accepted')) return false;
     if (q && ![r.owner_name, r.owner_email, r.address, r.suburb, r.postcode, ...ts.map((t) => t.manager_name)].join(' ').toLowerCase().includes(q)) return false;
@@ -74,6 +89,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
         <Link href={link('f', '')} className={`kpi k-blue${f === '' ? ' on' : ''}`} aria-current={f === '' ? 'true' : undefined}><span>{f === '' ? '✓ Showing: all requests' : 'All requests'}</span><b>{counts.all}</b><small>{days === 'all' ? 'all time' : `last ${days} days`}</small></Link>
         <Link href={link('f', 'waiting')} className={`kpi k-amber${f === 'waiting' ? ' on' : ''}`} aria-current={f === 'waiting' ? 'true' : undefined}><span>{f === 'waiting' ? '✓ Showing: waiting for quotes' : 'Waiting for quotes'}</span><b>{counts.waiting}</b><small>at least one manager yet to reply</small></Link>
         <Link href={link('f', 'overdue')} className={`kpi ${counts.overdue ? 'k-alert' : 'k-teal'}${f === 'overdue' ? ' on' : ''}`} aria-current={f === 'overdue' ? 'true' : undefined}><span>{f === 'overdue' ? '✓ Showing: overdue' : 'Overdue'}</span><b>{counts.overdue}</b><small>{counts.overdueThreads} manager{counts.overdueThreads === 1 ? '' : 's'} {OVERDUE_HOURS}h+ without replying</small></Link>
+        <Link href={link('f', 'unreached')} className={`kpi ${counts.unreached ? 'k-alert' : 'k-teal'}${f === 'unreached' ? ' on' : ''}`} aria-current={f === 'unreached' ? 'true' : undefined}><span>{f === 'unreached' ? '✓ Showing: manager not told' : 'Manager not told'}</span><b>{counts.unreached}</b><small>{counts.unreachedThreads} unclaimed manager{counts.unreachedThreads === 1 ? '' : 's'} we couldn&apos;t email</small></Link>
         <Link href={link('f', 'accepted')} className={`kpi k-green${f === 'accepted' ? ' on' : ''}`} aria-current={f === 'accepted' ? 'true' : undefined}><span>{f === 'accepted' ? '✓ Showing: accepted' : 'Accepted'}</span><b>{counts.accepted}</b><small>{counts.quoted} with at least one quote</small></Link>
       </section>
       <form className="panel" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -83,7 +99,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
         <button className="btn secondary" type="submit">Filter</button>
       </form>
       {error && <p className="panel" style={{ margin: 0 }}>Couldn&apos;t load requests: {error.message}</p>}
-      <p className="hint" style={{ margin: 0 }}>{rows.length} request{rows.length === 1 ? '' : 's'}. Overdue means a manager hasn&apos;t quoted, declined or replied {OVERDUE_HOURS} hours after the request. Claimed managers get a reminder email at that point; unclaimed ones appear in your daily email to chase by hand.</p>
+      <p className="hint" style={{ margin: 0 }}>{rows.length} request{rows.length === 1 ? '' : 's'}. Overdue means a manager hasn&apos;t quoted, declined or replied {OVERDUE_HOURS} hours after the request. Claimed managers get a reminder email at that point; unclaimed ones appear in your daily email to chase by hand. &ldquo;Manager not told&rdquo; means an unclaimed manager couldn&apos;t be emailed about the request at all, with the reason on each one.</p>
       {rows.map((r) => (
         <article key={r.id} className={`panel req-card${r.quote_request_managers.some(overdue) ? ' late' : ''}`}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
@@ -103,12 +119,15 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
             {r.quote_request_managers.map((t) => {
               const [label, cls] = STATUS[t.status] || [t.status, ''];
               const late = overdue(t);
+              const nt = notTold(t);
               return (
                 <div key={t.id} className="req-thread">
                   <Link href={`/managers/${t.manager_slug}`}><b>{t.manager_name}</b></Link>
                   <span className={`st ${late ? 'st-late' : cls}`}>{late ? `Overdue · ${ago(t.created_at)}` : label}</span>
                   {!claimed.has(t.manager_slug) && t.manager_slug !== TEST_SLUG && <span className="st st-lost" title="Not claimed: they can't see the request on CoHostCompare. Contact them by hand.">Unclaimed</span>}
                   {late && t.manager_reminded_at && <span className="hint" style={{ fontSize: 12 }}>reminded {ago(t.manager_reminded_at)} ago</span>}
+                  {!claimed.has(t.manager_slug) && t.unclaimed_notified_at && <span className="hint" style={{ fontSize: 12 }}>emailed {ago(t.unclaimed_notified_at)} ago</span>}
+                  {nt && <span className="req-why"><b>{nt.short}.</b> {nt.long}{nt.short.includes('no email') && <> <Link href="/admin/outreach">Add an email →</Link></>}</span>}
                 </div>
               );
             })}

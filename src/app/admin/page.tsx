@@ -35,11 +35,12 @@ export default async function Admin() {
     db.from('account_flags').select('id, user_id, reason, created_at, managers(name)').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
   ]);
   const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
-  const [st, partnersPending, thanks, reviewsCount] = await Promise.all([
+  const [st, partnersPending, thanks, reviewsCount, unreached] = await Promise.all([
     adminStats(),
     count('partners', (q) => q.eq('status', 'pending')).catch(() => 0),
     count('feedback', (q) => q.eq('reward_status', 'manual')).catch(() => 0),
     count('manager_reviews').catch(() => 0),
+    import('@/lib/outreach').then((o) => o.unreachedThreads()).then((x) => x.length, () => 0),
   ]);
   const awaiting = (fees || []).filter((f) => f.status === 'awaiting_unlock').length;
   const openErrors = (errors || []).filter((e) => Date.now() - new Date(e.last_seen_at).getTime() < 7 * 86400e3).length;
@@ -47,13 +48,13 @@ export default async function Admin() {
   type Item = { label: string; href: string; n?: number; ext?: boolean };
   const GROUPS: { title: string; tone: string; items: Item[] }[] = [
     { title: 'Managers', tone: 'g-teal', items: [{ label: 'Claims to review', href: '/admin/claims', n: openClaims }, { label: 'Managers and plans', href: '/admin/managers' }, { label: 'Manager outreach', href: '/admin/outreach' }, { label: 'Listing data', href: '/admin/data' }] },
-    { title: 'Owners', tone: 'g-blue', items: [{ label: 'All quote requests', href: '/admin/requests' }, { label: 'Owners', href: '/admin/owners' }, { label: 'Overdue quotes', href: '/admin/requests?f=overdue&d=90', n: st.overdueRequests }, { label: 'Owner reviews', href: '/admin/reviews', n: reviewsCount }, { label: 'Feedback', href: '/admin/feedback', n: thanks }] },
+    { title: 'Owners', tone: 'g-blue', items: [{ label: 'All quote requests', href: '/admin/requests' }, { label: 'Owners', href: '/admin/owners' }, { label: 'Managers not told', href: '/admin/requests?f=unreached&d=30', n: unreached }, { label: 'Overdue quotes', href: '/admin/requests?f=overdue&d=90', n: st.overdueRequests }, { label: 'Owner reviews', href: '/admin/reviews', n: reviewsCount }, { label: 'Feedback', href: '/admin/feedback', n: thanks }] },
     { title: 'Growth', tone: 'g-amber', items: [{ label: 'Ad results', href: '/admin/ads' }, { label: 'Partners', href: '/admin/partners', n: partnersPending }, { label: 'Interest sign-ups', href: '#interest' }] },
     { title: 'Money', tone: 'g-green', items: [{ label: 'Revenue by month', href: '/admin/revenue' }, { label: 'Client confirmations', href: '#fees', n: awaiting }, { label: 'Shared logins', href: '#flags', n: (flags || []).length }, { label: 'Stripe dashboard', href: 'https://dashboard.stripe.com', ext: true }] },
     { title: 'System', tone: 'g-rose', items: [{ label: 'Site errors', href: '#errors', n: openErrors }, { label: 'Email replies', href: '#inbound' }, { label: 'Vercel', href: 'https://vercel.com/dashboard', ext: true }, { label: 'Supabase', href: 'https://supabase.com/dashboard/project/hkntldmrckaosytpjakw', ext: true }] },
   ];
   const needs: [string, number, string][] = ([
-    ['claims to review', openClaims, '/admin/claims'], ['quote requests with overdue managers', st.overdueRequests, '/admin/requests?f=overdue&d=90'], ['partner applications', partnersPending, '/admin/partners'], ['client confirmations waiting', awaiting, '#fees'],
+    ['claims to review', openClaims, '/admin/claims'], ['unclaimed managers not told about a request', unreached, '/admin/requests?f=unreached&d=30'], ['quote requests with overdue managers', st.overdueRequests, '/admin/requests?f=overdue&d=90'], ['partner applications', partnersPending, '/admin/partners'], ['client confirmations waiting', awaiting, '#fees'],
     ['possible shared logins', (flags || []).length, '#flags'], ['Pro months to credit by hand', thanks, '/admin/feedback'], ['site errors this week', openErrors, '#errors'],
   ] as [string, number, string][]).filter(([, n]) => n > 0);
   const delta = ([a, b]: [number, number]) => { const d = a - b; return <span className={`wb-delta ${d > 0 ? 'up' : d < 0 ? 'down' : ''}`}>{d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '–'} vs last week</span>; };

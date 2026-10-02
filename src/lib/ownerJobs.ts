@@ -1,6 +1,7 @@
 import 'server-only';
 import { TEST_SLUG, managersForArea } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
+import { CATCHUP_FROM } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 
 /* Daily jobs for owners (SQL 022). Every one is best-effort and returns how many emails went. */
@@ -11,7 +12,6 @@ const ago = (h: number) => new Date(Date.now() - h * HOUR).toISOString();
 const suppressed = async (email: string) => Boolean((await adminClient().from('email_suppressions').select('email').eq('email', email.toLowerCase()).maybeSingle()).data);
 
 /** Catch-up only covers requests made after this moment. Everything before it was testing (Ben, 2 Oct 2026), so it's never emailed. */
-const CATCHUP_FROM = '2026-10-02T05:00:00Z'; // 3pm 2 Oct 2026 Sydney
 
 /** Request emails to unclaimed managers that were missed (e.g. a send failed). Last 14 days, never before CATCHUP_FROM. */
 export async function catchUpUnclaimed(limit = 40) {

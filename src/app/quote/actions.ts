@@ -152,13 +152,13 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
   const h = await headers();
   const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
   const { data: tRows } = await db.from('quote_request_managers').select('id, manager_slug').eq('request_id', req.id);
-  const { notifyUnclaimedOfRequest } = await import('@/lib/outreach');
-  const noContact: string[] = [];
+  const { notifyUnclaimedOfRequest, requestEmailsOn } = await import('@/lib/outreach');
+  const noContact: { slug: string; name: string }[] = [];
   for (const t of tRows || []) {
     const to = await memberEmails(t.manager_slug);
     if (!to.length) {
       const n = await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim(), t.id).catch(() => 0);
-      if (!n) noContact.push(managers.find((m) => m.slug === t.manager_slug)?.name || t.manager_slug);
+      if (!n) noContact.push({ slug: t.manager_slug, name: managers.find((m) => m.slug === t.manager_slug)?.name || t.manager_slug });
       continue;
     }
     await sendEmail({
@@ -173,8 +173,13 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
 
   await sendEmail({
     to: 'hello@cohostcompare.com',
-    subject: `New quote request: ${postcode}, ${managers.map((m) => m.name).join(', ')}`,
-    text: `${noContact.length ? `ACTION: no contact email on file for ${noContact.join(', ')}, so they haven't been told. Add one at /admin/outreach and they'll be invited automatically.\n\n` : ''}Owner: ${name} <${user.email}>${row.owner_phone ? `, ${row.owner_phone}` : ''}\nManagers: ${managers.map((m) => `${m.name}${m.demo ? ' (DEMO)' : ''}`).join(', ')}\n\n${summary}\n\nRequest id: ${req.id}`,
+    subject: `${noContact.length ? `ACTION: ${noContact.length} manager${noContact.length === 1 ? '' : 's'} not told · ` : ''}New quote request: ${postcode}, ${managers.map((m) => m.name).join(', ')}`,
+    text: `${noContact.length ? await (async () => {
+      const { unclaimedReach } = await import('@/lib/outreach');
+      const reach = await unclaimedReach(noContact.map((x) => x.slug));
+      const why = (r?: string) => r === 'no-email' ? 'no email on file. Add one at /admin/outreach and they’ll be told within a day' : r === 'unsubscribed' ? 'they’ve unsubscribed from our emails. Phone them or contact them through their website' : r === 'ok' && !requestEmailsOn() ? 'request emails are switched off (REQUEST_EMAILS=0)' : 'the email failed to send. We’ll retry tomorrow morning';
+      return `ACTION: ${noContact.length === 1 ? 'this unclaimed manager hasn’t' : 'these unclaimed managers haven’t'} been told about the request:\n${noContact.map((x) => `- ${x.name}: ${why(reach.get(x.slug))}`).join('\n')}\nThe owner is waiting. See ${origin}/admin/requests?f=unreached\n\n`;
+    })() : ''}Owner: ${name} <${user.email}>${row.owner_phone ? `, ${row.owner_phone}` : ''}\nManagers: ${managers.map((m) => `${m.name}${m.demo ? ' (DEMO)' : ''}`).join(', ')}\n\n${summary}\n\nRequest id: ${req.id}`,
     replyTo: user.email,
   });
 

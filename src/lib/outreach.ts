@@ -85,6 +85,40 @@ async function context(contact: { id?: string; email: string; first_name: string
     suburbs: localPlaces((st?.localities as string[] | null) || [], (m as { cities?: string[] }).cities || []), waiting: waiting ?? 0, email: contact.email, source: contact.source_url, contactId: contact.id };
 }
 
+/** Requests before this were tests (Ben, 2 Oct 2026): never emailed to unclaimed managers or flagged as "not told". 3pm Sydney. */
+export const CATCHUP_FROM = '2026-10-02T05:00:00Z';
+
+export type Reach = 'ok' | 'no-email' | 'unsubscribed';
+/** For unclaimed managers: can we email them about a request? 'no-email' = no contact on file; 'unsubscribed' = every contact opted out. */
+export async function unclaimedReach(slugs: string[]): Promise<Map<string, Reach>> {
+  const out = new Map<string, Reach>();
+  if (!slugs.length) return out;
+  const db = adminClient();
+  const { data: ms } = await db.from('managers').select('id, slug').in('slug', slugs);
+  const ids = (ms || []).map((m) => m.id);
+  const { data: cs } = ids.length ? await db.from('outreach_contacts').select('manager_id, email').in('manager_id', ids).in('status', ['active', 'finished', 'paused']) : { data: [] };
+  const emails = [...new Set((cs || []).map((c) => String(c.email).toLowerCase()))];
+  const { data: sup } = emails.length ? await db.from('email_suppressions').select('email').in('email', emails) : { data: [] };
+  const off = new Set((sup || []).map((s) => s.email));
+  for (const m of ms || []) {
+    const mine = (cs || []).filter((c) => c.manager_id === m.id);
+    out.set(m.slug, !mine.length ? 'no-email' : mine.every((c) => off.has(String(c.email).toLowerCase())) ? 'unsubscribed' : 'ok');
+  }
+  return out;
+}
+
+/** Open requests (last 30 days) where an unclaimed manager hasn't been told, with each reason. */
+export async function unreachedThreads(): Promise<{ manager: string; reason: 'no-email' | 'unsubscribed' | 'retrying' }[]> {
+  const db = adminClient();
+  const { data, error } = await db.from('quote_request_managers').select('manager_slug, manager_name').in('status', ['sent', 'viewed']).is('unclaimed_notified_at', null).neq('manager_slug', 'test-profile').gte('created_at', [new Date(Date.now() - 30 * 86400e3).toISOString(), CATCHUP_FROM].sort()[1]).limit(500);
+  if (error || !data?.length) return [];
+  const slugs = [...new Set(data.map((t) => t.manager_slug))];
+  const { data: ms } = await db.from('managers').select('slug').in('slug', slugs).eq('claimed', false);
+  const un = new Set((ms || []).map((m) => m.slug));
+  const reach = await unclaimedReach([...un]);
+  return data.filter((t) => un.has(t.manager_slug)).map((t) => { const r = reach.get(t.manager_slug) || 'no-email'; return { manager: t.manager_name, reason: r === 'ok' ? 'retrying' as const : r }; });
+}
+
 export async function suppressed(email: string) {
   const { data } = await adminClient().from('email_suppressions').select('email').eq('email', email.toLowerCase()).maybeSingle();
   return Boolean(data);
