@@ -142,7 +142,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string, thre
   for (const ct of contacts || []) {
     if (await suppressed(ct.email)) continue;
     const c: Ctx = { manager: m.name, slug, first: ct.first_name, homes: null, rating: null, suburbs: [], waiting: 1, email: ct.email, source: ct.source_url };
-    await sendEmail({
+    const ok = await sendEmail({
       to: ct.email, subject: `An owner in ${where} wants a quote from ${m.name}`,
       text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and it's free.${footer(c)}`,
       cta: { label: 'See the request', url: `${BASE}/claim/${slug}` },
@@ -150,7 +150,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string, thre
       replyTo: outreachReplyTo(ct.id),
       headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     });
-    sent++;
+    if (ok) sent++;
   }
   if (sent && threadId) await db.from('quote_request_managers').update({ unclaimed_notified_at: new Date().toISOString() }).eq('id', threadId).then(() => {}, () => {}); // needs 022
   return sent;

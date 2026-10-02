@@ -19,7 +19,13 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
   // Remember an unsent request so we can send one gentle reminder (SQL 022; never for admins).
   if (user?.email && picked.length && !isAdminEmail(user.email)) {
     const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v && k !== 'managers') as [string, string][]).toString();
-    await (await import('@/lib/supabase/server')).adminClient().from('quote_drafts').upsert({ user_id: user.id, email: user.email, managers: picked.map((m) => m.slug).join(','), names: picked.map((m) => m.name).join(', '), query: q, updated_at: new Date().toISOString(), done: false, reminded_at: null }).then(() => {}, () => {});
+    const db = (await import('@/lib/supabase/server')).adminClient();
+    const slugs = picked.map((m) => m.slug).join(',');
+    const { data: prev } = await db.from('quote_drafts').select('managers, reminded_at').eq('user_id', user.id).maybeSingle();
+    // Same managers and reminded in the last 30 days: keep it as reminded (one reminder means one).
+    const keep = prev && prev.managers === slugs && prev.reminded_at && Date.now() - new Date(prev.reminded_at).getTime() < 30 * 86400e3;
+    const now = new Date().toISOString();
+    await db.from('quote_drafts').upsert({ user_id: user.id, email: user.email, managers: slugs, names: picked.map((m) => m.name).join(', '), query: q, updated_at: now, done: false, ...(keep ? {} : { reminded_at: null, created_at: now }) }).then(() => {}, () => {});
   }
   const here = `/quote?${new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString()}`;
 

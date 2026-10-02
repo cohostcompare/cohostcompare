@@ -12,6 +12,8 @@ export type StateRules = {
   summary: string;
   points: string[];
   watch?: string[];
+  /** Plain questions and answers, restating the points above (same sources; keep in step when the points change). */
+  faqs?: [string, string][];
   sources: { label: string; url: string }[];
 };
 
@@ -29,6 +31,12 @@ export const RULES: StateRules[] = [
       'Strata schemes can pass a by-law banning short-term rentals in lots that aren’t the owner’s or occupier’s home. Hosted stays can’t be banned this way.',
     ],
     watch: ['The NSW Government is reviewing the STRA rules. No changes have been announced as law yet.'],
+    faqs: [
+      ['Do I need to register my Airbnb in NSW?', 'Yes. Every short-term rental in NSW must be registered on the NSW Planning Portal’s short-term rental accommodation register before you advertise it.'],
+      ['How many nights can I rent out my property in Sydney?', 'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney. Hosted stays aren’t capped, and bookings of 21 or more consecutive nights don’t count toward the cap.'],
+      ['What is the night cap in Byron Bay?', 'In most of Byron Shire, unhosted stays are capped at 60 nights a year. Mapped precincts in Byron Bay town centre and Brunswick Heads have no cap.'],
+      ['Can my strata ban short-term rentals?', 'A strata scheme can pass a by-law banning short-term rentals in lots that aren’t the owner’s or occupier’s home. Hosted stays can’t be banned this way.'],
+    ],
     sources: [
       { label: 'NSW Department of Planning, Housing and Infrastructure: short-term rental accommodation', url: 'https://www.planning.nsw.gov.au/the-planning-system/housing/short-term-rental-accommodation' },
       { label: 'NSW Department of Planning, Housing and Infrastructure: Byron Shire', url: 'https://www.planning.nsw.gov.au/policy-and-legislation/housing/short-term-rental-accommodation/byron-shire' },

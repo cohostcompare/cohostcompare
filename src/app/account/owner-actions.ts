@@ -54,9 +54,11 @@ export async function deleteAccount(_: { error?: string }, form: FormData): Prom
   const { count } = await db.from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id);
   if (count) return { error: 'This login also manages a business profile. Email hello@cohostcompare.com and we’ll remove you from the business and delete your account.' };
   const email = user.email || '';
+  // Unlocks still waiting on a manager's payment can't go ahead once the owner has gone. Paid ones stay on record (SQL 023).
+  const { data: mine } = await db.from('quote_request_managers').select('id, quote_requests!inner(owner_id)').eq('quote_requests.owner_id', user.id);
+  if (mine?.length) await db.from('success_fees').update({ status: 'expired', owner_notified_at: new Date().toISOString() }).in('thread_id', mine.map((t) => t.id)).eq('status', 'awaiting_unlock').then(() => {}, () => {});
   const { error } = await db.auth.admin.deleteUser(user.id); // requests, messages and reviews are removed with the account
   if (error) return { error: 'We couldn’t delete your account just now. Email hello@cohostcompare.com and we’ll do it for you.' };
-  await db.from('email_suppressions').upsert({ email: email.toLowerCase(), reason: 'account deleted' }).then(() => {}, () => {});
   if (email) await sendEmail({ to: email, subject: 'Your CoHostCompare account has been deleted', text: `Hi,\n\nAs you asked, we've deleted your CoHostCompare account, along with your quote requests and messages. Managers you were introduced to keep the details you shared with them, as their own records.\n\nYou're welcome back any time.\n\nThe CoHostCompare team` });
   await sendEmail({ to: 'hello@cohostcompare.com', subject: 'Owner deleted their account', text: `${email} deleted their account (self-serve).` });
   const { userClient } = await import('@/lib/supabase/server');

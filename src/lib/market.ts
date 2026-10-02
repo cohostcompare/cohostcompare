@@ -63,11 +63,14 @@ async function build(): Promise<Market> {
     const chunk = all.slice(i, i + 6);
     per.push(...(await Promise.all(chunk.map(async (a) => ({ a, ms: await managersNear(a.lat, a.lng) })))));
   }
+  // Don't cache a bad run: if the areas or listing figures didn't load, throw so the pages fall back and retry next time.
+  if (!all.length || per.every((p) => !p.ms.length)) throw new Error('market figures incomplete');
   const db = adminClient();
-  const [{ data: mgrs }, { data: st }] = await Promise.all([
+  const [{ data: mgrs, error: mErr }, { data: st }] = await Promise.all([
     db.from('managers').select('id, fee_min, fee_max, claimed').eq('published', true),
     db.from('manager_stats').select('data_as_of').order('data_as_of', { ascending: false }).limit(1),
   ]);
+  if (mErr || !mgrs?.length) throw new Error('managers query failed');
   const list = (mgrs || []) as { id: string; fee_min: number | null; fee_max: number | null; claimed: boolean }[];
   const cityNames = [...new Set(all.map((a) => a.city))];
   const cities = cityNames.map((city) => {

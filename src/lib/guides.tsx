@@ -166,7 +166,7 @@ export const GUIDES: Guide[] = [
           <li>How and when you’re paid, and what statements you get</li>
         </ul>
         <h2>5. Rules and compliance</h2>
-        <p>Rules differ by state and council. In NSW every short-term rental must be registered and meet a fire safety standard; in Victoria a short stay levy applies. A good manager will explain what applies to your property. See <Link href="/rules">the rules by state</Link>.</p>
+        <p>Rules differ by state and council. In New South Wales: {nsw.summary} In Victoria: {vic.summary} A good manager will explain what applies to your property. See <Link href="/rules">the rules by state</Link> (checked {RULES_CHECKED}).</p>
         <h2>6. Fit for your property</h2>
         <p>Some managers only take homes available most of the year, certain property types or full management. On CoHostCompare, enter your property details and we only let you add managers whose requirements fit.</p>
         <h2>7. Compare quotes in one format</h2>
@@ -180,12 +180,7 @@ export const GUIDES: Guide[] = [
     title: 'Short-stay rules in NSW: a checklist for Airbnb owners',
     description: 'What NSW owners need to do before listing a short-term rental: registration, the 180-night cap in Greater Sydney, Byron Shire’s 60-night cap, fire safety, the code of conduct and strata by-laws.',
     published: '2026-10-02', modified: '2026-10-02',
-    faqs: [
-      ['Do I need to register my Airbnb in NSW?', 'Yes. Every short-term rental in NSW must be registered on the NSW Planning Portal’s short-term rental accommodation register before you advertise it.'],
-      ['How many nights can I rent out my property in Sydney?', 'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney. Hosted stays aren’t capped, and bookings of 21 or more consecutive nights don’t count toward the cap.'],
-      ['What is the night cap in Byron Bay?', 'In most of Byron Shire, unhosted stays are capped at 60 nights a year. Mapped precincts in Byron Bay town centre and Brunswick Heads have no cap.'],
-      ['Can my strata ban short-term rentals?', 'A strata scheme can pass a by-law banning short-term rentals in lots that aren’t the owner’s or occupier’s home. Hosted stays can’t be banned this way.'],
-    ],
+    faqs: nsw.faqs || [],
     body: () => (
       <>
         <p>{nsw.summary} Here’s what to do before you list, checked against official NSW Government sources on {RULES_CHECKED}. General information, not legal advice.</p>

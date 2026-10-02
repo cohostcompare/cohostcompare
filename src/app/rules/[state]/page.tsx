@@ -5,7 +5,7 @@ import AskRules from '@/components/AskRules';
 import JsonLd from '@/components/JsonLd';
 import { areas } from '@/lib/areas';
 import { RULES, RULES_CHECKED, RULES_CHECKED_ISO, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
-import { article, breadcrumbs } from '@/lib/seo';
+import { article, breadcrumbs, faqPage } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 type P = Promise<{ state: string }>;
@@ -34,6 +34,7 @@ export default async function StateRules({ params }: { params: P }) {
       <JsonLd data={[
         breadcrumbs([['Home', '/'], ['Rules', '/rules'], [r.name, `/rules/${r.code}`]]),
         article({ title, description: r.summary, path: `/rules/${r.code}`, published: '2026-09-01', modified: RULES_CHECKED_ISO }),
+        ...(r.faqs?.length ? [faqPage(r.faqs)] : []),
       ]} />
       <nav className="hint" aria-label="Breadcrumb"><Link href="/rules">Rules</Link> › {r.name}</nav>
       <header style={{ display: 'grid', gap: 8 }}>
@@ -55,6 +56,13 @@ export default async function StateRules({ params }: { params: P }) {
         </ul>
         {r.watch && <p style={{ margin: 0, background: 'var(--tint)', borderRadius: 10, padding: '8px 12px', fontSize: 14 }}><b>Coming up:</b> {r.watch.join(' ')}</p>}
       </section>
+
+      {r.faqs?.length ? (
+        <section className="panel" style={{ display: 'grid', gap: 10 }}>
+          <h2 style={{ fontSize: 20, margin: 0 }}>Common questions</h2>
+          {r.faqs.map(([q, a]) => <details key={q} className="faq"><summary>{q}</summary><p>{a}</p></details>)}
+        </section>
+      ) : null}
 
       <section className="panel" style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>Official sources</h2>
