@@ -655,3 +655,5 @@ a.kpi:hover { border-color: var(--k); }
 .cmp thead th:first-child, .cmp tbody th { width: 190px; }
 .sort-hit { background: #FFF1DC; color: #7A4504; border-radius: 6px; padding: 0 5px; }
 @media (prefers-color-scheme: dark) { .sort-hit { background: #3A2A12; color: #F3C27A; } }
+.btn.btn-big { min-height: 52px; padding: 0 26px; font-size: 17px; box-shadow: 0 6px 18px color-mix(in srgb, var(--brand) 35%, transparent); }
+.quotebar .linkish { font-weight: 600; font-size: 14px; }
