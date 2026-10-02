@@ -6,6 +6,7 @@ import { submitQuoteRequest } from './actions';
 import { checkCoverage } from './coverage';
 import { AVAILABILITY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
 import { loadProperty, saveProperty } from '@/lib/client/property';
+import { removePick } from '@/lib/client/picks';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
@@ -71,6 +72,18 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
       <input type="hidden" name="managers" value={covered.map((m) => m.slug).join(',')} />
       <input type="hidden" name="lat" value={addr.lat ?? ''} />
       <input type="hidden" name="lng" value={addr.lng ?? ''} />
+      <div style={{ display: 'grid', gap: 6 }}>
+        <span style={{ fontWeight: 600, fontSize: 14 }}>Sending to</span>
+        <div className="pick-chips">
+          {active.map((m) => (
+            <span key={m.slug} className="pick-chip">
+              {m.name}
+              {active.length > 1 && <button type="button" aria-label={`Remove ${m.name}`} title={`Remove ${m.name}`} onClick={() => { setRemoved([...removed, m.slug]); removePick(m.slug); }}>×</button>}
+            </span>
+          ))}
+        </div>
+        {active.length === 1 && <span className="hint">To send to someone else instead, go back to the search results and pick another manager.</span>}
+      </div>
       <div style={grid(200)}>
         <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
         <label style={L}>Email<input className="field" name="email" type="email" autoComplete="email" defaultValue={email} required /></label>

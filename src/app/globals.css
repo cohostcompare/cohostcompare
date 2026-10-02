@@ -623,3 +623,8 @@ a.kpi:hover { border-color: var(--k); }
 .earn-nudge .x { position: absolute; top: 8px; right: 8px; background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 6px; }
 .earn-nudge .earn-pill { justify-self: start; }
 @media (prefers-reduced-motion: reduce) { .earn-nudge { animation: none; } }
+.pick-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--tint); border-radius: 999px; padding: 6px 6px 6px 14px; font-weight: 600; font-size: 14px; }
+.pick-chip button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--panel); color: var(--ink); font-size: 16px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.pick-chip button:hover { background: var(--signal); color: #fff; }
+.pick-chip:only-child { padding-right: 14px; }

@@ -43,3 +43,12 @@ export function areaKey(query: string) {
   const q = new URLSearchParams(query);
   return q.get('lat') && q.get('lng') ? `${q.get('lat')},${q.get('lng')}` : q.get('postcode') || 'any';
 }
+
+/** Removes a manager from the saved quote list, whatever the area (used by the quote form). */
+export function removePick(slug: string) {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(KEY) || 'null') as { area: string; picks: Pick[] } | null;
+    if (v) sessionStorage.setItem(KEY, JSON.stringify({ ...v, picks: (v.picks || []).filter((p) => p.slug !== slug) }));
+    window.dispatchEvent(new Event(EVT));
+  } catch { /* fine */ }
+}

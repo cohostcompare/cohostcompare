@@ -23,7 +23,7 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
       <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Request quotes</h1>
       {picked.length ? (
         <p style={{ color: 'var(--muted)', margin: 0 }}>
-          Going to <b style={{ color: 'var(--ink)' }}>{picked.map((m) => m.name).join(', ')}</b>. Describe your property once and each replies with a quote in the same format.
+          Describe your property once and each manager replies with a quote in the same format, so you can compare them side by side.
         </p>
       ) : (
         <div className="panel">Pick managers from your search results first. <Link href="/">Start a search</Link></div>
