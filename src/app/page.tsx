@@ -33,7 +33,7 @@ export default async function Home() {
         <div className="hh-photo" aria-hidden="true"><img src={photoSrc('photo-1689834680023-34882df43a7c', 1400)} srcSet={[800, 1400, 2000].map((w) => `${photoSrc('photo-1689834680023-34882df43a7c', w)} ${w}w`).join(', ')} sizes="(max-width: 880px) 100vw, 65vw" alt="" fetchPriority="high" /></div>
       <div className="split">
         <div style={{ display: 'grid', gap: 20 }}>
-          <h1 className="hero-h1">Compare <span>short-term rental managers</span> near you</h1>
+          <h1 className="hero-h1"><span>Compare short-term</span> <span>rental managers</span> <span>near you</span></h1>
           <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
           <div className="hero-actions">
             <div className="hero-search"><AddressSearch /></div>

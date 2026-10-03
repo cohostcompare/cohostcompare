@@ -19,7 +19,7 @@ export default function ComparisonPreview() {
               <span className="rp-av" style={{ background: TILE[i] }}>{m.initials}</span>
               <div className="rp-main">
                 <b>{m.name}</b>
-                <span className="rp-meta"><b>{m.homes}</b> homes nearby · <b>{m.rating} ★</b></span>
+                <span className="rp-meta"><b>{m.homes}</b> homes · <b>{m.rating} ★</b> guest rating nearby</span>
                 <span className="rp-meta">{m.platforms}</span>
                 <span className="rp-tag">{m.tag}</span>
               </div>
