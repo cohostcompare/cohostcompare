@@ -5,7 +5,7 @@ import { POSITIONING, faqPage } from '@/lib/seo';
 import AddressSearch from '@/components/AddressSearch';
 import ComparisonPreview from '@/components/ComparisonPreview';
 import CoverageMap from '@/components/CoverageMap';
-import Photo from '@/components/Photo';
+import Photo, { src as photoSrc } from '@/components/Photo';
 import { areas } from '@/lib/areas';
 import RulesTrust from '@/components/RulesTrust';
 
@@ -29,7 +29,9 @@ export default async function Home() {
   const all = await areas().catch(() => []);
   return (
     <main>
-      <section className="split" style={{ paddingBlock: '32px 48px' }}>
+      <section className="home-hero">
+        <div className="hh-photo" aria-hidden="true"><img src={photoSrc('photo-1689834680023-34882df43a7c', 1400)} srcSet={[800, 1400, 2000].map((w) => `${photoSrc('photo-1689834680023-34882df43a7c', w)} ${w}w`).join(', ')} sizes="(max-width: 880px) 100vw, 65vw" alt="" fetchPriority="high" /></div>
+      <div className="split">
         <div style={{ display: 'grid', gap: 20 }}>
           <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare short-term rental managers near you.</h1>
           <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
@@ -42,6 +44,7 @@ export default async function Home() {
           </div>
         </div>
         <ComparisonPreview />
+      </div>
       </section>
 
       <section className="steps" aria-labelledby="how">
