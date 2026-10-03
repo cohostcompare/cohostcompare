@@ -32,22 +32,22 @@ export default async function Home() {
       <section className="home-hero">
         <div className="hh-photo" aria-hidden="true"><img src={photoSrc('photo-1689834680023-34882df43a7c', 1400)} srcSet={[800, 1400, 2000].map((w) => `${photoSrc('photo-1689834680023-34882df43a7c', w)} ${w}w`).join(', ')} sizes="(max-width: 880px) 100vw, 65vw" alt="" fetchPriority="high" /></div>
       <div className="split">
-        <div style={{ display: 'grid', gap: 20 }}>
+        <div className="hero-left">
           <h1 className="hero-h1"><span>Compare short-term</span> <span>rental managers</span> <span>near you</span></h1>
           <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
           <div className="hero-actions">
             <div className="hero-search"><AddressSearch /></div>
-            <div className="hero-or">
-              <span className="hint">or</span>
-              <Link href="/earnings" className="btn-earn"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn</Link>
-            </div>
+          </div>
+          <div className="hero-or">
+            <span className="hint">or</span>
+            <Link href="/earnings" className="btn-earn"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn</Link>
           </div>
         </div>
         <ComparisonPreview />
       </div>
       </section>
 
-      <section className="steps" aria-labelledby="how">
+      <section className="steps home-steps" aria-labelledby="how">
         <div className="steps-head">
           <span className="label">How it works</span>
           <h2 id="how">Compare managers in three steps. Up to five quotes. Zero sales calls.</h2>
