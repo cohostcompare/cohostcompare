@@ -835,3 +835,5 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .steps.home-steps { padding-top: 26px; margin-top: 14px; gap: 26px; }
 .home-steps .steps-head .label { font-size: 15px; letter-spacing: .08em; opacity: .95; }
 .home-steps h2 { font-size: clamp(30px, 4.6vw, 48px); }
+
+.chip-more { border: 1px solid var(--brand); background: var(--panel); color: var(--brand); font-weight: 700; cursor: pointer; }

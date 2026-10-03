@@ -12,6 +12,8 @@ export default function CoverageMap({ areas, compact, hideList }: { areas: Cover
   const [failed, setFailed] = useState(false);
   const groups = useMemo(() => [...new Set(areas.map((a) => a.city))], [areas]);
   const [group, setGroup] = useState<string>('All');
+  const [more, setMore] = useState(false);
+  const FEW = 8;
   const shown = group === 'All' ? areas : areas.filter((a) => a.city === group);
 
   useEffect(() => {
@@ -45,13 +47,18 @@ export default function CoverageMap({ areas, compact, hideList }: { areas: Cover
     <div className="cov-map">
       <div role="tablist" aria-label="Region" className="cov-tabs">
         {['All', ...groups].map((x) => (
-          <button key={x} role="tab" type="button" aria-selected={group === x} className={`btn small ${group === x ? 'primary' : 'secondary'}`} onClick={() => setGroup(x)}>{x === 'All' ? 'All areas' : x}</button>
+          <button key={x} role="tab" type="button" aria-selected={group === x} className={`btn small ${group === x ? 'primary' : 'secondary'}`} onClick={() => { setGroup(x); setMore(false); }}>{x === 'All' ? 'All areas' : x}</button>
         ))}
       </div>
       {!failed && <div ref={el} className="cov-canvas" style={{ height: compact ? 300 : 380 }} role="img" aria-label={`Map of the ${shown.length} areas we cover${group === 'All' ? '' : ` in ${group}`}`} />}
       <div className="cov-list">
         <span className="hint">{shown.length} area{shown.length === 1 ? '' : 's'}{group === 'All' ? '' : ` in ${group}`}. More areas coming soon.</span>
-        {!hideList && <div className="chips">{shown.map((a) => <Link key={a.slug} className="chip" href={`/areas/${a.slug}`}>{a.label}</Link>)}</div>}
+        {!hideList && (
+          <div className="chips">
+            {(more ? shown : shown.slice(0, FEW)).map((a) => <Link key={a.slug} className="chip" href={`/areas/${a.slug}`}>{a.label}</Link>)}
+            {shown.length > FEW && <button type="button" className="chip chip-more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? 'Show fewer' : `Show ${shown.length - FEW} more`}</button>}
+          </div>
+        )}
       </div>
     </div>
   );
