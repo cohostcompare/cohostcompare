@@ -5,7 +5,8 @@ import { POSITIONING, faqPage } from '@/lib/seo';
 import AddressSearch from '@/components/AddressSearch';
 import ComparisonPreview from '@/components/ComparisonPreview';
 import CoverageMap from '@/components/CoverageMap';
-import Photo, { src as photoSrc } from '@/components/Photo';
+import HeroBackdrop from '@/components/HeroBackdrop';
+import Photo from '@/components/Photo';
 import { areas } from '@/lib/areas';
 import RulesTrust from '@/components/RulesTrust';
 
@@ -30,7 +31,7 @@ export default async function Home() {
   return (
     <main>
       <section className="home-hero">
-        <div className="hh-photo" aria-hidden="true"><img src={photoSrc('photo-1689834680023-34882df43a7c', 1400)} srcSet={[800, 1400, 2000].map((w) => `${photoSrc('photo-1689834680023-34882df43a7c', w)} ${w}w`).join(', ')} sizes="(max-width: 880px) 100vw, 65vw" alt="" fetchPriority="high" /></div>
+        <HeroBackdrop />
       <div className="split">
         <div className="hero-left">
           <h1 className="hero-h1"><span>Compare short-term</span> <span>rental managers</span> <span>near you</span></h1>
