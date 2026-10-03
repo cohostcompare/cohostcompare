@@ -837,3 +837,9 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .home-steps h2 { font-size: clamp(30px, 4.6vw, 48px); }
 
 .chip-more { border: 1px solid var(--brand); background: var(--panel); color: var(--brand); font-weight: 700; cursor: pointer; }
+
+/* Clicking the results picture: pulse the address box and make its placeholder stand out */
+@keyframes searchPulse { 0%, 100% { box-shadow: 0 14px 40px rgba(16,48,47,.18), 0 0 0 0 rgba(15,94,87,0); } 30%, 70% { box-shadow: 0 14px 40px rgba(16,48,47,.18), 0 0 0 6px rgba(15,94,87,.35); } }
+.hero-search.flash .search { animation: searchPulse .6s ease-in-out 3; }
+.hero-search.flash input::placeholder { color: var(--brand); font-weight: 700; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .hero-search.flash .search { animation: none; box-shadow: 0 0 0 4px rgba(15,94,87,.35); } }

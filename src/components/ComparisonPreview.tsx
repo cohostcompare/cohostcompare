@@ -1,3 +1,5 @@
+'use client';
+
 /** Homepage picture of the results page: made-up managers (never real businesses), shown as an app window with what you can do next. */
 const EXAMPLES = [
   { name: 'Tidewell Stays', initials: 'TS', fee: '18%', rating: '4.92', homes: 24, platforms: 'Airbnb · Stayz · Booking.com', tag: 'Highest rating nearby', picked: true },
@@ -6,9 +8,20 @@ const EXAMPLES = [
 ];
 const TILE = ['#0F5E57', '#9A5A06', '#3D4E8A'];
 
+/** Clicking the picture points people to the real search: the address box pulses and its placeholder goes bold. */
+function nudgeSearch() {
+  const box = document.querySelector<HTMLElement>('.hero-search');
+  if (!box) return;
+  const r = box.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > window.innerHeight) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
+  window.setTimeout(() => box.classList.remove('flash'), 1800);
+  if (window.matchMedia('(hover: hover)').matches) box.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+}
+
 export default function ComparisonPreview() {
   return (
-    <figure className="rp" aria-label="Picture of a results page, with made-up managers">
+    <figure className="rp" aria-label="Picture of a results page, with made-up managers" onClick={nudgeSearch}>
       <span className="rp-label">What your results look like</span>
       <div className="rp-window" aria-hidden="true">
         <div className="rp-chrome"><i /><i /><i /><span>cohostcompare.com/search</span></div>
