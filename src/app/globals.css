@@ -747,7 +747,8 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .home-hero > .hh-photo { position: absolute; inset: 0 0 0 38%; z-index: -2; }
 .home-hero > .hh-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .home-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface) 0%, var(--surface) 40%, color-mix(in srgb, var(--surface) 70%, transparent) 52%, transparent 70%); }
-.home-hero .split { gap: 48px; }
+.home-hero .split { gap: 40px; }
+@media (min-width: 881px) { .home-hero .split { grid-template-columns: minmax(0, 1.25fr) minmax(360px, .85fr); } }
 @media (max-width: 880px) {
   .home-hero { padding: 0 0 24px; border-radius: 0; margin-top: 0; }
   .home-hero > .hh-photo { position: relative; inset: auto; height: 110px; margin: 0 0 18px; border-radius: 16px; overflow: hidden; }
@@ -780,7 +781,7 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .rp-btn.done { background: var(--tint); }
 .rp-btn.primary { background: var(--brand); color: #fff; }
 .rp-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 9px; font-size: 13px; }
-.rp-actions { display: flex; gap: 10px; align-items: center; }
+.rp-actions { display: flex; gap: 10px; align-items: center; margin-left: auto; }
 .rp-link { font-weight: 700; color: var(--brand); text-decoration: underline; font-size: 12.5px; }
 
 /* Hero actions */
@@ -822,3 +823,7 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .guide-consent { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
 .guide-consent input { width: 20px; height: 20px; margin-top: 1px; accent-color: var(--brand); flex: none; }
 @media (max-width: 640px) { .guide-signup, .guide-signup.compact { grid-template-columns: 1fr; } .guide-cover { display: none; } .guide-form { grid-template-columns: 1fr; } }
+
+.hero-h1 { margin: 0; font-size: clamp(34px, 3.4vw, 45px); line-height: 1.06; }
+.hero-h1 span { display: block; }
+@media (min-width: 1000px) { .hero-h1 span { white-space: nowrap; } }
