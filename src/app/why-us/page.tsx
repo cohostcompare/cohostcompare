@@ -5,11 +5,11 @@ import Photo from '@/components/Photo';
 export const metadata: Metadata = {
   title: 'Why use us',
   alternates: { canonical: '/why-us' },
-  description: 'A neutral, transparent way to compare short-term rental managers: every manager, every platform, real performance data and no pay-to-rank.',
+  description: 'An unbiased, transparent way to compare short-term rental managers: every manager, every platform, real performance data and no pay-to-rank.',
 };
 
 const POINTS: [string, string][] = [
-  ['Neutral by design', 'We’re not a manager, and we don’t earn more when you pick one over another. Most “best Airbnb manager” lists are written by managers ranking themselves first.'],
+  ['Unbiased by design', 'We’re not a manager, and we don’t earn more when you pick one over another. Most “best Airbnb manager” lists are written by managers ranking themselves first.'],
   ['Every manager, every platform', 'Airbnb’s own co-host directory only shows Airbnb co-hosts. We include full-service agencies and managers who list on Booking.com, Stayz and direct booking sites.'],
   ['Performance you can check', 'Home counts, guest ratings and nightly rates are estimates from managers’ public listings, refreshed regularly and shown the same way for everyone. We show where each figure comes from.'],
   ['Fees in the same format', 'Where managers publish fees, we show them. Quotes come back in a standard format, so a 15% fee with a setup charge and a 12-month lock-in can be compared with 18% and no lock-in.'],
@@ -22,7 +22,7 @@ export default function WhyUs() {
     <main style={{ maxWidth: 1000, paddingBlock: '16px 64px', display: 'grid', gap: 28 }}>
       <header className="split">
         <div style={{ display: 'grid', gap: 10 }}>
-          <span className="label" style={{ color: 'var(--brand)' }}>Neutral and transparent</span>
+          <span className="label" style={{ color: 'var(--brand)' }}>Unbiased and transparent</span>
           <h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: 0 }}>Why use us</h1>
           <p className="lede">Handing over the keys to your property is a big decision. You should be able to compare every option on the same terms.</p>
         </div>

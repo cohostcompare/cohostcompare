@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import GuideSignup from '@/components/GuideSignup';
 import JsonLd from '@/components/JsonLd';
 import { GUIDES } from '@/lib/guides';
 import { RULES } from '@/lib/rules';
@@ -29,6 +30,7 @@ export default function Guides() {
           </Link>
         ))}
       </div>
+      <GuideSignup />
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 22, margin: 0 }}>Short-stay rules by state</h2>
         <div className="chips">{RULES.map((r) => <Link key={r.code} className="chip" href={`/rules/${r.code}`}>{r.name}</Link>)}</div>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DataSource from '@/components/DataSource';
+import GuideSignup from '@/components/GuideSignup';
 import JsonLd from '@/components/JsonLd';
 import { GUIDES, guide } from '@/lib/guides';
 import { fmtDate, market } from '@/lib/market';
@@ -42,6 +43,7 @@ export default async function GuidePage({ params }: { params: P }) {
         <span>Fees, guest ratings and homes they run nearby, side by side. Request up to five quotes, free.</span>
         <Link className="btn primary" href="/">Search your address</Link>
       </section>
+ <GuideSignup compact />
       <nav aria-label="More guides" style={{ display: 'grid', gap: 8 }}>
         <b>More guides</b>
         <div className="chips">{GUIDES.filter((x) => x.slug !== g.slug).map((x) => <Link key={x.slug} className="chip" href={`/guides/${x.slug}`}>{x.short}</Link>)}</div>

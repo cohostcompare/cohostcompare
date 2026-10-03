@@ -56,7 +56,7 @@ export default async function AreaPage({ params }: { params: P }) {
     [`How many short-term rental managers cover ${a.label}?`, managers.length ? `${managers.length} manager${managers.length === 1 ? '' : 's'} run${managers.length === 1 ? 's' : ''} homes within ${COVER_KM} km of central ${a.label}${homes ? `, with ${homes.toLocaleString('en-AU')} Airbnb homes between them nearby` : ''}.` : `We haven't mapped managers in ${a.label} yet. Search your address to see who covers it.`],
     [`How much do Airbnb managers charge in ${a.label}?`, fee.count ? `Of the managers here who publish a fee, fees range from ${range}, with a typical fee of ${fee.mid}% of booking income. Check whether GST, setup fees, cleaning and linen are extra.` : `Most managers here quote fees on request. Request quotes from up to five and compare them in one format.`],
     [`What are the short-stay rules in ${a.label}?`, rules ? `${rules.summary} Check with your council and strata or owners corporation too.` : 'Check with your council and strata or owners corporation before you list.'],
-    [`Can managers pay to rank higher here?`, 'No. CoHostCompare is neutral: no manager can pay for placement, ranking or ratings. You choose how results are sorted.'],
+    [`Can managers pay to rank higher here?`, 'No. No manager can pay for placement, ranking or ratings. You choose how results are sorted.'],
   ];
   const nearbyAreas = all.filter((x) => x.slug !== a.slug && x.city === a.city).map((x) => ({ ...x, d: km(a, x) })).sort((x, y) => x.d - y.d).slice(0, 6);
 

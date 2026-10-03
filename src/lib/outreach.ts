@@ -216,6 +216,7 @@ export async function unsubscribe(email: string) {
   const db = adminClient();
   await db.from('email_suppressions').upsert({ email: e, reason: 'unsubscribed' });
   await db.from('outreach_contacts').update({ status: 'unsubscribed' }).ilike('email', e);
+  await db.from('guide_signups').update({ consent: false, next_at: null }).ilike('email', e).then(() => {}, () => {});
 }
 
 /** Sends one sequence email for a real manager to hello@ so it can be checked before going out. */

@@ -35,4 +35,4 @@ export const article = (a: { title: string; description: string; path: string; p
 });
 
 /** One line used everywhere we describe ourselves (site, llms.txt, structured data). Keep them consistent. */
-export const POSITIONING = 'CoHostCompare is a free, neutral Australian comparison site where property owners compare short-term rental (Airbnb) managers and co-hosts that cover their address, then request quotes from up to five in one standard format. Managers cannot pay for placement or ranking.';
+export const POSITIONING = 'CoHostCompare is a free, unbiased Australian comparison site where property owners compare short-term rental (Airbnb) managers and co-hosts that cover their address, then request quotes from up to five in one standard format. Managers cannot pay for placement or ranking.';

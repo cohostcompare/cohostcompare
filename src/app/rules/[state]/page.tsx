@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import RulesTrust from '@/components/RulesTrust';
+import GuideSignup from '@/components/GuideSignup';
 import AskRules from '@/components/AskRules';
 import JsonLd from '@/components/JsonLd';
 import { areas } from '@/lib/areas';
@@ -41,6 +43,7 @@ export default async function StateRules({ params }: { params: P }) {
         <span className="label" style={{ color: 'var(--brand)' }}>{r.code.toUpperCase()} · checked {RULES_CHECKED}</span>
         <h1 style={{ fontSize: 'clamp(30px,5vw,44px)', margin: 0 }}>{title}</h1>
         <p className="lede" style={{ margin: 0 }}>{r.summary}</p>
+        <RulesTrust />
       </header>
 
       {rulesAgeDays() > RULES_STALE_DAYS && (
@@ -76,6 +79,8 @@ export default async function StateRules({ params }: { params: P }) {
         <h2 style={{ fontSize: 20, margin: 0 }}>Ask about your suburb or situation</h2>
         <AskRules initial="" />
       </section>
+
+      <GuideSignup compact />
 
       {local.length > 0 && (
         <section style={{ display: 'grid', gap: 8 }}>

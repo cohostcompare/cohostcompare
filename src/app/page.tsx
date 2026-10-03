@@ -3,12 +3,15 @@ import Link from 'next/link';
 import JsonLd from '@/components/JsonLd';
 import { POSITIONING, faqPage } from '@/lib/seo';
 import AddressSearch from '@/components/AddressSearch';
-import HeroCarousel from '@/components/HeroCarousel';
+import ComparisonPreview from '@/components/ComparisonPreview';
+import CoverageMap from '@/components/CoverageMap';
 import Photo from '@/components/Photo';
+import { areas } from '@/lib/areas';
+import RulesTrust from '@/components/RulesTrust';
 
 export const metadata: Metadata = {
   title: { absolute: 'CoHostCompare: compare Airbnb and short-term rental managers in Australia' },
-  description: 'Compare the Airbnb and short-term rental managers who cover your address: fees, guest ratings and homes they run nearby, side by side. Request up to five quotes free. Neutral: no paid rankings.',
+  description: 'Compare the Airbnb and short-term rental managers who cover your address: fees, guest ratings and homes they run nearby, side by side. Request up to five quotes free. Unbiased, with no paid rankings.',
   alternates: { canonical: '/' },
 };
 
@@ -19,29 +22,32 @@ const faqs: [string, string][] = [
   ['Can managers pay to rank higher?', 'No. No manager can pay for placement, ranking, ratings or badges. You choose how results are sorted, for example by guest rating near you or homes nearby.'],
   ['Where do the ratings and home counts come from?', 'From public guest ratings on the short-term rental listings each manager runs, over the last 12 months, via AirROI. They are estimates, and we never show individual listings.'],
   ['When does a manager get my contact details?', 'Only after you accept their quote. Until then you message them through CoHostCompare.'],
-  ['Which areas do you cover?', 'Sydney, Melbourne and holiday areas across New South Wales and Victoria, from Byron Bay and the Blue Mountains to the Great Ocean Road and Daylesford. More areas are coming.'],
+  ['Which areas do you cover?', 'Sydney, Melbourne and holiday spots across NSW and Victoria. The map above shows every area, and more are coming.'],
 ];
 
-export default function Home() {
+export default async function Home() {
+  const all = await areas().catch(() => []);
   return (
     <main>
-      <section className="split" style={{ paddingBlock: '36px 56px' }}>
-        <div style={{ display: 'grid', gap: 22 }}>
-          <div className="label" style={{ color: 'var(--brand)' }}>Sydney, Melbourne and NSW and Victorian holiday spots</div>
-          <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare every short-term rental manager for your property.</h1>
-          <p className="lede">See the managers who cover your address, with fees, platforms and real guest ratings side by side. Then request quotes from up to five managers in one go. Free for owners, and neutral: no manager can pay to change their rating.</p>
-          <div className="hero-search"><AddressSearch /></div>
-          <p style={{ margin: 0 }}><Link href="/earnings" className="earn-pill"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn →</Link></p>
+      <section className="split" style={{ paddingBlock: '32px 48px' }}>
+        <div style={{ display: 'grid', gap: 20 }}>
+          <h1 style={{ fontSize: 'clamp(34px, 5.2vw, 54px)', margin: 0 }}>Compare short-term rental managers near you.</h1>
+          <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
+          <div className="hero-actions">
+            <div className="hero-search"><AddressSearch /></div>
+            <div className="hero-or">
+              <span className="hint">or</span>
+              <Link href="/earnings" className="btn-earn"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn</Link>
+            </div>
+          </div>
         </div>
-        <div className="hero-photo">
-          <HeroCarousel sizes="(max-width: 880px) 100vw, 520px" />
-        </div>
+        <ComparisonPreview />
       </section>
 
       <section className="steps" aria-labelledby="how">
         <div className="steps-head">
           <span className="label">How it works</span>
-          <h2 id="how">Three steps. Up to five quotes. Zero sales calls.</h2>
+          <h2 id="how">Compare managers in three steps. Up to five quotes. Zero sales calls.</h2>
         </div>
         <ol>
           <li>
@@ -54,13 +60,13 @@ export default function Home() {
             <span className="num" aria-hidden="true">02</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
             <h3>Compare</h3>
-            <p>Fees, guest ratings, homes nearby and platforms, side by side, from the same data for everyone.</p>
+            <p>Compare fees, guest ratings, homes nearby and platforms side by side, from the same data for everyone.</p>
           </li>
           <li>
             <span className="num" aria-hidden="true">03</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
             <h3>Choose</h3>
-            <p>Describe your property once. Get quotes back in one format, ask questions, and accept the best fit.</p>
+            <p>Describe your property once. Compare quotes in one format, ask questions, and accept the best fit.</p>
           </li>
         </ol>
         <div className="steps-foot">
@@ -69,37 +75,31 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="band">
-        <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Sydney, Melbourne and the holiday coast</h2>
-        <p className="lede" style={{ marginBottom: 24 }}>We&apos;ve mapped the managers running short-term rentals across Sydney and Melbourne, plus NSW and Victorian holiday spots from Byron Bay and the Blue Mountains to the Great Ocean Road and Daylesford. More areas soon. <Link href="/areas">Browse by area →</Link></p>
-        <div className="cities">
-          <div className="city">
-            <Photo name="sydney" ratio="16 / 10" sizes="(max-width: 880px) 100vw, 540px" />
-            <div className="over"><b>Sydney</b><span>Know the 180-night cap and registration before you list.</span></div>
-          </div>
-          <div className="city">
-            <Photo name="melbourne" ratio="16 / 10" sizes="(max-width: 880px) 100vw, 540px" />
-            <div className="over"><b>Melbourne</b><span>Factor in Victoria&apos;s 7.5% short stay levy.</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="ask-cta" aria-label="Ask about short-stay rules">
-        <div>
-          <h2 style={{ fontSize: 'clamp(22px,3vw,28px)', margin: '0 0 4px' }}>What are the short-stay rules in your area?</h2>
-          <p style={{ margin: 0, color: 'var(--muted)' }}>Ask anything about registration, night caps, levies or strata rules, and get a plain-English answer with the official source.</p>
+      <section className="rules-cta" aria-label="Short-stay rules">
+        <span className="ico-big" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" /><path d="m9 12 2 2 4-4" /></svg></span>
+        <div style={{ display: 'grid', gap: 4 }}>
+          <h2 style={{ fontSize: 'clamp(20px,2.6vw,24px)', margin: 0 }}>Know the short-stay rules before you list</h2>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Registration, night caps, levies and strata rules in plain English, for your state.</p>
+          <RulesTrust style={{ fontSize: 13 }} />
         </div>
         <form action="/rules" method="get">
-          <label htmlFor="home-ask" className="sr-only">Your question</label>
-          <input id="home-ask" className="field" name="q" placeholder="e.g. Can my strata ban Airbnb?" style={{ minWidth: 260, background: 'var(--panel)' }} />
+          <label htmlFor="home-ask" className="sr-only">Your question about the rules</label>
+          <input id="home-ask" className="field" name="q" placeholder="e.g. Can my strata ban Airbnb?" />
           <button className="btn primary" type="submit">Ask</button>
         </form>
+      </section>
+
+      <section className="band" id="coverage" aria-labelledby="coverage-h">
+        <h2 id="coverage-h" style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Where you can compare managers</h2>
+        <p className="lede" style={{ marginBottom: 18 }}>Sydney, Melbourne and holiday spots across NSW and Victoria. Tap an area to compare the managers there.</p>
+        <CoverageMap areas={all.map((a) => ({ slug: a.slug, label: a.label, city: a.city, lat: a.lat, lng: a.lng }))} />
+        <p style={{ margin: '16px 0 0' }}><Link className="btn secondary btn-browse" href="/areas">Browse all areas →</Link></p>
       </section>
 
       <section className="band split">
         <Photo name="bed" ratio="4 / 3" sizes="(max-width: 880px) 100vw, 520px" />
         <div style={{ display: 'grid', gap: 14 }}>
-          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Neutral, so you can trust the comparison</h2>
+          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Unbiased, so you can trust the comparison</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>We&apos;re not a manager, and we don&apos;t earn more when you pick one over another. Every manager&apos;s figures come from the same public data, shown the same way, and every quote comes back in the same format.</p>
           <p style={{ margin: 0 }}><Link href="/why-us">Why use us →</Link></p>
         </div>

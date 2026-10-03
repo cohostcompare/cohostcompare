@@ -16,6 +16,9 @@ export default async function Owners({ searchParams }: { searchParams: Promise<{
   await requireAdmin('/admin/owners');
   const q = ((await searchParams).q || '').trim().toLowerCase();
   const { data } = await adminClient().from('quote_requests').select('id, created_at, owner_id, owner_name, owner_email, owner_phone, suburb, postcode, source, quote_request_managers(status, manager_slug)').order('created_at', { ascending: false }).limit(3000);
+  const { data: gs } = await adminClient().from('guide_signups').select('id, created_at, email, first_name, state, consent, step, downloads, source').order('created_at', { ascending: false }).limit(1000); // SQL 025
+  const guides = (gs || []) as { id: string; created_at: string; email: string; first_name: string | null; state: string; consent: boolean; step: number; downloads: number; source: string | null }[];
+  const owned = new Set(((data || []) as unknown as R[]).map((r) => r.owner_email.toLowerCase()));
   const by = new Map<string, O>();
   for (const r of (data || []) as unknown as R[]) {
     const ts = r.quote_request_managers || [];
@@ -62,6 +65,29 @@ export default async function Owners({ searchParams }: { searchParams: Promise<{
         </table>
       </div>
       <p className="hint" style={{ margin: 0 }}>Admin and test requests aren&apos;t included. Owner details are for running the service only; see the privacy policy.</p>
+
+      <section id="guide" style={{ display: 'grid', gap: 10, borderTop: '1px solid var(--line)', paddingTop: 18 }}>
+        <h2 style={{ fontSize: 24, margin: 0 }}>Setup guide sign-ups</h2>
+        <p className="hint" style={{ margin: 0 }}>{guides.length} sign-up{guides.length === 1 ? '' : 's'} · {guides.filter((g) => g.consent).length} said yes to setup tips · {guides.filter((g) => owned.has(g.email.toLowerCase())).length} went on to request quotes. Tips go out on days 3, 7 and 12, only to people who ticked the box.</p>
+        <div className="cmp-wrap">
+          <table className="cmp" style={{ minWidth: 720 }}>
+            <thead><tr>{['Email', 'State', 'Tips', 'Downloads', 'Came from', 'Signed up'].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+            <tbody>
+              {guides.map((g) => (
+                <tr key={g.id}>
+                  <th scope="row" style={{ position: 'static', width: 'auto' }}><a href={`mailto:${g.email}`}>{g.email}</a>{g.first_name ? <div className="hint">{g.first_name}</div> : null}{owned.has(g.email.toLowerCase()) ? <div className="hint" style={{ color: 'var(--brand)', fontWeight: 600 }}>Requested quotes</div> : null}</th>
+                  <td>{g.state.toUpperCase()}</td>
+                  <td>{g.consent ? `Yes · ${g.step} of 3 sent` : 'No'}</td>
+                  <td>{g.downloads}</td>
+                  <td>{g.source || '–'}</td>
+                  <td>{d(g.created_at)}</td>
+                </tr>
+              ))}
+              {!guides.length && <tr><td colSpan={6} className="hint">No sign-ups yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </main>
   );
 }

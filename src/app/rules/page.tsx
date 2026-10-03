@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import RulesTrust from '@/components/RulesTrust';
 import AskRules from '@/components/AskRules';
 import Photo from '@/components/Photo';
 import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
@@ -25,6 +26,7 @@ export default async function Rules({ searchParams }: { searchParams: SP }) {
           <h1>What are the short-stay rules where your property is?</h1>
           <p>Airbnb and short-term rental laws differ by state, council and building. Ask about your suburb or situation: registration, night caps, levies, strata bans or permits. You&apos;ll get a plain-English answer in seconds, with the official source.</p>
           <AskRules initial={(q || '').slice(0, 400)} />
+          <RulesTrust />
         </div>
       </section>
       <header style={{ display: 'grid', gap: 8 }}>
