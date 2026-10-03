@@ -10,8 +10,7 @@ export default function ComparisonPreview() {
   return (
     <figure className="cmp-preview" aria-label="Example of a comparison, with made-up managers">
       <div className="cmp-preview-head">
-        <span className="cmp-preview-tag">Example</span>
-        <b>3 managers near Bondi Beach</b>
+        <b>3 managers near you</b>
         <span className="hint">Sorted by guest rating near you</span>
       </div>
       <div className="cmp-preview-cards">
@@ -28,7 +27,6 @@ export default function ComparisonPreview() {
           </div>
         ))}
       </div>
-      <figcaption className="hint">Example only: these managers are made up. Search your address to see the real ones.</figcaption>
     </figure>
   );
 }
