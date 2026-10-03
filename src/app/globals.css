@@ -749,7 +749,7 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .home-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface) 0%, var(--surface) 40%, color-mix(in srgb, var(--surface) 70%, transparent) 52%, transparent 70%); }
 .home-hero .split { gap: 48px; }
 @media (max-width: 880px) {
-  .home-hero { padding: 0 0 24px; border-radius: 0; margin-top: 0; }
+  .home-hero { padding: 14px 0 24px; border-radius: 0; margin-top: 0; overflow: visible; }
   .home-hero > .hh-photo { position: relative; inset: auto; height: 110px; margin: 0 0 18px; border-radius: 16px; overflow: hidden; }
   .home-hero::before { display: none; }
 }
