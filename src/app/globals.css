@@ -1,8 +1,8 @@
 :root {
   --brand: #0F5E57; --on-brand: #FFFFFF; --ink: #10302F; --muted: #4A605D;
   --surface: #F3F6F5; --panel: #FFFFFF; --tint: #DDEEE9; --line: #DCE5E2; --line-strong: #8FA6A1; --signal: #9A5A06;
-  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
-  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: var(--font-display, "Bricolage Grotesque"), "Helvetica Neue", Arial, sans-serif;
+  --body: var(--font-body, "Figtree"), system-ui, -apple-system, "Segoe UI", sans-serif;
   --r-md: 10px; --r-lg: 14px;
 }
 @media (prefers-color-scheme: dark) {
@@ -751,7 +751,7 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .home-hero .split { gap: 48px; }
 @media (max-width: 880px) {
   .home-hero { padding: 14px 0 24px; border-radius: 0; margin-top: 0; overflow: visible; }
-  .home-hero > .hh-photo { position: relative; inset: auto; height: 110px; margin: 0 0 18px; border-radius: 16px; overflow: hidden; }
+  .home-hero > .hh-photo { display: none; } /* phones: no photo, the headline and search come first */
   .home-hero::before { display: none; }
 }
 
@@ -844,3 +844,16 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 .hero-search.flash .search { animation: searchPulse .6s ease-in-out 3; }
 .hero-search.flash input::placeholder { color: var(--brand); font-weight: 700; opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .hero-search.flash .search { animation: none; box-shadow: 0 0 0 4px rgba(15,94,87,.35); } }
+
+/* Phone-only flow strip above the results picture */
+.flow-strip { display: none; }
+@media (max-width: 880px) {
+  .flow-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 4px 0 10px; padding: 0; }
+  .flow-strip li { display: grid; gap: 4px; justify-items: center; text-align: center; font-size: 12.5px; font-weight: 700; line-height: 1.2; background: var(--tint); border-radius: 12px; padding: 10px 6px; color: var(--ink); }
+  .flow-strip li b { width: 24px; height: 24px; border-radius: 99px; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 12px; }
+  .hero-right { display: grid; gap: 0; margin-top: 8px; }
+  .home-hero .rp-window { box-shadow: 0 14px 40px rgba(16,48,47,.18); }
+}
+@media (min-width: 881px) { .hero-right { display: contents; } }
+.dir-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 18px; }
+.dir-list li { padding: 4px 0; border-bottom: 1px solid var(--line); }

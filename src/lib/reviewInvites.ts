@@ -29,7 +29,8 @@ export async function sendReviewInvites(limit = 40) {
     .select('id, created_at, owner_name, owner_email, suburb, quote_request_managers(id, manager_name, manager_slug, status, accepted_at)')
     .is('review_invited_at', null).gte('created_at', ago(90)).lte('created_at', ago(7)).order('created_at').limit(300);
   if (error || !data?.length) return 0; // error = 017 not run yet
-  const productReview = PRODUCTREVIEW_WRITE;
+  // Only once the ProductReview listing is live (set PRODUCTREVIEW_LIVE=1 in Vercel), so owners never hit a 404.
+  const productReview = process.env.PRODUCTREVIEW_LIVE === '1' ? PRODUCTREVIEW_WRITE : '';
   let sent = 0;
   for (const r of data as unknown as R[]) {
     if (sent >= limit) break;

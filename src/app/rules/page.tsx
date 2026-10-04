@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import RulesTrust from '@/components/RulesTrust';
-import AskRules from '@/components/AskRules';
+import AskRules, { AskFromUrl } from '@/components/AskRules';
+import { Suspense } from 'react';
 import Photo from '@/components/Photo';
 import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Short-term rental rules in your area',
@@ -13,10 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/rules' },
 };
 
-type SP = Promise<{ q?: string }>;
-
-export default async function Rules({ searchParams }: { searchParams: SP }) {
-  const { q } = await searchParams;
+export default function Rules() {
   return (
     <main style={{ maxWidth: 1000, paddingBlock: '16px 64px', display: 'grid', gap: 24 }}>
       <section className="ask-hero">
@@ -25,7 +23,7 @@ export default async function Rules({ searchParams }: { searchParams: SP }) {
           <span className="label">Short-term rental rules guide</span>
           <h1>What are the short-stay rules where your property is?</h1>
           <p>Airbnb and short-term rental laws differ by state, council and building. Ask about your suburb or situation: registration, night caps, levies, strata bans or permits. You&apos;ll get a plain-English answer in seconds, with the official source.</p>
-          <AskRules initial={(q || '').slice(0, 400)} />
+          <Suspense fallback={<AskRules initial="" />}><AskFromUrl /></Suspense>
           <RulesTrust />
         </div>
       </section>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { metaDescription } from '@/lib/seo';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
@@ -24,9 +25,10 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
   const m = await publicManager((await params).slug);
   if (!m) return {};
   return {
-    title: `${m.name}: short-term rental manager in ${m.cities.join(' and ')}`,
-    description: `${m.name}: ${m.propertyCount ? `${m.propertyCount} homes tracked` : 'short-term rental manager'}${m.avgRating ? `, rated ${m.avgRating.toFixed(2)} by guests` : ''}. Compare with other managers and request a quote.`,
+    title: { absolute: `${m.name}: Airbnb manager in ${m.cities.slice(0, 2).join(' and ')} | CoHostCompare` },
+    description: metaDescription(m.about || m.tagline ? `${m.name} in ${m.cities.join(' and ')}: ${m.about || m.tagline}` : `${m.name}: short-term rental manager in ${m.cities.join(' and ')}${m.propertyCount ? `, ${m.propertyCount} homes tracked` : ''}. Compare fees and ratings with other managers and request a quote.`),
     alternates: { canonical: `/managers/${m.slug}` },
+    openGraph: { title: m.name, url: `/managers/${m.slug}` },
   };
 }
 
@@ -65,7 +67,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   };
   return (
     <main className="profile" style={{ paddingBottom: 'calc(var(--qb-h, 120px) + 24px)' }}>
-      <JsonLd data={[ld, breadcrumbs([['Home', '/'], ['Managers', '/areas'], [m.name, `/managers/${m.slug}`]])]} />
+      <JsonLd data={[ld, breadcrumbs([['Home', '/'], ['All managers', '/directory'], [m.name, `/managers/${m.slug}`]])]} />
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>

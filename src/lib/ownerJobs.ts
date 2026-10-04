@@ -1,7 +1,7 @@
 import 'server-only';
 import { TEST_SLUG, managersForArea } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
-import { CATCHUP_FROM } from '@/lib/outreach';
+import { CATCHUP_FROM, unsubscribeUrl } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 
 /* Daily jobs for owners (SQL 022). Every one is best-effort and returns how many emails went. */
@@ -10,6 +10,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com'
 const HOUR = 3600e3;
 const ago = (h: number) => new Date(Date.now() - h * HOUR).toISOString();
 const suppressed = async (email: string) => Boolean((await adminClient().from('email_suppressions').select('email').eq('email', email.toLowerCase()).maybeSingle()).data);
+const unsubHeaders = (email: string) => ({ 'List-Unsubscribe': `<${unsubscribeUrl(email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
 
 /** Catch-up only covers requests made after this moment. Everything before it was testing (Ben, 2 Oct 2026), so it's never emailed. */
 
@@ -44,8 +45,9 @@ export async function draftReminders(limit = 40) {
     const q = new URLSearchParams(d.query); q.set('managers', d.managers);
     await sendEmail({
       to: d.email, subject: 'Your quote request isn’t sent yet',
-      text: `Hi,\n\nYou were about to request quotes from ${d.names || 'some managers'} but didn't send it. It only takes a minute to finish, and it's free.\n\nEach manager replies in the same format, so you can compare fees, terms and what's included side by side. There's no obligation.\n\nIf you've decided not to go ahead, no worries: we won't remind you again.\n\nThe CoHostCompare team`,
+      text: `Hi,\n\nYou were about to request quotes from ${d.names || 'some managers'} but didn't send it. It only takes a minute to finish, and it's free.\n\nEach manager replies in the same format, so you can compare fees, terms and what's included side by side. There's no obligation.\n\nIf you've decided not to go ahead, no worries: we won't remind you again.\n\nThe CoHostCompare team\n\nDon't want emails from us? ${unsubscribeUrl(d.email)}`,
       cta: { label: 'Finish my request', url: `${SITE}/quote?${q.toString()}` },
+      headers: unsubHeaders(d.email),
     });
     await db.from('quote_drafts').update({ reminded_at: new Date().toISOString() }).eq('user_id', d.user_id);
     n++;
@@ -71,6 +73,7 @@ export async function newManagerAlerts(limit = 30) {
       to: r.owner_email, subject: `${fresh.length} new manager${fresh.length === 1 ? '' : 's'} near ${r.suburb || r.postcode}`,
       text: `Hi ${String(r.owner_name || '').split(' ')[0] || 'there'},\n\nAs you asked, here ${fresh.length === 1 ? 'is a manager' : 'are managers'} now running homes near ${r.address || r.suburb || r.postcode}:\n\n${fresh.slice(0, 8).map((m) => `- ${m.name}${m.nearby ? ` (${m.nearby} home${m.nearby === 1 ? '' : 's'} nearby)` : ''}`).join('\n')}\n\nYou can compare them and request quotes in a couple of minutes.\n\nTo stop these emails, open your inbox and choose "Stop these emails" on that request.`,
       cta: { label: 'See them', url: `${SITE}/search?${q.toString()}` },
+      headers: unsubHeaders(r.owner_email),
     });
     n++;
   }

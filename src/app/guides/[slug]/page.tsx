@@ -6,15 +6,15 @@ import GuideSignup from '@/components/GuideSignup';
 import JsonLd from '@/components/JsonLd';
 import { GUIDES, guide } from '@/lib/guides';
 import { fmtDate, market } from '@/lib/market';
-import { article, breadcrumbs, faqPage } from '@/lib/seo';
+import { article, breadcrumbs, faqPage, metaDescription } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 type P = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
   const g = guide((await params).slug);
   if (!g) return {};
-  return { title: g.title, description: g.description, alternates: { canonical: `/guides/${g.slug}` }, openGraph: { type: 'article', title: g.title, description: g.description, url: `/guides/${g.slug}` } };
+  return { title: { absolute: g.title }, description: metaDescription(g.description), alternates: { canonical: `/guides/${g.slug}` }, openGraph: { type: 'article', title: g.title, description: g.description, url: `/guides/${g.slug}` } };
 }
 
 export default async function GuidePage({ params }: { params: P }) {

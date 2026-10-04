@@ -16,12 +16,15 @@ const round1 = (x: number | null) => (x == null ? null : Math.round(x * 10) / 10
 
 export type FeeStats = { mid: number | null; low: number | null; high: number | null; count: number };
 
+/** Fewer managers than this and a "typical fee" would just be one or two businesses' prices, so we show the range only. */
+export const MIN_FOR_TYPICAL = 5;
+
 /** Fee figures from managers who publish a fee (mid-point of each manager's range). */
 export function feeStats(ms: Pick<NearbyManager, 'feeMin' | 'feeMax'>[]): FeeStats {
   const f = ms.filter((m) => m.feeMin != null);
   const mids = f.map((m) => (Number(m.feeMin) + Number(m.feeMax ?? m.feeMin)) / 2);
   return {
-    mid: round1(median(mids)),
+    mid: f.length >= MIN_FOR_TYPICAL ? round1(median(mids)) : null,
     low: f.length ? round1(Math.min(...f.map((m) => Number(m.feeMin)))) : null,
     high: f.length ? round1(Math.max(...f.map((m) => Number(m.feeMax ?? m.feeMin)))) : null,
     count: f.length,

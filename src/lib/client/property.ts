@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useMe } from '@/lib/client/me';
 import { PROPERTY_KEY, type PropertyDetails } from '@/lib/requirements';
 
 /*
@@ -21,7 +22,10 @@ export function saveProperty(fresh: boolean | undefined, p: PropertyDetails) {
 }
 export const isComplete = (p: PropertyDetails) => Boolean(p.type && p.beds != null && (p.beds as unknown) !== '' && p.availability && p.services?.length);
 
-export function useProperty(fresh?: boolean) {
+export function useProperty(freshProp?: boolean) {
+  // Admins get a fresh form in every tab (sessionStorage). Known from the server when passed, otherwise from /api/me.
+  const me = useMe();
+  const fresh = freshProp ?? Boolean(me?.isAdmin);
   const [prop, setProp] = useState<PropertyDetails>({});
   useEffect(() => {
     const sync = () => setProp(loadProperty(fresh));

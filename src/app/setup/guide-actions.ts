@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers';
 import { CONSENT_TEXT, FIRST_FOLLOW_UP_DAYS, STATES, guideLink, sendGuideEmail } from '@/lib/guide';
+import { allow, callerKey } from '@/lib/rate';
 import { adminClient } from '@/lib/supabase/server';
 
 export type GuideState = { ok?: boolean; link?: string; error?: string };
@@ -15,19 +16,24 @@ export async function requestGuide(_: GuideState, form: FormData): Promise<Guide
   const consent = form.get('consent') === 'yes';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Enter a valid email address.' };
   if (!STATES.some((s) => s.code === state)) return { error: 'Pick the state your property is in.' };
+  if (!(await allow('guide', await callerKey(), 5, 3600e3))) return { error: 'Too many requests from your connection. Try again in an hour.' };
   const db = adminClient();
+  // Someone who unsubscribed from our emails gets the download, but no email.
+  const { suppressed } = await import('@/lib/outreach');
+  const quiet = await suppressed(email).catch(() => false);
   // Same person asking again within a day: reuse their sign-up rather than sending more emails.
   const { data: recent } = await db.from('guide_signups').select('id').ilike('email', email).eq('state', state).gte('created_at', new Date(Date.now() - 86400e3).toISOString()).limit(1);
   if (recent?.length) return { ok: true, link: guideLink(recent[0].id) };
   const { currentSource } = await import('@/lib/traffic');
   const src = await currentSource().catch(() => ({ source: 'direct', campaign: null }));
-  const ref = (await headers()).get('referer') || '';
+  let refPath = '';
+  try { refPath = new URL((await headers()).get('referer') || '').pathname; } catch { /* no or odd referer */ }
   const { data, error } = await db.from('guide_signups').insert({
-    email, first_name: first, state, consent, consent_text: consent ? CONSENT_TEXT : null,
-    source: `${src.source}${ref ? ` · ${new URL(ref).pathname}` : ''}`.slice(0, 120),
-    next_at: consent ? new Date(Date.now() + FIRST_FOLLOW_UP_DAYS * 86400e3).toISOString() : null,
+    email, first_name: first, state, consent: consent && !quiet, consent_text: consent ? CONSENT_TEXT : null,
+    source: `${src.source}${refPath ? ` · ${refPath}` : ''}`.slice(0, 120),
+    next_at: consent && !quiet ? new Date(Date.now() + FIRST_FOLLOW_UP_DAYS * 86400e3).toISOString() : null,
   }).select('id').single();
   if (error || !data) return { error: 'Something went wrong. Please try again.' };
-  await sendGuideEmail({ id: data.id, email, first_name: first, state, consent, step: 0 }).catch(() => false);
+  if (!quiet) await sendGuideEmail({ id: data.id, email, first_name: first, state, consent, step: 0 }).catch(() => false);
   return { ok: true, link: guideLink(data.id) };
 }

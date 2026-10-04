@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 type Answer = { answer: string; sources: { label: string; url: string }[] } | { error: string };
 
@@ -46,4 +47,10 @@ export default function AskRules({ initial = '' }: { initial?: string }) {
       )}
     </div>
   );
+}
+
+/** Reads ?q= from the address bar so the page itself can be cached. */
+export function AskFromUrl() {
+  const sp = useSearchParams();
+  return <AskRules initial={(sp.get('q') || '').slice(0, 400)} />;
 }

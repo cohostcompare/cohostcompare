@@ -5,7 +5,9 @@ export type Area = { id: string; slug: string; label: string; city: 'Sydney' | '
 
 /** SEO area pages come from the sweep areas we have data for. */
 export async function areas(): Promise<Area[]> {
-  const { data } = await adminClient().from('sweep_cells').select('id, label, lat, lng, radius_miles').gt('listings_seen', 0).order('label');
+  const { data, error } = await adminClient().from('sweep_cells').select('id, label, lat, lng, radius_miles').gt('listings_seen', 0).order('label');
+  // On Vercel a failed read must not quietly become an empty page: throw so a build fails or a cached page is kept.
+  if (error && process.env.VERCEL) throw new Error(`areas: ${error.message}`);
   const rows = (data || []).map((c) => ({
     id: c.id, short: c.id.replace(/^(syd|mel|nsw|vic)-/, ''), label: c.label, lat: c.lat, lng: c.lng, radiusMiles: Number(c.radius_miles || 1),
     city: c.id.startsWith('syd-') ? 'Sydney' : c.id.startsWith('mel-') ? 'Melbourne' : c.id.startsWith('nsw-') ? 'NSW holiday areas' : c.id.startsWith('vic-') ? 'Victorian holiday areas' : 'Australia',

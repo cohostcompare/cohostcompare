@@ -6,13 +6,11 @@ import JsonLd from '@/components/JsonLd';
 import { feeRange, feeStats } from '@/lib/market';
 import { breadcrumbs, faqPage, itemList } from '@/lib/seo';
 import ResultsList from '@/components/ResultsList';
-import { isAdminViewer } from '@/lib/admin';
 import { area, areas } from '@/lib/areas';
 import { COVER_KM, managersNear } from '@/lib/data';
-import { bump } from '@/lib/events';
 import { RULES } from '@/lib/rules';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 1800; // cached half an hour; figures move slowly
 type P = Promise<{ slug: string }>;
 
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); if (!s.length) return null; const i = Math.floor(s.length / 2); return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2; };
@@ -35,9 +33,8 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
 export default async function AreaPage({ params }: { params: P }) {
   const a = await area((await params).slug);
   if (!a) notFound();
-  const [near, all] = await Promise.all([managersNear(a.lat, a.lng), areas()]);
-  const managers = await (await import('@/lib/reach')).withReach(await (await import('@/lib/requirementsServer')).withRequirements(await (await import('@/lib/reviews')).withReviewSummaries(near)));
-  await bump(managers.map((m) => m.id), 'search');
+  const [near, all, { withReach }, { withRequirements }, { withReviewSummaries }] = await Promise.all([managersNear(a.lat, a.lng), areas(), import('@/lib/reach'), import('@/lib/requirementsServer'), import('@/lib/reviews')]);
+  const managers = await withReach(await withRequirements(await withReviewSummaries(near)));
   const q = new URLSearchParams({ lat: String(a.lat), lng: String(a.lng), suburb: a.label });
 
   // Area snapshot from the same figures shown on each card.
@@ -85,7 +82,7 @@ export default async function AreaPage({ params }: { params: P }) {
         </section>
       )}
 
-      {managers.length ? <ResultsList managers={managers} query={q.toString()} fresh={await isAdminViewer()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
+      {managers.length ? <ResultsList managers={managers} query={q.toString()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
 
       {managers.length > 0 && (
         <section className="prose" style={{ marginTop: 28, maxWidth: 760 }}>

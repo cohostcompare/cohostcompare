@@ -6,7 +6,7 @@ import { feeRange, fmtDate, market } from '@/lib/market';
 import { RULES } from '@/lib/rules';
 import { POSITIONING, SITE, breadcrumbs } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 export const metadata: Metadata = {
   title: 'Australian short-term rental manager market facts',
   description: 'Live figures on Australian Airbnb and short-term rental managers: how many cover each area, the management fees they publish, homes they run and typical nightly rates. Updated regularly, free to quote with a link.',
@@ -82,7 +82,7 @@ export default async function Facts() {
         <h2 style={{ fontSize: 20, margin: 0 }}>How these figures are worked out</h2>
         <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
           <li>A manager covers an area if they run at least one short-term rental within 4 km of its centre.</li>
-          <li>Fees are only from managers who publish one, on their own website or their CoHostCompare profile. The typical fee is the median of each manager’s mid-point. Fees on unclaimed profiles haven’t been confirmed by the manager.</li>
+          <li>Fees are only from managers who publish one, on their own website or their CoHostCompare profile. The typical fee is the median of each manager’s mid-point, shown only where at least five managers publish a fee. Fees on unclaimed profiles haven’t been confirmed by the manager.</li>
           <li>Homes, nightly rates and guest ratings are estimates from public listings over the last 12 months{m.dataAsOf ? `, with listing data as of ${fmtDate(m.dataAsOf)}` : ''}. We never show individual listings.</li>
           <li>Figures update automatically as managers and listing data change. This page was last worked out on {date}.</li>
         </ul>

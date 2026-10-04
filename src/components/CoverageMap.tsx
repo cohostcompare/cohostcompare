@@ -15,9 +15,20 @@ export default function CoverageMap({ areas, compact, hideList }: { areas: Cover
   const [more, setMore] = useState(false);
   const FEW = 8;
   const shown = group === 'All' ? areas : areas.filter((a) => a.city === group);
+  const [near, setNear] = useState(false);
+
+  // Only load Google Maps once the map is close to the viewport (it's below the fold on the homepage).
+  useEffect(() => {
+    const node = el.current;
+    if (!node || near) return;
+    if (!('IntersectionObserver' in window)) { setNear(true); return; }
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setNear(true); io.disconnect(); } }, { rootMargin: '400px' });
+    io.observe(node);
+    return () => io.disconnect();
+  }, [near]);
 
   useEffect(() => {
-    if (!shown.length) return;
+    if (!shown.length || !near) return;
     let cancelled = false;
     loadMaps().then(async () => {
       const g = window.google.maps;

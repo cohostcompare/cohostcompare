@@ -7,9 +7,9 @@ import AskRules from '@/components/AskRules';
 import JsonLd from '@/components/JsonLd';
 import { areas } from '@/lib/areas';
 import { RULES, RULES_CHECKED, RULES_CHECKED_ISO, RULES_STALE_DAYS, rulesAgeDays } from '@/lib/rules';
-import { article, breadcrumbs, faqPage } from '@/lib/seo';
+import { article, breadcrumbs, faqPage, metaDescription } from '@/lib/seo';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 type P = Promise<{ state: string }>;
 
 const find = (s: string) => RULES.find((r) => r.code === s.toLowerCase());
@@ -17,10 +17,10 @@ const find = (s: string) => RULES.find((r) => r.code === s.toLowerCase());
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
   const r = find((await params).state);
   if (!r) return {};
-  const title = `Airbnb and short-term rental rules in ${r.name} (${r.code.toUpperCase()})`;
+  const title = `Airbnb rules in ${r.name} (${r.code.toUpperCase()}) explained`;
   return {
     title,
-    description: `${r.summary} Plain-English summary checked against official sources on ${RULES_CHECKED}.`.slice(0, 300),
+    description: metaDescription(`${r.summary} Checked against official sources on ${RULES_CHECKED}.`),
     alternates: { canonical: `/rules/${r.code}` },
     openGraph: { title, url: `/rules/${r.code}` },
   };

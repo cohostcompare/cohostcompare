@@ -1,19 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { allow, callerKey, underDailyTotal } from '@/lib/rate';
 import { RULES, RULES_CHECKED, RULES_STALE_DAYS, rulesAgeDays, rulesAsText } from '@/lib/rules';
 
 // Answers owners' questions using only our state-by-state guide. Needs ANTHROPIC_API_KEY in Vercel.
 const MODEL = 'claude-haiku-4-5-20251001';
-const hits = new Map<string, number[]>(); // simple per-instance rate limit
+const PER_HOUR = 15;        // questions per network address an hour
+const PER_DAY_TOTAL = 600;  // across everyone: caps the Anthropic bill if something goes wrong
 
 export async function POST(req: NextRequest) {
   const key = (process.env.ANTHROPIC_API_KEY || '').trim();
   if (!key) return NextResponse.json({ error: 'Ask about the rules is coming soon. For now, see the state-by-state guide below.' });
 
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
-  if (recent.length >= 15) return NextResponse.json({ error: "You've asked a lot of questions in the last hour. Try again later." });
-  hits.set(ip, [...recent, now]);
+  const site = req.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin') return NextResponse.json({ error: 'Ask from the rules page on CoHostCompare.' }, { status: 403 });
+  if (!(await underDailyTotal('ask', PER_DAY_TOTAL))) return NextResponse.json({ error: "The rules helper is busy today. The state-by-state guide below has the same information." });
+  if (!(await allow('ask', await callerKey(req.headers), PER_HOUR, 3600e3))) return NextResponse.json({ error: "You've asked a lot of questions in the last hour. Try again later." });
 
   let question = '';
   try { question = String((await req.json()).question || '').trim().slice(0, 400); } catch { /* empty */ }

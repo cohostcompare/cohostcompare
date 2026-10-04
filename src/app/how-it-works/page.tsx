@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Photo from '@/components/Photo';
 
 export const metadata: Metadata = {
-  title: 'How it works',
+  title: 'How it works: compare short-term rental managers',
   alternates: { canonical: '/how-it-works' },
   description: 'Find, compare and get quotes from short-term rental managers who cover your property, in one place and without sales calls.',
 };

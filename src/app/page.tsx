@@ -26,6 +26,8 @@ const faqs: [string, string][] = [
   ['Which areas do you cover?', 'Sydney, Melbourne and holiday spots across NSW and Victoria. The map above shows every area, and more are coming.'],
 ];
 
+export const revalidate = 1800;
+
 export default async function Home() {
   const all = await areas().catch(() => []);
   return (
@@ -44,7 +46,14 @@ export default async function Home() {
             <Link href="/earnings" className="btn-earn"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn</Link>
           </div>
         </div>
-        <ComparisonPreview />
+        <div className="hero-right">
+          <ol className="flow-strip" aria-label="How it works, in short">
+            <li><b>1</b> Search your address</li>
+            <li><b>2</b> Compare managers</li>
+            <li><b>3</b> Request up to 5 quotes</li>
+          </ol>
+          <ComparisonPreview />
+        </div>
       </div>
       </section>
 
