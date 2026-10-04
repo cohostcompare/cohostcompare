@@ -6,6 +6,7 @@ import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
 import { DeclineForm, ManagerComposer, QuoteForm } from './Forms';
 import { availabilityLabel } from '@/lib/requirements';
+import { otherAcceptedFor } from '@/lib/todo';
 
 export const metadata: Metadata = { title: 'Quote request', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,8 @@ const WHO: Record<string, string> = { manager: 'You', system: 'CoHostCompare' };
 export default async function ManagerThread({ params, searchParams }: { params: P; searchParams: Promise<{ unlocked?: string; billing?: string }> }) {
   const { thread: id } = await params;
   const sp = await searchParams;
-  const { user, thread: t, req } = await requireThread(id);
+  const { user, thread: t, req: reqRow } = await requireThread(id);
+  const req = reqRow || ({} as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
   const db = adminClient();
   const { data: msgs } = await db.from('messages').select('id, sender, body, created_at').eq('thread_id', t.id).order('created_at');
   await db.from('messages').update({ read_by_manager: true }).eq('thread_id', t.id).eq('read_by_manager', false);
@@ -28,13 +30,16 @@ export default async function ManagerThread({ params, searchParams }: { params: 
   const { data: tpl } = await db.from('managers').select('quote_templates').eq('id', m.id).maybeSingle(); // needs 015
   const { data: fee } = await db.from('success_fees').select('status, expires_at').eq('thread_id', t.id).maybeSingle(); // needs 015/016
   const accepted = t.status === 'accepted';
-  const locked = accepted && Boolean(fee && ['awaiting_unlock', 'expired'].includes(fee.status));
+  const awaiting = accepted && Boolean(fee && ['awaiting_unlock', 'expired'].includes(fee.status));
+  // The owner may have chosen another manager after the confirmation window, or deleted their account: then there's nothing to unlock.
+  const gone = awaiting && (!reqRow || await otherAcceptedFor(t.request_id, t.manager_slug));
+  const locked = awaiting && !gone;
   const closed = ['accepted', 'declined', 'withdrawn'].includes(t.status);
   const first = String(req.owner_name || 'Owner').split(' ')[0];
 
   return (
     <main style={{ maxWidth: 860, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
-      <Link href="/dashboard" className="hint">← All quote requests</Link>
+      <Link href="/dashboard/requests" className="hint">← All quote requests</Link>
       <div>
         <span className="label">Quote request for {t.manager_name}</span>
         <h1 style={{ fontSize: 'clamp(26px,4vw,34px)', margin: '2px 0 0' }}>{first} · {req.suburb || ''} {req.state || ''} {req.postcode}</h1>
@@ -54,7 +59,11 @@ export default async function ManagerThread({ params, searchParams }: { params: 
           <div><dt className="label">Received</dt><dd style={{ margin: 0 }}>{new Date(t.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
         </dl>
         {req.notes && <p style={{ margin: 0 }}><b>Owner&apos;s note:</b> {req.notes}</p>}
-        {locked ? (
+        {gone ? (
+          <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '12px 14px' }}>
+            <b>This owner has since chosen another manager, so there&apos;s nothing to unlock.</b> {reqRow ? `${first} accepted your quote first, but the confirmation window passed.` : 'The request is no longer open.'} Your other quote requests are unaffected.
+          </div>
+        ) : locked ? (
           <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 10 }}>
             <b>{first} accepted your quote. Confirm this client to get their details.</b>
             <span>You&apos;ve used the {FREE_ACCEPTS_PER_MONTH} free clients included in the Free plan this month. Confirm this one for {SUCCESS_FEE_TEXT} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>

@@ -2,6 +2,7 @@ import 'server-only';
 import { sign } from '@/lib/claims';
 import { sendEmail } from '@/lib/email';
 import { outreachReplyTo } from '@/lib/inbound';
+import { FREE_ACCEPTS_PER_MONTH, SUCCESS_FEE_TEXT } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
@@ -29,7 +30,7 @@ export const outreachOn = () => {
 };
 export const requestEmailsOn = () => (process.env.REQUEST_EMAILS || '').trim() !== '0';
 
-export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; suburbs: string[]; waiting: number; email: string; source: string; contactId?: string };
+export type Ctx = { manager: string; slug: string; first: string | null; homes: number | null; rating: number | null; feeMin?: number | null; feeMax?: number | null; suburbs: string[]; waiting: number; email: string; source: string; contactId?: string };
 
 export const unsubscribeUrl = (email: string, api = false) => `${BASE}${api ? '/api' : ''}/unsubscribe?e=${encodeURIComponent(email)}&s=${sign(`unsub:${email.toLowerCase()}`)}`;
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -38,10 +39,15 @@ function footer(c: Ctx) {
   return `\n\nCheers,\nBen Deeley\nFounder, CoHostCompare\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
 }
 
+/** Footer for the one transactional notice (an owner asked for a quote) sent to an address that has unsubscribed: sender details only. */
+function unsubscribedFooter(c: Ctx) {
+  return `\n\nCheers,\nBen Deeley\nFounder, CoHostCompare\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou've unsubscribed from our other emails, so this is the only kind you'll get: a notice when an owner asks ${c.manager} for a quote. We send it because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. If you'd rather not be listed at all, reply and we'll remove the profile. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW.`;
+}
+
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
   {
     subject: (c) => `${c.manager}'s profile on CoHostCompare`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nI'm Ben, founder of CoHostCompare, a new free site where property owners in Sydney and Melbourne compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first 4 new clients each month. Claim by 31 January and you get Pro free for three months.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nI'm Ben, founder of CoHostCompare, a new free site where property owners across NSW and Victoria compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first ${FREE_ACCEPTS_PER_MONTH} new clients each month, then ${SUCCESS_FEE_TEXT} per client you win, or Pro. Claim by 31 January and you get Pro free for three months.`,
     cta: (c) => ({ label: 'See your profile', url: `${BASE}/managers/${c.slug}` }),
   },
   {
@@ -56,7 +62,9 @@ export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; 
   },
   {
     subject: () => 'Your fees, in your words',
-    body: (c) => `Hi ${c.first || 'there'},\n\nRight now ${c.manager}'s profile shows "Fee on request", because we only show fees a manager publishes or sets themselves. Owners compare on fees first, so profiles with a fee range tend to get asked for more quotes.\n\nOnce you claim it, you can set your fee range and terms, add photos of homes you manage, and add your ABN to get a "Verified business" badge.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\n${c.feeMin != null
+      ? `Right now ${c.manager}'s profile shows a management fee of ${feeText(c.feeMin, c.feeMax ?? null)}, as published on your website. If that's right, great. If it's out of date or needs context, you can correct it once you claim the profile.`
+      : `Right now ${c.manager}'s profile shows "Fee on request", because we only show fees a manager publishes or sets themselves.`} Owners compare on fees first, so profiles with a clear fee range tend to get asked for more quotes.\n\nOnce you claim it, you can ${c.feeMin != null ? 'confirm or change your fee range and terms' : 'set your fee range and terms'}, add photos of homes you manage, and add your ABN to get a "Verified business" badge.`,
     cta: (c) => ({ label: 'Update your profile', url: `${BASE}/claim/${c.slug}` }),
   },
   {
@@ -65,6 +73,9 @@ export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; 
     cta: (c) => ({ label: 'Claim when you’re ready', url: `${BASE}/claim/${c.slug}` }),
   },
 ];
+
+/** "18%" or "15–20%". */
+const feeText = (min: number, max: number | null) => (max != null && max !== min ? `${min}–${max}%` : `${min}%`);
 
 /** Suburbs the manager actually operates in (from their homes), without council names or whole cities; falls back to their stated regions. */
 export function localPlaces(localities: string[], cities: string[]) {
@@ -75,13 +86,14 @@ export function localPlaces(localities: string[], cities: string[]) {
 
 async function context(contact: { id?: string; email: string; first_name: string | null; source_url: string; manager_id: string }): Promise<Ctx | null> {
   const db = adminClient();
-  const { data: m } = await db.from('managers').select('id, slug, name, claimed, published, cities').eq('id', contact.manager_id).maybeSingle();
+  const { data: m } = await db.from('managers').select('id, slug, name, claimed, published, cities, fee_min, fee_max').eq('id', contact.manager_id).maybeSingle();
   if (!m || !m.published) return null;
   const [{ data: st }, { count: waiting }] = await Promise.all([
     db.from('manager_stats').select('property_count, avg_rating, localities').eq('manager_id', m.id).maybeSingle(),
     db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', m.slug).in('status', ['sent', 'viewed']),
   ]);
   return { manager: m.name, slug: m.slug, first: contact.first_name, homes: st?.property_count ?? null, rating: st?.avg_rating != null ? Number(st.avg_rating) : null,
+    feeMin: m.fee_min != null ? Number(m.fee_min) : null, feeMax: m.fee_max != null ? Number(m.fee_max) : null,
     suburbs: localPlaces((st?.localities as string[] | null) || [], (m as { cities?: string[] }).cities || []), waiting: waiting ?? 0, email: contact.email, source: contact.source_url, contactId: contact.id };
 }
 
@@ -89,21 +101,20 @@ async function context(contact: { id?: string; email: string; first_name: string
 export const CATCHUP_FROM = '2026-10-02T05:00:00Z';
 
 export type Reach = 'ok' | 'no-email' | 'unsubscribed';
-/** For unclaimed managers: can we email them about a request? 'no-email' = no contact on file; 'unsubscribed' = every contact opted out. */
+/** Contact statuses that still get the transactional "an owner wants a quote" notice. Unsubscribing stops the outreach sequence, not that notice. */
+const REQUEST_STATUSES = ['active', 'finished', 'paused', 'unsubscribed'];
+/**
+ * For unclaimed managers: can we email them about a request? 'no-email' = no contact on file (bounced addresses don't count).
+ * 'unsubscribed' is kept in the type for older admin copy but is no longer returned: the request notice is transactional and still goes.
+ */
 export async function unclaimedReach(slugs: string[]): Promise<Map<string, Reach>> {
   const out = new Map<string, Reach>();
   if (!slugs.length) return out;
   const db = adminClient();
   const { data: ms } = await db.from('managers').select('id, slug').in('slug', slugs);
   const ids = (ms || []).map((m) => m.id);
-  const { data: cs } = ids.length ? await db.from('outreach_contacts').select('manager_id, email').in('manager_id', ids).in('status', ['active', 'finished', 'paused']) : { data: [] };
-  const emails = [...new Set((cs || []).map((c) => String(c.email).toLowerCase()))];
-  const { data: sup } = emails.length ? await db.from('email_suppressions').select('email').in('email', emails) : { data: [] };
-  const off = new Set((sup || []).map((s) => s.email));
-  for (const m of ms || []) {
-    const mine = (cs || []).filter((c) => c.manager_id === m.id);
-    out.set(m.slug, !mine.length ? 'no-email' : mine.every((c) => off.has(String(c.email).toLowerCase())) ? 'unsubscribed' : 'ok');
-  }
+  const { data: cs } = ids.length ? await db.from('outreach_contacts').select('manager_id, email').in('manager_id', ids).in('status', REQUEST_STATUSES) : { data: [] };
+  for (const m of ms || []) out.set(m.slug, (cs || []).some((c) => c.manager_id === m.id) ? 'ok' : 'no-email');
   return out;
 }
 
@@ -193,17 +204,18 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string, thre
   const { data: m } = await db.from('managers').select('id, name, claimed').eq('slug', slug).maybeSingle();
   if (!m || m.claimed) return 0;
   let sent = 0;
-  const { data: contacts } = await db.from('outreach_contacts').select('*').eq('manager_id', m.id).in('status', ['active', 'finished', 'paused']);
+  // Transactional (a real owner asked for this manager), so it goes even to addresses that unsubscribed from the outreach sequence, with a plain sender-only footer.
+  const { data: contacts } = await db.from('outreach_contacts').select('*').eq('manager_id', m.id).in('status', REQUEST_STATUSES);
   for (const ct of contacts || []) {
-    if (await suppressed(ct.email)) continue;
-    const c: Ctx = { manager: m.name, slug, first: ct.first_name, homes: null, rating: null, suburbs: [], waiting: 1, email: ct.email, source: ct.source_url };
+    const off = ct.status === 'unsubscribed' || await suppressed(ct.email);
+    const c: Ctx = { manager: m.name, slug, first: ct.first_name, homes: null, rating: null, feeMin: null, feeMax: null, suburbs: [], waiting: 1, email: ct.email, source: ct.source_url };
     const ok = await sendEmail({
       to: ct.email, subject: `An owner in ${where} wants a quote from ${m.name}`,
-      text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and it's free.${footer(c)}`,
+      text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and it's free.${off ? unsubscribedFooter(c) : footer(c)}`,
       cta: { label: 'See the request', url: `${BASE}/claim/${slug}` },
       from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
       replyTo: outreachReplyTo(ct.id),
-      headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+      ...(off ? {} : { headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } }),
     });
     if (ok) sent++;
   }

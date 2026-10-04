@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { myManagers, requireManager, requireThread } from '@/lib/managers';
 import { planOf, plansFor } from '@/lib/pro';
+import { otherAcceptedFor } from '@/lib/todo';
 import { billingPortal, proCheckout, stripeOn, unlockCheckout } from '@/lib/stripe';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 
@@ -39,6 +40,8 @@ export async function unlockClient(form: FormData) {
   if (planOf((await plansFor([mine.id])).get(mine.id)) !== 'free') redirect(`/dashboard/requests/${thread.id}`);
   const { data: fee } = await db.from('success_fees').select('id, status').eq('thread_id', thread.id).maybeSingle();
   if (!fee || !['awaiting_unlock', 'expired'].includes(fee.status)) redirect(`/dashboard/requests/${thread.id}`);
+  // Nothing to unlock if the owner has since chosen another manager, or the request (and owner) no longer exists.
+  if (!req || await otherAcceptedFor(thread.request_id, thread.manager_slug)) redirect(`/dashboard/requests/${thread.id}`);
   if (!stripeOn()) redirect(`/dashboard/requests/${thread.id}?billing=soon`);
   const b = await billingRow(mine.id);
   const u = await currentUser();

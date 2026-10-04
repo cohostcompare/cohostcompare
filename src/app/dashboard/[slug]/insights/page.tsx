@@ -5,6 +5,8 @@ import { requireManager } from '@/lib/managers';
 import { foundingDeadlineText, isPro, planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 import ProInterest from '../../ProInterest';
+import { startPro } from '@/app/dashboard/billing/actions';
+import { stripeOn } from '@/lib/stripe';
 
 export const metadata: Metadata = { title: 'Insights', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -50,7 +52,7 @@ export default async function Insights({ params }: { params: P }) {
         <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>Insights for {m.name}</h1>
         <p className="lede" style={{ margin: 0 }}>Pro adds tools for your business. It never changes where you appear, your ratings or how owners compare quotes.</p>
         <ul className="ticks">{PRO_FEATURES.map((f) => <li key={f.title} className={f.live ? 'done' : ''}><b>{f.title}.</b> {f.body}{f.live ? '' : ' (coming soon)'}</li>)}</ul>
-        <ProInterest managerId={m.id} />
+        {stripeOn() ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary">Start Pro</button></form> : <ProInterest managerId={m.id} />}
         <p className="hint" style={{ margin: 0 }}>Managers who claim by {foundingDeadlineText()} get Pro free for three months. After that it&apos;s {PRO_PRICE}, and we&apos;ll always ask before charging anything. Running homes in several regions? See <Link href="/managers#pricing">Enterprise</Link>.</p>
       </main>
     );

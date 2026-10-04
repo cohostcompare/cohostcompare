@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { sendEmail } from '@/lib/email';
 import { requireManager } from '@/lib/managers';
 import { planOf, plansFor, SEATS } from '@/lib/pro';
@@ -36,13 +37,22 @@ export async function invite(_: State, form: FormData): Promise<State> {
   return { ok: `Invite sent to ${email}.` };
 }
 
+/** The signed-in user's role on a profile: 'owner' (claimed it, or was made owner) or 'member' (invited). */
+export async function memberRole(managerId: string, userId: string): Promise<'owner' | 'member'> {
+  const { data } = await adminClient().from('manager_members').select('role').eq('manager_id', managerId).eq('user_id', userId).maybeSingle();
+  return data?.role === 'owner' ? 'owner' : 'member';
+}
+
+/** Owners can remove anyone else and cancel invites. Members can only remove themselves. */
 export async function removeMember(form: FormData) {
   const slug = String(form.get('slug') || '');
   const { user, manager: m } = await requireManager(slug, `/dashboard/${slug}/team`);
   const id = String(form.get('user') || '');
   const inviteId = String(form.get('invite') || '');
   const db = adminClient();
-  if (inviteId) await db.from('manager_invites').delete().eq('id', inviteId).eq('manager_id', m.id);
-  if (id && id !== user.id) await db.from('manager_members').delete().eq('manager_id', m.id).eq('user_id', id);
+  const owner = (await memberRole(m.id, user.id)) === 'owner';
+  if (inviteId && owner) await db.from('manager_invites').delete().eq('id', inviteId).eq('manager_id', m.id);
+  if (id && id !== user.id && owner) await db.from('manager_members').delete().eq('manager_id', m.id).eq('user_id', id);
+  if (id && id === user.id && !owner) { await db.from('manager_members').delete().eq('manager_id', m.id).eq('user_id', id); redirect('/dashboard'); }
   revalidatePath(`/dashboard/${slug}/team`);
 }

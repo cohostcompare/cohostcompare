@@ -24,8 +24,11 @@ export async function saveProfile(_: unknown, form: FormData): Promise<{ error?:
   if (postcodes.some((p) => !/^\d{4}$/.test(p))) return { error: 'Service postcodes must be 4 digits each, separated by commas.' };
   const website = String(form.get('website') || '').trim();
   if (website && !/^https?:\/\/[^\s]+\.[^\s]+$/i.test(website)) return { error: 'Enter your website as a full address, starting with https://' };
+  const name = String(form.get('name') ?? m.name).replace(/\s+/g, ' ').trim().slice(0, 80) || m.name;
+  if (name.length < 2) return { error: 'Enter your business name.' };
 
   const updates = {
+    name, // the slug (web address) never changes
     tagline: String(form.get('tagline') || '').trim().slice(0, 120) || null,
     about: String(form.get('about') || '').trim().slice(0, 1500) || null,
     website: website || null,
@@ -34,7 +37,7 @@ export async function saveProfile(_: unknown, form: FormData): Promise<{ error?:
     services: form.getAll('services').map(String).filter((s) => SERVICES.includes(s)),
     postcodes: [...new Set(postcodes)].slice(0, 200),
     fee_min: feeMin, fee_max: feeMax ?? feeMin,
-    fee_note: feeMin == null ? null : `${feeMin === (feeMax ?? feeMin) ? `${feeMin}%` : `${feeMin}–${feeMax}%`} of booking revenue${form.get('fee_gst') === 'yes' ? ' + GST' : ''} (set by ${m.name})`,
+    fee_note: feeMin == null ? null : `${feeMin === (feeMax ?? feeMin) ? `${feeMin}%` : `${feeMin}–${feeMax}%`} of booking revenue${form.get('fee_gst') === 'yes' ? ' + GST' : ''} (set by ${name})`,
     licensed_agent: bool(form.get('licensed_agent')),
     gated: {
       ...(m.gated || {}),

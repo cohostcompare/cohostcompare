@@ -71,7 +71,11 @@ export default async function Claim({ params }: { params: P }) {
 
       <aside className="sticky" style={{ display: 'grid', gap: 12 }}>
       {m.claimed && existing?.status !== 'approved' ? (
-        <div className="panel">This profile has already been claimed. If you work there, ask your colleague to invite you from <b>Team</b> in their dashboard. If that wasn&apos;t you or your team, email <b>hello@cohostcompare.com</b>.</div>
+        <div className="panel" style={{ display: 'grid', gap: 8 }}>
+          <b>This profile has already been claimed.</b>
+          <span>If you work there, the Free plan has 1 login, so ask your colleague to hand it over, or email <b>hello@cohostcompare.com</b> and we&apos;ll move the login to you. On <Link href="/managers#pricing">Pro</Link> (3 logins) your colleague can invite you from <b>Team</b> in their dashboard.</span>
+          <span className="hint">If that wasn&apos;t you or your team, email hello@cohostcompare.com.</span>
+        </div>
       ) : existing?.status === 'approved' ? (
         <div className="panel" style={{ background: 'var(--tint)' }}>You manage this profile. <Link href="/dashboard">Open your dashboard</Link></div>
       ) : existing?.status === 'info_requested' || existing?.status === 'info_received' ? (

@@ -4,6 +4,7 @@ import { regionsOf, type Region } from '@/lib/regions';
 import { COVER_KM, managersNear } from '@/lib/data';
 import { airroi, cached, marketFor, store } from '@/lib/earnings';
 import { sendEmail } from '@/lib/email';
+import { suppressed, unsubscribeUrl } from '@/lib/outreach';
 import { planOf, plansFor } from '@/lib/pro';
 import { RULES } from '@/lib/rules';
 import { adminClient } from '@/lib/supabase/server';
@@ -237,17 +238,21 @@ async function notifyReports() {
   for (const m of ms || []) {
     if (m.report_emails === false) continue;
     const { data: mem } = await db.from('manager_members').select('user_id').eq('manager_id', m.id);
-    const emails = (await Promise.all((mem || []).map(async (x) => (await db.auth.admin.getUserById(x.user_id)).data.user?.email))).filter(Boolean) as string[];
+    const all = (await Promise.all((mem || []).map(async (x) => (await db.auth.admin.getUserById(x.user_id)).data.user?.email))).filter(Boolean) as string[];
+    const emails: string[] = [];
+    for (const e of all) if (!(await suppressed(e))) emails.push(e); // never to addresses that unsubscribed
     if (!emails.length) continue;
     const reps = byManager.get(m.id)!;
     const paid = planOf(plans.get(m.id)) !== 'free';
     const list = reps.map((r) => `- ${r.area_label}`).join('\n');
-    await sendEmail({
-      to: emails,
+    // One email per person, each with their own unsubscribe link and List-Unsubscribe header.
+    for (const to of emails) await sendEmail({
+      to,
+      headers: { 'List-Unsubscribe': `<${unsubscribeUrl(to, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
       subject: `New regional report${reps.length > 1 ? 's' : ''}: ${reps.slice(0, 2).map((r) => r.area_label).join(', ')}${reps.length > 2 ? ` and ${reps.length - 2} more` : ''}`,
       text: paid
-        ? `Hi,\n\nThe ${periodLabel(reps[0].period)} regional short-stay report${reps.length > 1 ? 's are' : ' is'} ready for regions where ${m.name} is active:\n\n${list}\n\nEach report covers nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and owner activity. Past reports stay in your dashboard.\n\nTo stop these emails, turn off report emails under Alerts in your dashboard.`
-        : `Hi,\n\nWe've published the ${periodLabel(reps[0].period)} regional short-stay report${reps.length > 1 ? 's' : ''} for regions where ${m.name} is active:\n\n${list}\n\nThey cover nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and owner activity. Regional reports are included in Pro.\n\nTo stop these emails, turn off report emails under Alerts in your dashboard.`,
+        ? `Hi,\n\nThe ${periodLabel(reps[0].period)} regional short-stay report${reps.length > 1 ? 's are' : ' is'} ready for regions where ${m.name} is active:\n\n${list}\n\nEach report covers nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and owner activity. Past reports stay in your dashboard.\n\nTo stop these emails, turn off report emails under Alerts in your dashboard, or unsubscribe: ${unsubscribeUrl(to)}`
+        : `Hi,\n\nWe've published the ${periodLabel(reps[0].period)} regional short-stay report${reps.length > 1 ? 's' : ''} for regions where ${m.name} is active:\n\n${list}\n\nThey cover nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and owner activity. Regional reports are included in Pro.\n\nTo stop these emails, turn off report emails under Alerts in your dashboard, or unsubscribe: ${unsubscribeUrl(to)}`,
       cta: { label: paid ? 'Open your reports' : 'See what’s in the reports', url: `${SITE}/dashboard/reports` },
     });
     sent++;

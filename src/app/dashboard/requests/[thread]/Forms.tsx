@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
 import { declineRequest, saveTemplate, sendManagerMessage, sendQuote } from '../actions';
+import { GST_OPTIONS, gstModeOf } from '@/lib/gst';
 
 const L = { display: 'grid', gap: 6, fontWeight: 600, fontSize: 14 } as const;
 const grid = (min: number) => ({ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit,minmax(${min}px,1fr))` });
@@ -11,7 +12,7 @@ type T = { name: string; q: any }; // eslint-disable-line @typescript-eslint/no-
 
 function fill(form: HTMLFormElement, q: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const set = (n: string, v: unknown) => { const el = form.elements.namedItem(n) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null; if (el) el.value = v == null ? '' : String(v); };
-  set('fee_pct', q.feePct); set('gst', q.gst ? 'yes' : 'no'); set('setup_fee', q.setupFee); set('min_term', q.minTermMonths); set('notice_days', q.noticeDays);
+  set('fee_pct', q.feePct); set('gst', gstModeOf(q)); set('setup_fee', q.setupFee); set('min_term', q.minTermMonths); set('notice_days', q.noticeDays);
   set('cleaning', q.cleaning ?? ''); set('linen', q.linenIncluded === true ? 'yes' : q.linenIncluded === false ? 'no' : ''); set('included', (q.included || []).join('\n')); set('note', q.note ?? '');
 }
 
@@ -33,7 +34,7 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
       )}
       <div style={grid(150)}>
         <label style={L}>Management fee (%)<input className="field" name="fee_pct" inputMode="decimal" defaultValue={d.feePct ?? ''} required /></label>
-        <label style={L}>GST<select className="field" name="gst" defaultValue={d.gst ? 'yes' : 'no'}><option value="no">Included / not charged</option><option value="yes">Plus GST</option></select></label>
+        <label style={L}>GST<select className="field" name="gst" defaultValue={q ? gstModeOf(q) : d.gst ? 'plus' : 'includes'}>{GST_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
         <label style={L}>Setup fee (A$)<input className="field" name="setup_fee" inputMode="numeric" defaultValue={d.setupFee ?? ''} placeholder="0 for none" required /></label>
       </div>
       <div style={grid(150)}>

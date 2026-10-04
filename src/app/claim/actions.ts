@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { approveClaim, emailMatchesSite } from '@/lib/claims';
+import { approveClaim, claimWelcomeExtras, emailMatchesSite } from '@/lib/claims';
 import { managerForClaim } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -33,6 +33,7 @@ export async function submitClaim(_: unknown, form: FormData): Promise<{ error?:
 
   if (auto) {
     await approveClaim(claim.id);
+    const extras = await claimWelcomeExtras(m.id, origin);
     await sendEmail({
       to: 'hello@cohostcompare.com',
       subject: `Claimed (auto-approved): ${m.name}`,
@@ -42,7 +43,7 @@ export async function submitClaim(_: unknown, form: FormData): Promise<{ error?:
     await sendEmail({
       to: user.email,
       subject: `You now manage ${m.name} on CoHostCompare`,
-      text: `Hi ${name},\n\nYour work email matched ${m.name}'s website, so your claim was approved straight away.\n\nIn your dashboard you can add your fees, services, logo and photos, and reply to owners' quote requests.\n\nThe CoHostCompare team`,
+      text: `Hi ${name},\n\nYour work email matched ${m.name}'s website, so your claim was approved straight away.\n\nIn your dashboard you can add your fees, services, logo and photos, and reply to owners' quote requests.${extras}\n\nThe CoHostCompare team`,
       cta: { label: 'Open my dashboard', url: `${origin}/dashboard` },
     });
     redirect('/dashboard?claimed=1');

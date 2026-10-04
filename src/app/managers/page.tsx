@@ -4,19 +4,19 @@ import { faqPage } from '@/lib/seo';
 import ManagerSignup from '@/components/ManagerSignup';
 import Photo from '@/components/Photo';
 import InterestForm from '@/app/interest/InterestForm';
-import { SUCCESS_FEE_TEXT, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
+import { SUCCESS_FEE_TEXT, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, GST, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
   alternates: { canonical: '/managers' },
-  description: 'Get found by property owners looking for a short-term rental manager in your area. Free listing during launch.',
+  description: 'Get found by property owners looking for a short-term rental manager in your area. Your profile and replies are free. Paid plans are optional.',
 };
 
 const faqs: [string, string][] = [
   ['What does it cost?', `Your profile, owner quote requests and replies are free, with no lock-in. The Free plan includes 4 accepted clients a month, introduced to you straight away, then ${SUCCESS_FEE_TEXT} each. Pro and Enterprise include unlimited clients, and founding managers get Pro free for three months.`],
   ['Why do you show my fees?', 'Owners compare on fees first. We show a fee band publicly and the full breakdown only to signed-in owners, in the same format for every manager, so you are compared fairly.'],
   ['Where do the ratings come from?', 'From the public guest ratings on the listings you manage, combined across your portfolio and labelled as estimates. See “How we build manager profiles” above.'],
-  ['How did you get my business’s details?', 'From public sources only: public short-term rental listing data (via AirROI) and your own website. We don’t buy contact lists. If we emailed you, it’s because your business publishes that address on its website.'],
+  ['How did you get my business’s details?', 'From public sources only: public short-term rental listing data (via AirROI) and your own website. We don’t buy contact lists. If we emailed you, it’s because that address is published publicly for the business, on its own website or in a listing it controls (such as its claimed review-site profile or an official tourism listing).'],
   ['Can I pay to rank higher?', 'No. Nobody can pay to appear higher, change their rating or change how quotes are compared. Paid plans only add tools for you, like benchmarks and owner demand, and owners can’t see who has one.'],
   ['How do quote requests work?', 'An owner describes their property once and sends it to up to five managers. You reply with a quote in a standard format. The owner’s contact details are shared with you if they accept your quote.'],
 ];
@@ -65,14 +65,14 @@ export default function ForManagers() {
           </div>
           <div className="panel plan" style={{ borderColor: 'var(--brand)' }}>
             <h3>Pro</h3>
-            <p className="price"><b>{PRO_PRICE_SHORT}</b> <span className="hint">a month + GST</span></p>
+            <p className="price"><b>{PRO_PRICE_SHORT}</b> <span className="hint">a month{GST ? ' + GST' : ''}</span></p>
             <p className="hint" style={{ margin: 0 }}><b style={{ color: 'var(--brand)' }}>Founding offer:</b> claim your profile by {foundingDeadlineText()} and get Pro free for three months. No card needed.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Free, plus:</p>
             <ul className="ticks plan-pro">{PRO_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}{f.live ? '' : <span className="soon"> Coming soon.</span>}</li>)}</ul>
           </div>
           <div className="panel plan">
             <h3>Enterprise</h3>
-            <p className="price"><b>From {ENTERPRISE_PRICE_SHORT}</b> <span className="hint">a month + GST</span></p>
+            <p className="price"><b>From {ENTERPRISE_PRICE_SHORT}</b> <span className="hint">a month{GST ? ' + GST' : ''}</span></p>
             <p className="hint" style={{ margin: 0 }}>For operators with homes in several regions. We&apos;re building it with our first Enterprise operators, so talk to us about what you need.</p>
             <p style={{ margin: 0, fontWeight: 600 }}>Everything in Pro, plus:</p>
             <ul className="ticks plan-ent">{ENTERPRISE_FEATURES.map((f) => <li key={f.title}><b>{f.title}.</b> {f.body}{f.live ? '' : <span className="soon"> Coming soon.</span>}</li>)}</ul>

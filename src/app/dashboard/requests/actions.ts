@@ -11,6 +11,7 @@ import { isPro, plansFor } from '@/lib/pro';
 import { threadReplyTo } from '@/lib/inbound';
 import { postManagerMessage } from '@/lib/threads';
 import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
+import { gstModeOf, gstSuffix } from '@/lib/gst';
 
 async function origin() {
   const h = await headers();
@@ -28,13 +29,13 @@ export async function sendQuote(_: unknown, form: FormData): Promise<{ error?: s
   if (error) { console.error(error); return { error: "We couldn't save your quote. Try again in a minute." }; }
   // A new or changed quote counts as unseen again (columns from 008; ignore if not run yet).
   await db.from('quote_request_managers').update({ owner_seen_at: null, owner_reminded_at: null }).eq('id', thread.id);
-  await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} ${first ? 'sent' : 'updated'} their quote: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.` });
+  await db.from('messages').insert({ thread_id: thread.id, sender: 'system', read_by_manager: true, body: `${thread.manager_name} ${first ? 'sent' : 'updated'} their quote: ${q.feePct}%${gstSuffix(gstModeOf(q))} management fee, ${q.setupFee ? `A$${q.setupFee} setup` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.` });
   const site = await origin();
   if (first && await notifyIfAllReplied(thread.request_id, site)) { revalidatePath(`/dashboard/requests/${thread.id}`); return { ok: true }; }
   await sendEmail({
     to: req.owner_email,
     subject: `${thread.manager_name} ${first ? 'sent you a quote' : 'updated their quote'}`,
-    text: `Hi ${String(req.owner_name || '').split(' ')[0] || 'there'},\n\n${thread.manager_name} has ${first ? 'sent a quote' : 'updated their quote'} for ${req.suburb || `postcode ${req.postcode}`}: ${q.feePct}%${q.gst ? ' + GST' : ''} management fee, ${q.setupFee ? `A$${q.setupFee} setup fee` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.\n\nSign in to see the full quote, compare it side by side with any others, ask questions or accept it.\n\nThe CoHostCompare team`,
+    text: `Hi ${String(req.owner_name || '').split(' ')[0] || 'there'},\n\n${thread.manager_name} has ${first ? 'sent a quote' : 'updated their quote'} for ${req.suburb || `postcode ${req.postcode}`}: ${q.feePct}%${gstSuffix(gstModeOf(q))} management fee, ${q.setupFee ? `A$${q.setupFee} setup fee` : 'no setup fee'}, ${q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}.\n\nSign in to see the full quote, compare it side by side with any others, ask questions or accept it.\n\nThe CoHostCompare team`,
     cta: { label: 'Review the quote', url: `${site}/account` },
     replyTo: threadReplyTo(thread.id, 'o'),
   });
