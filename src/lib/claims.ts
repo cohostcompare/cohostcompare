@@ -42,3 +42,21 @@ export async function approveClaim(claimId: string) {
   await grantFoundingPro(c.manager_id);
 }
 
+/**
+ * Extra paragraphs for the "you now manage X" email after a claim is approved: the founding Pro trial end date
+ * (when the claim set one) and how many owner requests are already waiting, with a link to the requests list.
+ */
+export async function claimWelcomeExtras(managerId: string, origin: string): Promise<string> {
+  const db = adminClient();
+  const { data: m } = await db.from('managers').select('slug, pro_until, pro_note').eq('id', managerId).maybeSingle();
+  if (!m) return '';
+  const { count } = await db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', m.slug).in('status', ['sent', 'viewed']);
+  const lines: string[] = [];
+  if (m.pro_note === 'founding' && m.pro_until && new Date(m.pro_until).getTime() > Date.now()) {
+    lines.push(`As a founding manager you have Pro free until ${new Date(m.pro_until).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })}: insights, market reports, SMS alerts, quote templates and more photos. Nothing is charged unless you choose to keep it.`);
+  }
+  const waiting = count ?? 0;
+  if (waiting) lines.push(`${waiting === 1 ? 'One owner is' : `${waiting} owners are`} already waiting for a quote from you: ${origin}/dashboard/requests`);
+  return lines.length ? `\n\n${lines.join('\n\n')}` : '';
+}
+

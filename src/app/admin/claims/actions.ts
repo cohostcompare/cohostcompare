@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
-import { approveClaim } from '@/lib/claims';
+import { approveClaim, claimWelcomeExtras } from '@/lib/claims';
 import { sendEmail } from '@/lib/email';
 import { adminClient } from '@/lib/supabase/server';
 
@@ -14,7 +14,7 @@ async function origin() {
 }
 
 async function load(id: string) {
-  const { data } = await adminClient().from('manager_claims').select('id, email, name, status, managers(name, slug)').eq('id', id).single();
+  const { data } = await adminClient().from('manager_claims').select('id, email, name, status, manager_id, managers(name, slug)').eq('id', id).single();
   if (!data) throw new Error('Claim not found');
   const m = (Array.isArray(data.managers) ? data.managers[0] : data.managers) as { name: string; slug: string };
   return { ...data, manager: m };
@@ -27,11 +27,13 @@ export async function approve(form: FormData) {
   const c = await load(String(form.get('id')));
   await approveClaim(c.id);
   await adminClient().from('manager_claims').update({ admin_note: String(form.get('note') || '') || null }).eq('id', c.id);
+  const site = await origin();
+  const extras = await claimWelcomeExtras(c.manager_id, site);
   await sendEmail({
     to: c.email,
     subject: `You now manage ${c.manager.name} on CoHostCompare`,
-    text: `Hi ${c.name},\n\nYour claim for ${c.manager.name} has been approved. In your dashboard you can add your fees, services, logo and photos, and reply to owners' quote requests.\n\nThe CoHostCompare team`,
-    cta: { label: 'Open my dashboard', url: `${await origin()}/dashboard` },
+    text: `Hi ${c.name},\n\nYour claim for ${c.manager.name} has been approved. In your dashboard you can add your fees, services, logo and photos, and reply to owners' quote requests.${extras}\n\nThe CoHostCompare team`,
+    cta: { label: 'Open my dashboard', url: `${site}/dashboard` },
   });
   } catch (e) {
     if ((e as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) throw e;
