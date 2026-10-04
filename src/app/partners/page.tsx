@@ -35,7 +35,7 @@ export default function Partners() {
             <a className="btn primary" href="#apply">Apply to be a partner</a>
             <a className="btn secondary" href="#link">Already a partner?</a>
           </div>
-          <ul className="earn-trust" style={{ margin: 0 }}><li>Free to apply</li><li>Checked by hand</li><li>Clearly labelled to owners</li></ul>
+          <ul className="earn-trust" style={{ margin: 0 }}><li>Free to apply</li><li>Every business checked</li><li>Clearly labelled to owners</li></ul>
         </div>
         <div className="hero-photo">
           <Photo name="making" ratio="4 / 3" eager sizes="(max-width: 880px) 100vw, 520px" />
@@ -58,7 +58,7 @@ export default function Partners() {
           <h2 style={{ fontSize: 'clamp(24px,3.4vw,32px)', margin: 0 }}>How it works</h2>
           <ol className="steps3">
             <li><span>1</span><div><b>Apply in two minutes</b><p>Tell us about your business and the offer you&apos;d like owners to see.</p></div></li>
-            <li><span>2</span><div><b>We check it by hand</b><p>We only list businesses and offers that are genuinely useful to owners, and agree any referral fee with you first.</p></div></li>
+            <li><span>2</span><div><b>We check it</b><p>We confirm the business is real and the offer is accurate, and agree any referral fee with you first. Owners are told we haven&apos;t used your services ourselves.</p></div></li>
             <li><span>3</span><div><b>Owners click through to you</b><p>Your offer appears in our owner setup guide. Owners go straight to your site, and your partner page shows how many clicked.</p></div></li>
           </ol>
         </div>

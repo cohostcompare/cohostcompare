@@ -50,7 +50,7 @@ export default async function Setup() {
         <section id="partners" style={{ display: 'grid', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 26, scrollMarginTop: 96 }}>
           <span className="label">Partner offers</span>
           <h2 style={{ fontSize: 'clamp(24px,3.4vw,30px)', margin: 0 }}>Offers for owners setting up</h2>
-          <p style={{ margin: 0, maxWidth: 720 }}>Offers from businesses we&apos;ve checked. They&apos;re partner offers, so each one says if we earn a referral fee when you use it. Partners never affect which managers you see, their ratings or how quotes are compared, and we never share your details with them.</p>
+          <p style={{ margin: 0, maxWidth: 720 }}>Offers from partner businesses. We check the business is real and the offer is accurate; we haven&apos;t used their services and don&apos;t vouch for them. Each one says if we earn a referral fee when you use it. Partners never affect which managers you see, their ratings or how quotes are compared, and we never share your details with them.</p>
           <div className="offers">
             {offers.map((o) => <OfferCard key={o.id} o={o} />)}
           </div>
