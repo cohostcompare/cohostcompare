@@ -1,8 +1,9 @@
 import type { Quote } from '@/lib/quotes';
+import { gstModeOf, gstSuffix } from '@/lib/gst';
 
 const money = (n: number) => `A$${Math.round(n).toLocaleString('en-AU')}`;
 const revenue = (q: Quote) => (q.estNightlyRate != null && q.estOccupancyPct != null ? q.estNightlyRate * 365 * (q.estOccupancyPct / 100) : null);
-const effFee = (q: Quote) => q.feePct * (q.gst ? 1.1 : 1);
+const effFee = (q: Quote) => q.feePct * (gstModeOf(q) === 'plus' ? 1.1 : 1); // only "plus GST" adds 10%
 
 export type QuoteCol = { name: string; href?: string; q: Quote; accepted?: boolean; nearby?: { homes: number; rating: number | null } };
 
@@ -36,7 +37,7 @@ export default function QuoteTable({ quotes }: { quotes: QuoteCol[] }) {
   }
 
   const rows: [string, (x: QuoteCol, i: number) => React.ReactNode][] = [
-    ['Management fee', (x) => `${x.q.feePct}%${x.q.gst ? ' + GST' : ''}`],
+    ['Management fee', (x) => `${x.q.feePct}%${gstSuffix(gstModeOf(x.q))}`],
     ['Setup fee', (x) => (x.q.setupFee ? money(x.q.setupFee) : 'None')],
     [R != null ? `Year-one fees on ${money(R)} bookings` : 'Year-one fees', (x) => { const c = cost(x.q); return c == null ? 'Needs a revenue estimate' : `≈ ${money(c)}`; }],
     ['Minimum term', (x) => (x.q.minTermMonths ? `${x.q.minTermMonths} months` : 'No lock-in')],

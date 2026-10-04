@@ -3,6 +3,7 @@ import { TEST_SLUG } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { memberEmails } from '@/lib/managers';
 import { suppressed, unsubscribeUrl } from '@/lib/outreach';
+import { isPro, plansFor } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
@@ -64,7 +65,9 @@ export async function runOnboarding(limit = 30) {
         n++;
       }
     } else if (step === 1) {
-      await mail(to, { subject: 'Get the right requests, and reply faster', text: `Hi,\n\nThree quick settings that make CoHostCompare work better for ${m.name}:\n\n1. Requirements: say what you take on (for example, homes available at least 9 months a year, or full management only). Owners whose property doesn't fit can't send you a request, so you won't need to decline them.\n${SITE}/dashboard/${m.slug}/requirements\n\n2. Alerts: choose how you hear about new requests. Owners often go with whoever replies first.\n${SITE}/dashboard/${m.slug}/alerts\n\n3. Team: invite a colleague so requests never wait for one person.\n${SITE}/dashboard/${m.slug}/team\n\nBen\nCoHostCompare`, cta: { label: 'Open my dashboard', url: `${SITE}/dashboard` }, from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });
+      const pro = isPro((await plansFor([m.id])).get(m.id));
+      const tpl = pro ? `\n\n4. Quote templates (in your Pro plan): save your standard fees, terms and inclusions once, then fill in any quote in one click.\n${SITE}/dashboard/${m.slug}/templates` : '';
+      await mail(to, { subject: 'Get the right requests, and reply faster', text: `Hi,\n\n${pro ? 'Four' : 'Three'} quick settings that make CoHostCompare work better for ${m.name}:\n\n1. Requirements: say what you take on (for example, homes available at least 9 months a year, or full management only). Owners whose property doesn't fit can't send you a request, so you won't need to decline them.\n${SITE}/dashboard/${m.slug}/requirements\n\n2. Alerts: choose how you hear about new requests. Owners often go with whoever replies first.\n${SITE}/dashboard/${m.slug}/alerts\n\n3. Team: invite a colleague so requests never wait for one person.\n${SITE}/dashboard/${m.slug}/team${tpl}\n\nBen\nCoHostCompare`, cta: { label: 'Open my dashboard', url: `${SITE}/dashboard` }, from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });
       n++;
     } else {
       await mail(to, { subject: 'How owners choose a manager on CoHostCompare', text: `Hi,\n\nNow that ${m.name} is set up, here's what we see owners care about when they compare:\n\n- Reply speed: a quick, specific reply stands out.\n- A complete quote: fees, setup costs, minimum term and what's included, in the standard format.\n- Homes nearby: owners like managers who already run homes near them. Your figures update automatically.\n- Reviews: owners you work with are invited to review you after a couple of weeks.\n\nPaid plans never change your position in results or the comparison. Pro adds insights on how your fees compare, owner demand in your postcodes, market reports, SMS alerts and quote templates, if they'd help.\n\nAny questions or ideas, just reply. I read every one.\n\nBen\nCoHostCompare`, cta: { label: 'See what Pro adds', url: `${SITE}/managers#pricing` }, from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });

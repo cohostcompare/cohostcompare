@@ -1,9 +1,12 @@
 import 'server-only';
+import { type GstMode } from '@/lib/gst';
 
 /** The standard quote format every manager replies with, so owners can compare like with like. */
 export type Quote = {
   feePct: number;
+  /** True only when the fee is quoted plus GST (the one case that changes the maths). Kept for older stored quotes. */
   gst: boolean;
+  gstMode?: GstMode;
   setupFee: number;
   minTermMonths: number;
   noticeDays: number | null;
@@ -24,10 +27,12 @@ export function parseQuote(form: FormData): Quote | { error: string } {
   for (const [v, label, max] of [[notice, 'notice period', 365], [rate, 'nightly rate', 20000], [occ, 'occupancy', 100]] as const) {
     if (v != null && (!Number.isFinite(v) || v < 0 || v > max)) return { error: `Check the ${label}.` };
   }
+  const g = String(form.get('gst') || '');
+  const gstMode: GstMode = g === 'yes' || g === 'plus' ? 'plus' : g === 'none' ? 'none' : 'includes';
   const c = String(form.get('cleaning') || '');
   const l = String(form.get('linen') || '');
   return {
-    feePct, gst: form.get('gst') === 'yes', setupFee: setup, minTermMonths: term, noticeDays: notice,
+    feePct, gst: gstMode === 'plus', gstMode, setupFee: setup, minTermMonths: term, noticeDays: notice,
     cleaning: c === 'guests' || c === 'owner' ? c : null,
     linenIncluded: l === 'yes' ? true : l === 'no' ? false : null,
     estNightlyRate: rate, estOccupancyPct: occ,

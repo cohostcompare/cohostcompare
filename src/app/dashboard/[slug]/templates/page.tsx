@@ -5,12 +5,12 @@ import { isPro, plansFor, PRO_PRICE } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 import { deleteTemplate } from './actions';
 import RenameForm from './RenameForm';
+import { gstModeOf, gstSuffix } from '@/lib/gst';
 
 export const metadata: Metadata = { title: 'Quote templates', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 type Tpl = { name: string; q: Record<string, unknown> };
-const gstLabel = (q: Record<string, unknown>) => (q.gstMode === 'none' ? 'not registered for GST' : q.gstMode === 'plus' || q.gst === true ? '+ GST' : 'incl. GST');
 
 export default async function Templates({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -52,7 +52,7 @@ export default async function Templates({ params }: { params: Promise<{ slug: st
               <section key={t.name} className="panel" style={{ display: 'grid', gap: 10 }}>
                 <h2 style={{ fontSize: 20, margin: 0 }}>{t.name}</h2>
                 <p style={{ margin: 0, color: 'var(--muted)' }}>
-                  {q.feePct != null ? `${q.feePct}% management fee (${gstLabel(q)})` : 'No fee set'} · {q.setupFee ? `A$${q.setupFee} setup` : 'no setup fee'} · {q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}{q.noticeDays != null ? ` · ${q.noticeDays} days’ notice` : ''}
+                  {q.feePct != null ? `${q.feePct}%${gstSuffix(gstModeOf(q as { gst?: boolean; gstMode?: string }))} management fee` : 'No fee set'} · {q.setupFee ? `A$${q.setupFee} setup` : 'no setup fee'} · {q.minTermMonths ? `${q.minTermMonths}-month minimum term` : 'no lock-in'}{q.noticeDays != null ? ` · ${q.noticeDays} days’ notice` : ''}
                   {inc.length ? <><br />Includes: {inc.join(', ')}</> : null}
                 </p>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
