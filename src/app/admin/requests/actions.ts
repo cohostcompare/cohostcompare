@@ -48,6 +48,7 @@ export async function addEmailAndNotify(form: FormData) {
 /** Couldn't find a way to reach an unclaimed manager: remove them from the request and tell the owner. */
 export async function cantReach(form: FormData) {
   await requireAdmin('/admin/requests');
+  if (form.get('confirm') !== 'yes') return back('Tick the box to confirm before removing a manager.', 'error');
   const x = await unreachedThread(String(form.get('thread') || ''));
   if (!x) return back('That request is no longer waiting on an unclaimed manager.', 'error');
   const db = adminClient();

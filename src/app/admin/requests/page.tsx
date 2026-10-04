@@ -107,6 +107,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
             <b>{r.owner_name}</b>
             <span className="hint"><a href={`mailto:${r.owner_email}`}>{r.owner_email}</a>{r.owner_phone ? ` · ${r.owner_phone}` : ''}</span>
             <span className="hint" style={{ marginLeft: 'auto' }}>{when(r.created_at)} ({ago(r.created_at)} ago){r.source && r.source !== 'direct' ? ` · from ${r.source === 'ads' ? 'Google Ads' : r.source === 'google' ? 'Google search' : r.source}` : ''}</span>
+            <Link href={`/admin/requests/${r.id}`} style={{ fontWeight: 600, fontSize: 14 }}>Open →</Link>
             <details className="req-del"><summary className="hint">Delete</summary>
               <form action={deleteRequest} className="req-del-pop">
                 <input type="hidden" name="id" value={r.id} />
@@ -144,7 +145,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
                         <summary>Can&apos;t reach them? Tell the owner</summary>
                         <form action={cantReach} className="req-fix-form">
                           <input type="hidden" name="thread" value={t.id} />
-                          <span className="hint">Removes {t.manager_name} from this request and emails the owner a link to add another manager. It can&apos;t be undone.</span>
+                          <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}><input type="checkbox" name="confirm" value="yes" required style={{ marginTop: 3 }} /> <span>Remove {t.manager_name} from this request and email the owner a link to add another manager. It can&apos;t be undone.</span></label>
                           <button className="btn secondary small" type="submit">Remove and tell the owner</button>
                         </form>
                       </details>

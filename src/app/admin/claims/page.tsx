@@ -80,6 +80,7 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
                 <form action={approve} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   <input type="hidden" name="id" value={c.id} />
                   <input className="field" name="note" placeholder="Private note (optional), e.g. confirmed on LinkedIn" style={{ flex: '1 1 260px', minHeight: 40 }} />
+                  <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }} title="Approving gives this person control of the profile and emails them."><input type="checkbox" name="confirm" value="yes" required /> Sure?</label>
                   <button className="btn primary" type="submit">Approve</button>
                 </form>
                 {c.status === 'info_requested' && (

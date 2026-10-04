@@ -49,8 +49,8 @@ export default async function Revenue() {
         <div className="kpi k-purple"><span>All time</span><b>{money(allTime)}</b><small>client confirmations paid, ex GST</small></div>
       </section>
       <div className="wb-grid">
-        <WeekBars title="Client confirmation fees by month (A$)" values={months.map((m) => Math.round(unlocks.get(m)!.amt))} labels={months.map(label)} />
-        <WeekBars title="Client confirmations by month" values={months.map((m) => unlocks.get(m)!.n)} labels={months.map(label)} />
+        <WeekBars title="Client confirmation fees by month (A$)" values={months.map((m) => Math.round(unlocks.get(m)!.amt))} labels={months.map(label)} unit="month" />
+        <WeekBars title="Client confirmations by month" values={months.map((m) => unlocks.get(m)!.n)} labels={months.map(label)} unit="month" />
       </div>
       <div className="cmp-wrap">
         <table className="cmp" style={{ minWidth: 560 }}>

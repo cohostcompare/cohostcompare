@@ -39,6 +39,7 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
       {missing.length > 0 && (
         <form action={generateReports} className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <span><b>{missing.length} region{missing.length === 1 ? '' : 's'} still to do this quarter:</b> <span className="hint">{missing.slice(0, 8).map((r) => r.label).join(', ')}{missing.length > 8 ? '…' : ''}</span></span>
+          <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Make up to 8 reports now and email the managers who get them.</label>
           <button className="btn primary small" type="submit">Make them now</button>
         </form>
       )}

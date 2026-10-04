@@ -15,7 +15,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
   const sp = await searchParams;
   const q = (sp.q || '').trim();
   const db = adminClient();
-  let query = db.from('managers').select('id, slug, name, website, claimed, published').order('name').limit(300);
+  let query = db.from('managers').select('id, slug, name, website, claimed, published, stripe_subscription_id').order('name').limit(300);
   if (q) query = query.ilike('name', `%${q}%`);
   if (sp.show === 'hidden') query = query.eq('published', false);
   const planFilter = ['pro', 'paying', 'freepro', 'free'].includes(sp.plan || '') ? sp.plan! : '';
@@ -35,6 +35,15 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
   const { data: abns } = await db.from('managers').select('id, abn, abn_name, abn_verified_at').in('id', (rows || []).map((r) => r.id)); // needs 009
   const abnOf = new Map((abns || []).map((a) => [a.id, a]));
   const plans = await plansFor((rows || []).filter((r) => r.claimed).map((r) => r.id));
+  // Who can sign in for each claimed manager (up to 3 shown), so you can see who you're dealing with.
+  const claimedIds = (rows || []).filter((r) => r.claimed).map((r) => r.id);
+  const { data: members } = claimedIds.length ? await db.from('manager_members').select('manager_id, user_id').in('manager_id', claimedIds).limit(2000) : { data: [] };
+  const perManager = new Map<string, string[]>();
+  for (const x of members || []) { const l = perManager.get(x.manager_id) || []; if (l.length < 3) l.push(x.user_id); perManager.set(x.manager_id, l); }
+  const userIds = [...new Set([...perManager.values()].flat())];
+  const emailOf = new Map<string, string>();
+  await Promise.all(userIds.map(async (uid) => { const e = (await db.auth.admin.getUserById(uid).catch(() => ({ data: { user: null } }))).data.user?.email; if (e) emailOf.set(uid, e); }));
+  const memberList = (id: string) => (perManager.get(id) || []).map((u) => emailOf.get(u)).filter((e): e is string => Boolean(e));
   const ids = (rows || []).filter((r) => !r.published).map((r) => r.id);
   const { data: edits } = ids.length ? await db.from('manager_edits').select('manager_id, changes, created_at').in('manager_id', ids).order('created_at', { ascending: false }) : { data: [] };
   const why = new Map<string, { reason?: string; at: string }>();
@@ -66,7 +75,8 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
           <div key={m.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '6px 12px', padding: '12px 16px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>
             <div style={{ minWidth: 0 }}>
               <b>{m.published ? <Link href={`/managers/${m.slug}`}>{m.name}</Link> : m.name}</b>
-              <span className="hint"> · {m.published ? 'Visible' : 'Hidden'}{m.claimed ? ' · Claimed' : ''}{m.website ? ` · ${m.website.replace(/^https?:\/\//, '')}` : ''} · <Link href={`/admin/managers/${m.id}/requirements`}>Requirements</Link></span>
+              <span className="hint"> · {m.published ? 'Visible' : 'Hidden'}{m.claimed ? ' · Claimed' : ''}{m.website ? ` · ${m.website.replace(/^https?:\/\//, '')}` : ''} · <Link href={`/admin/managers/${m.id}/requirements`}>Requirements</Link> · <a href={`/managers/${m.slug}`} target="_blank" rel="noopener">Public profile ↗</a></span>
+              {m.claimed && <div className="hint">Logins: {memberList(m.id).length ? memberList(m.id).map((e, i) => <span key={e}>{i ? ', ' : ''}<a href={`mailto:${e}`}>{e}</a></span>) : 'none found'}{(perManager.get(m.id) || []).length >= 3 ? ' (first 3)' : ''}</div>}
               {abnOf.get(m.id)?.abn && (
                 <div className="hint">ABN {abnOf.get(m.id)!.abn}{abnOf.get(m.id)!.abn_name ? ` · registered to ${abnOf.get(m.id)!.abn_name}` : ''} · {abnOf.get(m.id)!.abn_verified_at ? 'verified' : 'not verified'}{' '}
                   <form action={setVerified} style={{ display: 'inline' }}>
@@ -77,7 +87,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
               )}
               {m.claimed && (
                 <form action={setPlan} className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
-                  <span>Plan: <b>{planName(planOf(plans.get(m.id)))}</b>{plans.get(m.id)?.pro_until ? ` until ${new Date(plans.get(m.id)!.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
+                  <span>Plan: <b>{planName(planOf(plans.get(m.id)))}</b>{plans.get(m.id)?.pro_until ? ` until ${new Date(plans.get(m.id)!.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}{m.stripe_subscription_id ? <> · <span className="chip" title="Set to Free in Stripe, not here">paying via Stripe</span></> : ''}</span>
                   <input type="hidden" name="id" value={m.id} /><input type="hidden" name="q" value={q} />
                   <select name="plan" defaultValue={planOf(plans.get(m.id))} style={{ minHeight: 30 }}><option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select>
                   <select name="months" defaultValue="0" style={{ minHeight: 30 }}><option value="0">no end date</option><option value="1">1 month</option><option value="3">3 months</option><option value="12">12 months</option></select>

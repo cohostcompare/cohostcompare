@@ -7,7 +7,7 @@ const L = ({ label, hint, children }: { label: string; hint?: string; children: 
   <label style={{ display: 'grid', gap: 4, alignContent: 'start' }}><span style={{ fontWeight: 600, fontSize: 14 }}>{label}</span>{children}{hint && <span className="hint" style={{ fontSize: 13 }}>{hint}</span>}</label>
 );
 
-export default function PartnerForm({ categories, p, manage }: { categories: readonly string[]; p?: P; manage?: { id: string; s: string } }) {
+export default function PartnerForm({ categories, p, manage, approved }: { categories: readonly string[]; p?: P; manage?: { id: string; s: string }; approved?: boolean }) {
   const [state, act, pending] = useActionState(manage ? updatePartner : applyPartner, {});
   if (state.ok && !manage) return <p className="panel" style={{ margin: 0, background: 'var(--tint)' }}>{state.ok}</p>;
   return (
@@ -25,10 +25,11 @@ export default function PartnerForm({ categories, p, manage }: { categories: rea
         <L label="Where you work" hint="States, cities or regions you cover"><input className="field" name="areas" maxLength={200} placeholder="e.g. Sydney and the Blue Mountains" defaultValue={p?.areas || ''} /></L>
       </div>
       <h2 style={{ fontSize: 20, margin: '6px 0 0' }}>Your offer for owners</h2>
+      {manage && approved && <p className="hint" style={{ margin: 0 }}>Your offer is live, so changes to the title, details, link or promo code are checked by us before owners see them (usually within a few business days). Your other details update straight away.</p>}
       <L label="Offer title" hint="Up to 80 characters, e.g. 15% off your first professional listing shoot"><input className="field" name="offer_title" required maxLength={80} defaultValue={p?.offer_title || ''} /></L>
       <L label="Offer details" hint="What's included, who it suits and any conditions. Up to 600 characters."><textarea className="field" name="offer_body" required rows={4} maxLength={600} defaultValue={p?.offer_body || ''} /></L>
       <div className="form-grid">
-        <L label="Link for owners" hint="Where owners go to take up the offer"><input className="field" name="offer_url" defaultValue={p?.offer_url || ''} /></L>
+        <L label="Link for owners" hint="Where owners go to take up the offer, starting with https://"><input className="field" name="offer_url" type="url" required={!manage} placeholder="https://www.example.com.au/offer" defaultValue={p?.offer_url || ''} /></L>
         <L label="Promo code (optional)"><input className="field" name="promo_code" maxLength={40} defaultValue={p?.promo_code || ''} /></L>
         <L label="Logo link (optional)" hint="A link to a square PNG or SVG of your logo"><input className="field" name="logo_url" defaultValue={p?.logo_url || ''} /></L>
       </div>

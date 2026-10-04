@@ -17,7 +17,14 @@ export type Partner = {
   category: string; areas: string | null; offer_title: string | null; offer_body: string | null; offer_url: string | null; promo_code: string | null;
   logo_url: string | null; referral_fee: boolean; admin_note: string | null; status: 'pending' | 'approved' | 'hidden' | 'rejected'; sort: number;
   fee_terms?: string | null; agreed_at?: string | null; agreed_version?: string | null; agreed_name?: string | null;
+  // SQL 027: an approved partner's offer edits wait here until admin approves them; agreed_fee_terms is what they accepted.
+  pending_review?: boolean | null; pending_offer?: PendingOffer | null; agreed_fee_terms?: string | null;
 };
+export type PendingOffer = { offer_title: string | null; offer_body: string | null; offer_url: string | null; promo_code: string | null };
+export const OFFER_KEYS = ['offer_title', 'offer_body', 'offer_url', 'promo_code'] as const;
+
+/** Where /go/[id] sends owners: the offer link, else the website. Null means the offer can't show. */
+export const offerLink = (p: Pick<Partner, 'offer_url' | 'website'>) => p.offer_url || p.website || null;
 
 /** Bump when the partner agreement (/partners/agreement) changes; partners on an older version are asked to accept again. */
 export const PARTNER_TERMS_VERSION = '2026-10-02';
@@ -45,7 +52,7 @@ export async function liveOffers(): Promise<Partner[]> {
   try {
     if (!(await getSetting<boolean>('offers_live', false))) return [];
     // Only partners who've accepted the current partner agreement (SQL 020) show to owners.
-    return (await approvedPartners()).filter((p) => p.offer_title && (p.offer_url || p.website) && p.agreed_at);
+    return (await approvedPartners()).filter((p) => p.offer_title && offerLink(p) && p.agreed_at);
   } catch { return []; }
 }
 
@@ -55,16 +62,35 @@ export const cleanUrl = (raw: unknown) => {
   try { const u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`); return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString().slice(0, 500) : null; } catch { return null; }
 };
 
-/** On the 1st of each month (daily cron): emails each approved partner last month's clicks, once offers are live. */
+const TZ = 'Australia/Sydney';
+/** Calendar parts of an instant in Sydney. */
+function sydneyParts(at: Date) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-AU', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(at).map((x) => [x.type, x.value]));
+  return { y: Number(p.year), m: Number(p.month), d: Number(p.day), h: Number(p.hour), mi: Number(p.minute), s: Number(p.second) };
+}
+/** The instant of midnight on a Sydney calendar date (month is 1-based), allowing for daylight saving. */
+export function sydneyMidnight(y: number, m: number, d: number): Date {
+  const guess = Date.UTC(y, m - 1, d);
+  const q = sydneyParts(new Date(guess));
+  const asUtc = Date.UTC(q.y, q.m - 1, q.d, q.h, q.mi, q.s);
+  return new Date(guess - (asUtc - guess)); // shift back by Sydney's offset at that moment
+}
+/** The previous calendar month in Sydney: its name and the [start, end) window as instants. */
+export function previousSydneyMonth(now = new Date()) {
+  const { y, m } = sydneyParts(now);
+  const py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
+  const start = sydneyMidnight(py, pm, 1), end = sydneyMidnight(y, m, 1);
+  const label = start.toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: TZ });
+  return { start, end, label, isFirst: sydneyParts(now).d === 1 };
+}
+
+/** On the 1st of each month (daily cron): emails each approved partner the previous calendar month's clicks (Sydney time), once offers are live. */
 export async function monthlyPartnerReports() {
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-  if (now.getDate() !== 1) return 0;
+  const { start, end, label: month, isFirst } = previousSydneyMonth();
+  if (!isFirst) return 0;
   if (!(await getSetting<boolean>('offers_live', false).catch(() => false))) return 0;
   const db = adminClient();
   const { data } = await db.from('partners').select('id, name, email, contact_name').eq('status', 'approved').not('agreed_at', 'is', null);
-  const end = new Date(Date.now() - 2 * 3600e3); // just before midnight Sydney
-  const start = new Date(end.getTime() - 31 * 86400e3);
-  const month = start.toLocaleDateString('en-AU', { month: 'long', timeZone: 'Australia/Sydney' });
   const { sendEmail } = await import('@/lib/email');
   let n = 0;
   for (const p of data || []) {

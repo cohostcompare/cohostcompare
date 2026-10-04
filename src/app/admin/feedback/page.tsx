@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 type F = { id: string; created_at: string; email: string | null; role: string; ease: number | null; nps: number | null; improve: string; confusing: string | null; wish: string | null; heard_from: string | null; contact_ok: boolean; page: string | null; reward: string | null; reward_status: string; admin_note: string | null; managers: { name: string } | null };
 
-const STATUS: Record<string, string> = { none: 'No reward', granted: 'Pro month added', to_send: 'Gift card to send', sent: 'Sent', manual: 'Credit Pro by hand' };
+const STATUS: Record<string, string> = { none: 'No reward', granted: 'Pro month added', to_send: 'Pro month to credit', sent: 'Sent', manual: 'Credit Pro by hand' };
 
 export default async function AdminFeedback({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
   await requireAdmin('/admin/feedback');

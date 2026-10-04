@@ -44,6 +44,9 @@ export async function setPlan(form: FormData) {
   const plan = String(form.get('plan') || 'free');
   const months = Number(form.get('months') || 0);
   if (!['free', 'pro', 'enterprise'].includes(plan)) redirect('/admin/managers');
+  // A manager paying through Stripe keeps Pro while the subscription is live; cancel it in Stripe (or they do, from Billing) rather than setting Free here.
+  const { data: cur } = await adminClient().from('managers').select('stripe_subscription_id, name').eq('id', id).maybeSingle();
+  if (plan === 'free' && cur?.stripe_subscription_id) redirect(`/admin/managers?q=${encodeURIComponent(q)}&error=${encodeURIComponent(`${cur.name} pays for Pro through Stripe. Cancel the subscription in Stripe first (the webhook then sets them to Free), or ask them to cancel from Billing in their dashboard.`)}`);
   const until = months > 0 ? new Date(Date.now() + months * 30.44 * 86400e3).toISOString() : null;
   const { error } = await adminClient().from('managers').update({ plan, pro_until: plan === 'free' ? null : until, pro_note: plan === 'free' ? null : 'admin' }).eq('id', id);
   if (error) redirect(`/admin/managers?q=${encodeURIComponent(q)}&error=${encodeURIComponent(error.message)}`);

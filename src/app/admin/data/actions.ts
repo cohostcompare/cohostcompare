@@ -42,8 +42,9 @@ export async function addHotspots() {
 }
 
 /** Works through unfinished areas until about 50 seconds pass or the budget runs out. */
-export async function sweepMany() {
+export async function sweepMany(form: FormData) {
   await requireAdmin('/admin/data');
+  if (form.get('confirm') !== 'yes') back('Tick the box to confirm before fetching.', 'error');
   const started = Date.now();
   let calls = 0, stored = 0, areas = 0; let note = '';
   try {
