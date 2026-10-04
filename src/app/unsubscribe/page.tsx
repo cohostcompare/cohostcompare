@@ -21,7 +21,13 @@ export default async function Unsubscribe({ searchParams }: { searchParams: SP }
   return (
     <main style={{ maxWidth: 560, paddingBlock: '48px 80px', display: 'grid', gap: 14 }}>
       <h1 style={{ fontSize: 34, margin: 0 }}>Unsubscribe</h1>
-      {sp.done ? <p className="lede">Done. You won&apos;t get any more emails like that from us. Emails you need about your own quote requests or account still arrive. If that was a mistake, email hello@cohostcompare.com.</p>
+      {sp.done ? (
+          <div style={{ display: 'grid', gap: 10 }}>
+            <p className="lede" style={{ margin: 0 }}>Done. You won&apos;t get any more emails like that from us: no invitations to claim a profile, tips, market reports or review invitations.</p>
+            <p style={{ margin: 0 }}>Two kinds of email still arrive, because they&apos;re about something you or an owner asked for: a notice when an owner asks your business for a quote through CoHostCompare, and emails about your own quote requests or account. If you&apos;d rather your business wasn&apos;t listed at all, email hello@cohostcompare.com and we&apos;ll remove the profile.</p>
+            <p className="hint" style={{ margin: 0 }}>Unsubscribed by mistake? Email hello@cohostcompare.com.</p>
+          </div>
+        )
         : ok ? (
           <form action={confirm} style={{ display: 'grid', gap: 12 }}>
             <input type="hidden" name="e" value={sp.e} /><input type="hidden" name="s" value={sp.s} />
