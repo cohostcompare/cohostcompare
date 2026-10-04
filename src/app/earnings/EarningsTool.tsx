@@ -8,7 +8,7 @@ import { getEstimate, type EstimateResult } from './actions';
 
 const money = (n: number) => `A$${Math.round(n).toLocaleString('en-AU')}`;
 
-export default function EarningsTool({ initial }: { initial?: { lat: number; lng: number; label: string; beds: number } | null }) {
+export default function EarningsTool({ initial, feePct = 20 }: { initial?: { lat: number; lng: number; label: string; beds: number } | null; feePct?: number }) {
   // Arriving from search results or a sent quote request: the address is known, so estimate straight away.
   const [place, setPlace] = useState<PickedPlace | null>(initial ? { formatted: initial.label, street: '', suburb: initial.label, state: '', postcode: '', lat: initial.lat, lng: initial.lng } : null);
   const [beds, setBeds] = useState(initial?.beds ?? 2);
@@ -71,7 +71,7 @@ export default function EarningsTool({ initial }: { initial?: { lat: number; lng
           <div className="facts">
             <div><b>{Math.round(res.occupancy * 100)}%</b><span>of nights booked, area average</span></div>
             <div><b>{money(res.nightly)}</b><span>typical nightly rate for this size</span></div>
-            <div><b>{money(res.mid * 0.8)}</b><span>kept after a 20% management fee, before cleaning and other costs</span></div>
+            <div><b>{money(res.mid * (1 - feePct / 100))}</b><span>kept after a {feePct}% management fee (the typical published fee on CoHostCompare), before cleaning and other costs</span></div>
             {res.activeListings ? <div><b>{res.activeListings.toLocaleString('en-AU')}</b><span>active short-stay listings in the area</span></div> : null}
           </div>
           <p className="hint" style={{ margin: 0 }}>An estimate from area averages over the last 12 months, adjusted for bedrooms. Your home&apos;s actual earnings depend on its location, presentation, pricing and local rules. Data source: AirROI (www.airroi.com).</p>

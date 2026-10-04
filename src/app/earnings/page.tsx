@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Photo from '@/components/Photo';
 import EarningsTool from './EarningsTool';
+import { market } from '@/lib/market';
 
 export const metadata: Metadata = {
   title: 'What could my property earn on Airbnb?',
@@ -13,6 +14,7 @@ type SP = Promise<{ lat?: string; lng?: string; place?: string; beds?: string }>
 export default async function Earnings({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   const lat = Number(sp.lat), lng = Number(sp.lng);
+  const fee = (await market()).fee.mid ?? 20;
   const initial = sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180
     ? { lat, lng, label: (sp.place || '').slice(0, 120), beds: Math.min(5, Math.max(0, Number(sp.beds) || 2)) } : null;
   return (
@@ -25,7 +27,7 @@ export default async function Earnings({ searchParams }: { searchParams: SP }) {
         </div>
         <Photo name="bondi" ratio="3 / 2" eager sizes="(max-width: 880px) 100vw, 480px" />
       </header>
-      <EarningsTool initial={initial} />
+      <EarningsTool initial={initial} feePct={fee} />
     </main>
   );
 }

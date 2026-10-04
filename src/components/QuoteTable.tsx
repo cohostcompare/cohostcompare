@@ -37,7 +37,7 @@ export default function QuoteTable({ quotes }: { quotes: QuoteCol[] }) {
   }
 
   const rows: [string, (x: QuoteCol, i: number) => React.ReactNode][] = [
-    ['Management fee', (x) => `${x.q.feePct}%${gstSuffix(gstModeOf(x.q))}`],
+    ['Management fee (% of booking income)', (x) => `${x.q.feePct}%${gstSuffix(gstModeOf(x.q))}`],
     ['Setup fee', (x) => (x.q.setupFee ? money(x.q.setupFee) : 'None')],
     [R != null ? `Year-one fees on ${money(R)} bookings` : 'Year-one fees', (x) => { const c = cost(x.q); return c == null ? 'Needs a revenue estimate' : `≈ ${money(c)}`; }],
     ['Minimum term', (x) => (x.q.minTermMonths ? `${x.q.minTermMonths} months` : 'No lock-in')],

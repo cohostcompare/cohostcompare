@@ -104,7 +104,7 @@ export default async function Home() {
         <Photo name="bed" ratio="4 / 3" sizes="(max-width: 880px) 100vw, 520px" />
         <div style={{ display: 'grid', gap: 14 }}>
           <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Unbiased, so you can trust the comparison</h2>
-          <p style={{ margin: 0, color: 'var(--muted)' }}>We&apos;re not a manager, and we don&apos;t earn more when you pick one over another. Every manager&apos;s figures come from the same public data, shown the same way, and every quote comes back in the same format.</p>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>We&apos;re not a manager. No manager can pay for a better position, and what a manager pays us never changes what you see or how quotes compare. Every manager&apos;s figures come from the same public data, shown the same way, and every quote comes back in the same format.</p>
           <p style={{ margin: 0 }}><Link href="/why-us">Why use us →</Link></p>
         </div>
       </section>

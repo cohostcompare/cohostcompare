@@ -14,7 +14,7 @@ import { adminClient } from '@/lib/supabase/server';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
 export const GUIDE_TITLE = 'The short-term rental setup guide';
-export const CONSENT_TEXT = 'Send me a few short emails to help me get set up (4 over two weeks). I can unsubscribe at any time.';
+export const CONSENT_TEXT = 'Send me a few short emails to help me get set up (3 over two weeks). I can unsubscribe at any time.';
 export const STATES = RULES.map((r) => ({ code: r.code, name: r.name }));
 
 export const guideLink = (id: string) => `${SITE}/api/guide?i=${id}&s=${sign(`guide:${id}`)}`;

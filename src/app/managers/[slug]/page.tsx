@@ -163,7 +163,6 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           <section className="locked" aria-label="Details for signed-in owners">
             <h2 style={{ fontSize: 20, margin: 0 }}>Full fees, terms and performance near you</h2>
             <ul>
-              <li>How many homes they run near your address, and how those are rated</li>
               <li>Setup fee, minimum term and notice period, where published</li>
               <li>Rules on using the property yourself</li>
             </ul>

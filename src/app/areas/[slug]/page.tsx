@@ -123,7 +123,7 @@ export default async function AreaPage({ params }: { params: P }) {
       )}
 
       <div style={{ margin: '0 0 24px', display: 'grid', gap: 6 }}>
-        <p className="hint" style={{ margin: 0 }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public listings over the last 12 months. Figures are estimates. Fees are shown only where a manager publishes them, and fees for unclaimed profiles come from the manager&apos;s own website and haven&apos;t been confirmed by them.{withAirbnb < managers.length ? ' Some managers cover this area according to their own website, without listing figures.' : ''}</p>
+        <p className="hint" style={{ margin: 0 }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public listings over the last 12 months. Figures are estimates. Fees are a percentage of booking income, shown only where a manager publishes them. Fees on unclaimed profiles come from the manager&apos;s own website, haven&apos;t been confirmed by them, and may or may not include GST.{withAirbnb < managers.length ? ' Some managers cover this area according to their own website, without listing figures.' : ''}</p>
         <DataSource />
       </div>
     </main>

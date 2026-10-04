@@ -123,7 +123,7 @@ export default async function Account({ searchParams }: { searchParams: SP }) {
                       return (
                         <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: '1px solid var(--line)', padding: '10px 0', flexWrap: 'wrap' }}>
                           <span><b>{m.manager_name}</b> <span className="hint">· {m.status === 'withdrawn' && (m.messages || []).some((x) => x.sender === 'system' && x.body.startsWith('We couldn')) ? 'Removed: we couldn’t reach them' : STATUS[m.status] || m.status}{u ? ` · ${u} new message${u === 1 ? '' : 's'}` : ''}</span></span>
-                          <Link className="btn secondary small" href={`/account/messages/${m.id}`}>{u ? 'Read message' : 'Message them'}</Link>
+                          <Link className="btn secondary small" href={`/account/messages/${m.id}`}>{u ? 'Read message' : ['declined', 'withdrawn'].includes(m.status) ? 'See why' : 'Message them'}</Link>
                         </div>
                       );
                     })}

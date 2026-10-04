@@ -136,7 +136,7 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ 
     `Listed now: ${row.currently_listed}`,
     `Available for guests: ${availabilityLabel(availability)}`,
     `Wants: ${services.join(', ')}`,
-    situation ? `Owner: ${situation.replace(/^I’m|^I'm/, 'They’re').replace(/^I own/, 'They own')}` : '',
+    situation ? `Your situation: ${situation}` : '',
     `Start: ${row.start_timing}`,
     row.notes ? `Notes: ${row.notes}` : '',
   ].filter(Boolean).join('\n');

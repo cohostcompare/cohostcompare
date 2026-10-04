@@ -32,7 +32,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
     <main>
       <div className="results-head">
         <div>
-          <h1>{managers.length} manager{managers.length === 1 ? '' : 's'} near {place || 'this area'}</h1>
+          <h1>{managers.length === 0 ? `Managers near ${place || 'this area'}` : `${managers.length} manager${managers.length === 1 ? '' : 's'} near ${place || 'this area'}`}</h1>
           <span className="hint">
             {hasPoint ? `Managers running homes within ${COVER_KM} km. Sort them however you like.` : 'Pick your address from the suggestions for the most accurate results.'} No manager can pay for a higher place.
           </span>
@@ -48,7 +48,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
         </div>
       )}
       <p style={{ margin: '0 0 12px' }}><a className="earn-pill" href={earningsHref({ lat: hasPoint ? lat : null, lng: hasPoint ? lng : null, place })}>What could this property earn? Get a free estimate →</a></p>
-      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are shown only where a manager publishes them. For profiles not yet claimed, fees come from the manager&apos;s website and haven&apos;t been confirmed by them. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
+      <p className="hint" style={{ margin: '0 0 24px' }}>Ratings, home counts and nightly rates are estimates based on managers&apos; public Airbnb listings over the last 12 months. Fees are a percentage of booking income, shown only where a manager publishes them. For profiles not yet claimed, fees come from the manager&apos;s website, haven&apos;t been confirmed by them, and may or may not include GST. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>
     </main>
   );
 }

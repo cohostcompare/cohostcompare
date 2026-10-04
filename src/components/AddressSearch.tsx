@@ -22,8 +22,8 @@ export default function AddressSearch() {
 
   function go(p: PickedPlace) {
     setError('');
-    if (!p.postcode) { setError('Pick an address or suburb from the list so we know its postcode.'); return; }
-    const q = new URLSearchParams({ postcode: p.postcode });
+    if (!p.postcode && (p.lat == null || p.lng == null)) { setError('Pick an address or suburb from the list so we know where it is.'); return; }
+    const q = new URLSearchParams(p.postcode ? { postcode: p.postcode } : {});
     if (p.suburb) q.set('suburb', p.suburb);
     if (p.state) q.set('state', p.state);
     if (p.street) q.set('street', p.street);

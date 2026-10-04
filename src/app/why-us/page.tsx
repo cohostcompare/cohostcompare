@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const POINTS: [string, string][] = [
-  ['Unbiased by design', 'We’re not a manager, and we don’t earn more when you pick one over another. Most “best Airbnb manager” lists are written by managers ranking themselves first.'],
+  ['Unbiased by design', 'We’re not a manager. No manager can pay for a better position, and what a manager pays us never changes what you see or how quotes compare. Most “best Airbnb manager” lists are written by managers ranking themselves first.'],
   ['Every manager, every platform', 'Airbnb’s own co-host directory only shows Airbnb co-hosts. We include full-service agencies and managers who list on Booking.com, Stayz and direct booking sites.'],
   ['Performance you can check', 'Home counts, guest ratings and nightly rates are estimates from managers’ public listings, refreshed regularly and shown the same way for everyone. We show where each figure comes from.'],
   ['Fees in the same format', 'Where managers publish fees, we show them. Quotes come back in a standard format, so a 15% fee with a setup charge and a 12-month lock-in can be compared with 18% and no lock-in.'],

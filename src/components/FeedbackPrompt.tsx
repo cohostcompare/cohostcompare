@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { checkPrompt, promptAction } from '@/app/feedback/actions';
 
 // Never interrupt someone mid-task.
-const QUIET = /^\/(feedback|quote|signin|join|claim|admin|ops|partners)|\/edit$|\/review\//;
+const QUIET = /^\/(feedback|quote|signin|join|claim|admin|ops|partners|search|areas\/|compare|account\/messages)|\/edit$|\/review\//;
 
 export default function FeedbackPrompt() {
   const path = usePathname() || '/';

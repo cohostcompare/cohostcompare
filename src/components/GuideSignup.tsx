@@ -30,7 +30,7 @@ export default function GuideSignup({ compact }: { compact?: boolean }) {
                 <option value="" disabled>State your property is in</option>
                 {STATES.map(([c, n]) => <option key={c} value={c}>{n}</option>)}
               </select>
-              <label className="guide-consent"><input type="checkbox" name="consent" value="yes" /> <span>Send me a few short emails to help me get set up (4 over two weeks). I can unsubscribe at any time.</span></label>
+              <label className="guide-consent"><input type="checkbox" name="consent" value="yes" /> <span>Send me a few short emails to help me get set up (3 over two weeks). I can unsubscribe at any time.</span></label>
               <button className="btn primary" type="submit" disabled={pending}>{pending ? 'Sending…' : 'Get the free guide'}</button>
               {state.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}
               <p className="hint" style={{ margin: 0, fontSize: 12.5 }}>We use your email to send the guide and, if you tick the box, our setup tips. See our <a href="/privacy">privacy policy</a>.</p>

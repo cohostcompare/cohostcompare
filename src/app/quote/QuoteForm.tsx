@@ -24,8 +24,8 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   const [editing, setEditing] = useState(!known);
   const [removed, setRemoved] = useState<string[]>([]);
   // Property details: prefilled from what the owner told us on the results page (this browser only).
-  const [ptype, setPtype] = useState<string>('Apartment');
-  const [beds, setBeds] = useState<number>(2);
+  const [ptype, setPtype] = useState<string>('');
+  const [beds, setBeds] = useState<number>(-1);
   const [avail, setAvail] = useState<string>('');
   const [services, setServices] = useState<string[]>([SERVICES[0]]);
   const [situation, setSituation] = useState<string>(SITUATIONS[0]);
@@ -33,18 +33,18 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
     try {
       const p = loadProperty(fresh); // admins: this tab only
       if (p.type && (PROPERTY_TYPES as readonly string[]).includes(p.type)) setPtype(p.type);
-      if (typeof p.beds === 'number') setBeds(p.beds);
+      if (typeof p.beds === 'number' && p.beds >= 0) setBeds(p.beds);
       if (p.availability) setAvail(p.availability);
       if (p.services?.length && !p.services.includes(SERVICES[0])) setServices([]);
     } catch { /* none */ }
   }, [fresh]);
-  const details: PropertyDetails = { type: ptype, beds, availability: avail || null, services, situation };
+  const details: PropertyDetails = { type: ptype || null, beds: beds < 0 ? null : beds, availability: avail || null, services, situation };
   // Keep the search results' "Your property" bar in step with changes made here.
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setLoaded(true); }, []);
   useEffect(() => {
     if (!loaded || !avail) return; // only once the owner has filled it in
-    saveProperty(fresh, { type: ptype, beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null });
+    saveProperty(fresh, { type: ptype || null, beds: beds < 0 ? null : beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null });
   }, [loaded, ptype, beds, avail, services]);
   const searchHref = `/search?${new URLSearchParams({ postcode: addr.postcode, ...(addr.suburb ? { suburb: addr.suburb } : {}), ...(addr.state ? { state: addr.state } : {}), ...(addr.street ? { street: addr.street } : {}), ...(addr.lat != null && addr.lng != null ? { lat: String(addr.lat), lng: String(addr.lng) } : {}) }).toString()}#your-property`;
   const toggleService = (s: string) => setServices(services.includes(s) ? services.filter((x) => x !== s) : [...services, s]);
@@ -63,9 +63,9 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   // Managers whose requirements this property doesn't meet can't be sent the request.
   const unfit = coveredAll.map((m) => ({ m, why: mismatches(m.requirements, details) })).filter((x) => x.why.length);
   const covered = coveredAll.filter((m) => !unfit.some((u) => u.m.slug === m.slug));
-  // Typing over the suburb or postcode means we no longer know exactly where the property is.
+  // Typing over the suburb means we no longer know exactly where the property is. Filling in a missing postcode doesn't.
   const set = (k: 'street' | 'suburb' | 'state' | 'postcode') => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setAddr({ ...addr, [k]: e.target.value, ...(k === 'suburb' || k === 'postcode' ? { lat: null, lng: null } : {}) });
+    setAddr({ ...addr, [k]: e.target.value, ...(k === 'suburb' ? { lat: null, lng: null } : {}) });
 
   return (
     <form action={action} className="panel" style={{ display: 'grid', gap: 16 }}>
@@ -152,10 +152,10 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
       )}
       <div style={grid(150)}>
         <label style={L}>Property type
-          <select className="field" name="property_type" value={ptype} onChange={(e) => setPtype(e.target.value)}>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
+          <select className="field" name="property_type" required value={ptype} onChange={(e) => setPtype(e.target.value)}><option value="" disabled>Choose</option>{PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
         </label>
         <label style={L}>Bedrooms
-          <select className="field" name="bedrooms" value={beds} onChange={(e) => setBeds(Number(e.target.value))}>{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select>
+          <select className="field" name="bedrooms" required value={beds < 0 ? '' : beds} onChange={(e) => setBeds(Number(e.target.value))}><option value="" disabled>Choose</option>{[0, 1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n === 0 ? 'Studio' : n === 6 ? '6+' : n}</option>)}</select>
         </label>
         <label style={L}>Available for guests
           <select className="field" name="availability" value={avail} onChange={(e) => setAvail(e.target.value)} required><option value="" disabled>Choose one</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label}</option>)}</select>
@@ -191,8 +191,8 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
       <label style={L}>Anything else managers should know? (optional)
         <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
       </label>
-      <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || unfit.length > 0 || covered.length === 0 || !avail}>
-        {pending ? 'Sending…' : checking ? 'Checking coverage…' : !avail ? 'Choose how much of the year it’s available' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
+      <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || unfit.length > 0 || covered.length === 0 || !avail || !ptype || beds < 0 || services.length === 0}>
+        {pending ? 'Sending…' : checking ? 'Checking coverage…' : !ptype || beds < 0 ? 'Choose the property type and bedrooms' : !avail ? 'Choose how much of the year it’s available' : services.length === 0 ? 'Tick at least one service' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
       <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept. By sending, you agree to our <a href="/terms">terms</a>.</p>

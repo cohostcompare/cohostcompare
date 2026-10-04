@@ -41,8 +41,9 @@ export default function EmailSignIn({ next = '/account', intro, mode = 'signin' 
 
   if (state === 'sent') {
     return (
-      <div className="panel" style={{ background: 'var(--tint)' }}>
-        <b>Check your inbox.</b> We&apos;ve sent a sign-in link to {email}. Open it on this device to carry on. It can take a minute, so check spam if it hasn&apos;t arrived.
+      <div className="panel" style={{ background: 'var(--tint)', display: 'grid', gap: 8 }}>
+        <span><b>Check your inbox.</b> We&apos;ve sent a sign-in link to {email}. It can take a minute, so check spam if it hasn&apos;t arrived.</span>
+        <button type="button" className="linkish" style={{ justifySelf: 'start' }} onClick={() => setState('idle')}>Wrong address? Use a different email</button>
       </div>
     );
   }

@@ -50,7 +50,7 @@ export default async function Compare({ searchParams }: { searchParams: SP }) {
 
   type Row = { label: string; cell: (m: M) => React.ReactNode; locked?: boolean };
   const rows: Row[] = [
-    { label: 'Management fee', cell: (m) => <>{feeLabel(m) ?? <span className="hint">On request</span>}{tag(m.feeMin != null && m.feeMin === minFee, 'lowest')}{!m.claimed && feeLabel(m) ? <div className="hint">from their website</div> : null}</> },
+    { label: 'Management fee (% of booking income)', cell: (m) => <>{feeLabel(m) ?? <span className="hint">On request</span>}{tag(m.feeMin != null && m.feeMin === minFee, 'lowest')}{!m.claimed && feeLabel(m) ? <div className="hint">from their website</div> : null}</> },
     { label: 'Homes they run near you', cell: (m) => <>{m.nearby ? <b>{m.nearby}</b> : <span className="hint">None tracked</span>}{tag(Boolean(m.nearby) && m.nearby === maxNear, 'most')}{m.nearestKm != null ? <div className="hint">closest {m.nearestKm} km away</div> : null}</> },
     { label: 'Guest rating near you', cell: (m) => <>{m.nearbyRating ? <b>{m.nearbyRating.toFixed(2)} ★</b> : <span className="hint">–</span>}{tag(Boolean(m.nearbyRating) && m.nearbyRating === maxRating, 'highest')}</> },
     { label: 'Guest rating overall', cell: (m) => (m.avgRating != null ? <>{m.avgRating.toFixed(2)} ★ <div className="hint">{m.reviewCount?.toLocaleString('en-AU')} reviews</div></> : <span className="hint">–</span>) },

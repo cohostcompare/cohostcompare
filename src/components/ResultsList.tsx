@@ -85,7 +85,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
               </div>
               <div className="side">
                 <div className="fee">
-                  {fee ? <><span className="n">{fee}</span><span className="s">management fee{m.claimed ? '' : ' (from their website)'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
+                  {fee ? <><span className="n">{fee}</span><span className="s">of booking income{m.claimed ? '' : ', from their website, GST not stated'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
                 </div>
                 {!complete ? (
                   <button type="button" className="btn secondary add above has-tip" onClick={askForDetails} data-tip="Add your property details at the top first, so we can check this manager takes on a property like yours" aria-describedby="prop-step">+ Add to quote</button>

@@ -13,7 +13,7 @@ export default async function SignIn({ searchParams }: { searchParams: SP }) {
     <main style={{ maxWidth: 480, paddingBlock: '24px 64px', display: 'grid', gap: 16 }}>
       <h1 style={{ fontSize: 34, margin: 0 }}>Sign in or join free</h1>
       <p style={{ margin: 0, color: 'var(--muted)' }}>One step for both: new here, and we&apos;ll create your free account. Request quotes, compare them and message managers in one inbox.</p>
-      {sp.error === 'link' && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>That sign-in link has expired or was already used. Request a new one below.</p>}
+      {sp.error === 'link' && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>That sign-in link didn&apos;t work. It may have expired or been used already. Request a new one below.</p>}
       <EmailSignIn next={next} />
     </main>
   );

@@ -32,6 +32,8 @@ export async function acceptQuote(form: FormData) {
   const s = await userClient();
   const { data: t } = await s.from('quote_request_managers').select('id, manager_slug, manager_name, status, quote, request_id').eq('id', threadId).single();
   if (!t || t.status !== 'quoted') return;
+  const { data: others } = await adminClient().from('quote_request_managers').select('id').eq('request_id', t.request_id).eq('status', 'accepted').neq('id', t.id).limit(1);
+  if (others?.length && form.get('also') !== 'yes') return;
   await adminClient().from('quote_request_managers').update({ status: 'accepted', accepted_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', t.id);
   await onAccepted(t.id);
   revalidatePath(`/account/messages/${t.id}`);
