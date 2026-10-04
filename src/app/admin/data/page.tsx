@@ -38,8 +38,14 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <b>Fetch listings</b>
         <p className="hint" style={{ margin: 0 }}>AirROI charges US$0.50 per call (10 listings). We fetch only professionally managed homes, at most 10 calls (US$5) per area. {enabled ? (budget?.budget ? <>Budget <b>US${budget.budget}</b>: <b>US${budget.spent.toFixed(2)}</b> spent, <b>US${budget.left.toFixed(2)}</b> left.</> : 'Set AIRROI_BUDGET_USD in Vercel to start.') : 'Fetching is switched off (AIRROI_SWEEP_ENABLED isn’t 1).'}</p>
+        {enabled && budget?.left ? (
+          <form action={sweepMany} style={{ display: 'grid', gap: 6, background: 'var(--surface)', borderRadius: 10, padding: '10px 12px' }}>
+            <span className="hint">Estimated spend this click: up to <b>US${Math.min(open * 5, budget.left).toFixed(2)}</b> (about 45 seconds of fetching at most US$5 an area, {open} area{open === 1 ? '' : 's'} left, never past the US${budget.left.toFixed(2)} left in the budget).</span>
+            <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Spend real AirROI credit now.</label>
+            <div><button className="btn primary" type="submit">Fetch remaining areas (keeps within budget)</button></div>
+          </form>
+        ) : <div><button className="btn primary" type="button" disabled>Fetch remaining areas (keeps within budget)</button></div>}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <form action={sweepMany}><button className="btn primary" type="submit" disabled={!enabled || !budget?.left}>Fetch remaining areas (keeps within budget)</button></form>
           <form action={addHotspots}><button className="btn secondary" type="submit">Add NSW and VIC holiday areas</button></form>
           <form action={addPresetAreas}><button className="btn secondary" type="submit">Add all Sydney and Melbourne areas</button></form>
           <form action={runSeed}><button className="btn secondary" type="submit">Update researched profiles</button></form>

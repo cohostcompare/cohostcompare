@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
+import { inboundOn } from '@/lib/inbound';
 import { DAILY_CAP, OUTREACH_START, SEQUENCE, outreachOn, outreachStats, requestEmailsOn, type Ctx } from '@/lib/outreach';
 import { adminClient } from '@/lib/supabase/server';
 import { RESEARCHED_CONTACTS } from '@/lib/jobs/contacts';
@@ -28,6 +29,7 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
   const counts = (contacts || []).reduce<Record<string, number>>((a, c) => ({ ...a, [c.status]: (a[c.status] || 0) + 1 }), {});
   const sample: Ctx = { manager: 'Example Stays', slug: 'example', first: 'Sam', homes: 24, rating: 4.86, suburbs: ['Bondi', 'Coogee'], waiting: 0, email: 'sam@example.com.au', source: 'https://example.com.au/contact' };
   const i = Math.min(Math.max(Number(sp.preview || 1), 1), SEQUENCE.length) - 1;
+  const replyTracking = inboundOn() ? 'Reply tracking: on (a reply marks the contact as replied).' : 'Reply tracking: off (set INBOUND_DOMAIN and RESEND_INBOUND_SECRET in Vercel; until then, mark replies by hand below).';
 
   return (
     <main style={{ maxWidth: 1000, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
@@ -37,8 +39,8 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
         <p className="hint" style={{ margin: '4px 0 0' }}>Five emails over about 24 days inviting unclaimed managers to claim their profile. Sent automatically each morning, up to {DAILY_CAP} a day. Stops when they claim, unsubscribe or you mark them as replied (their replies land in hello@). Only add addresses a business publishes on its own website.</p>
       </div>
       {!outreachOn() ? (
-        <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>The outreach sequence is paused{process.env.OUTREACH_ENABLED === '0' ? '' : ` until ${new Date(OUTREACH_START).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}`}.</b> Approved contacts stay queued until then. {requestEmailsOn() ? 'The instant “an owner wants a quote” email to unclaimed managers is on.' : 'The instant “an owner wants a quote” email is also off (REQUEST_EMAILS=0).'} Test emails to hello@ still work.</div>
-      ) : <div role="status" className="panel" style={{ background: 'var(--tint)' }}><b>Outreach is on.</b> Up to {DAILY_CAP} emails a day go out with the daily run. Set OUTREACH_ENABLED=0 in Vercel to stop it.</div>}
+        <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>The outreach sequence is paused{process.env.OUTREACH_ENABLED === '0' ? '' : ` until ${new Date(OUTREACH_START).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}`}.</b> Approved contacts stay queued until then. {requestEmailsOn() ? 'The instant “an owner wants a quote” email to unclaimed managers is on.' : 'The instant “an owner wants a quote” email is also off (REQUEST_EMAILS=0).'} Test emails to hello@ still work. {replyTracking}</div>
+      ) : <div role="status" className="panel" style={{ background: 'var(--tint)' }}><b>Outreach is on.</b> Up to {DAILY_CAP} emails a day go out with the daily run. Set OUTREACH_ENABLED=0 in Vercel to stop it. {replyTracking}</div>}
       {error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>Run supabase/009_launch_features.sql first. ({error.message})</div>}
       {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
@@ -85,7 +87,10 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
           <button className="btn primary" type="submit" style={{ justifySelf: 'start' }}>Approve ticked contacts</button>
         </form>
       )}
-      <form action={sendNow}><button className="btn secondary" type="submit">Send today&apos;s due emails now</button></form>
+      <form action={sendNow} className="panel" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" name="confirm" value="yes" required /> Send up to {DAILY_CAP} real outreach emails to managers now (the daily run would send them tomorrow morning anyway).</label>
+        <button className="btn secondary" type="submit">Send today&apos;s due emails now</button>
+      </form>
 
       <section className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '12px 16px', background: 'var(--tint)' }}><b>Contacts</b></div>

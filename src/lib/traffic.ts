@@ -15,6 +15,16 @@ export const SOURCES: Source[] = ['ads', 'google', 'social', 'referral', 'email'
 export const sourceLabel: Record<Source, string> = { ads: 'Google Ads', google: 'Google search (free)', social: 'Social media', referral: 'Other websites', email: 'Email', direct: 'Direct or unknown' };
 
 export const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|quora|pinterest|vercel-screenshot|headless|lighthouse|adsbot|mediapartners/i;
+
+export type Device = 'phone' | 'tablet' | 'desktop';
+export const DEVICES: Device[] = ['phone', 'tablet', 'desktop'];
+/** Device type from the user agent only (SQL 027 funnel_events.device). iPadOS Safari reports as a Mac, so it counts as desktop. */
+export function deviceOf(ua: string | null | undefined): Device {
+  const s = ua || '';
+  if (/iPad|Tablet/i.test(s) || (/Android/i.test(s) && !/Mobi/i.test(s))) return 'tablet';
+  if (/Mobi|Android/i.test(s)) return 'phone';
+  return 'desktop';
+}
 const SOCIAL = /(^|\.)(linkedin|lnkd|facebook|fb|instagram|t\.co|twitter|x\.com|reddit|youtube|tiktok)\./i;
 const OWN = /(^|\.)cohostcompare\.com$/i;
 
@@ -52,6 +62,6 @@ export async function logFunnel(kind: 'search' | 'quote') {
     const { isAdminEmail } = await import('@/lib/admin');
     if (isAdminEmail((await currentUser().catch(() => null))?.email)) return;
     const { source, campaign } = await currentSource();
-    await adminClient().from('funnel_events').insert({ sid: sid.slice(0, 40), kind, source, campaign });
+    await adminClient().from('funnel_events').insert({ sid: sid.slice(0, 40), kind, source, campaign, device: deviceOf(ua) });
   } catch { /* best-effort */ }
 }

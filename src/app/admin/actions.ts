@@ -10,6 +10,7 @@ export async function setFeeStatus(form: FormData) {
   if (!['owed', 'invoiced', 'paid', 'waived'].includes(status)) return;
   const id = String(form.get('id') || '');
   if (status === 'waived') {
+    if (form.get('confirm') !== 'yes') return; // tick the box first: waiving sends the introduction straight away
     // Waiving a confirmation sends the introduction, as if the manager had paid.
     const { data: f } = await adminClient().from('success_fees').select('thread_id').eq('id', id).maybeSingle();
     const { completeUnlock } = await import('@/lib/intro');

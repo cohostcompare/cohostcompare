@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
   const raw = await req.text();
   const ok = verifyWebhook(raw, { id: req.headers.get('svix-id'), timestamp: req.headers.get('svix-timestamp'), signature: req.headers.get('svix-signature') });
   if (!ok) return new NextResponse('Bad signature', { status: 401 });
-  const evt = JSON.parse(raw) as { type?: string; data?: { email_id?: string; from?: string; to?: string[]; subject?: string } };
+  const evt = JSON.parse(raw) as { type?: string; data?: { email_id?: string; from?: string; to?: string[]; subject?: string; bounce?: { message?: string; type?: string; subType?: string } } };
+  if (evt.type === 'email.bounced' || evt.type === 'email.complained') return handleBounce(evt.type === 'email.bounced' ? 'bounced' : 'complained', evt.data || {});
   if (evt.type !== 'email.received' || !evt.data?.email_id) return NextResponse.json({ ignored: true });
   const d = evt.data;
   const db = adminClient();
@@ -58,4 +59,22 @@ export async function POST(req: NextRequest) {
   }
   await log(`posted to thread ${t.id} (${target.side === 'o' ? 'owner' : 'manager'})`);
   return NextResponse.json({ posted: true });
+}
+
+/**
+ * A bounce or spam complaint (Resend events email.bounced / email.complained, ticked on the same webhook):
+ * stop emailing that address everywhere (email_suppressions), end any outreach to it, drop setup guide tips,
+ * and log it to email_failures (SQL 027) so it shows on /admin.
+ */
+async function handleBounce(reason: 'bounced' | 'complained', d: { email_id?: string; to?: string[]; subject?: string; bounce?: { message?: string; type?: string; subType?: string } }) {
+  const db = adminClient();
+  const addrs = [...new Set((d.to || []).map(bareEmail).filter((e) => e.includes('@')))];
+  const detail = [d.bounce?.type, d.bounce?.subType, d.bounce?.message, d.email_id ? `email ${d.email_id}` : ''].filter(Boolean).join(' · ').slice(0, 1000);
+  for (const email of addrs) {
+    await db.from('email_suppressions').upsert({ email, reason }, { onConflict: 'email', ignoreDuplicates: true }).then(() => {}, (e) => console.error('suppress', e));
+    await db.from('outreach_contacts').update({ status: 'bounced' }).ilike('email', email).in('status', ['active', 'paused', 'finished']).then(() => {}, () => {});
+    await db.from('guide_signups').update({ consent: false }).ilike('email', email).then(() => {}, () => {});
+    await db.from('email_failures').insert({ to_domain: email.split('@')[1] || null, subject: (d.subject || '').slice(0, 300), status: reason, detail }).then(() => {}, () => {});
+  }
+  return NextResponse.json({ [reason]: addrs.length });
 }

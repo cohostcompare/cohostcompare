@@ -33,8 +33,9 @@ export async function setStatus(form: FormData) {
   back('Updated.');
 }
 
-export async function sendNow() {
+export async function sendNow(form: FormData) {
   await requireAdmin('/admin/outreach');
+  if (form.get('confirm') !== 'yes') back('Tick the box to confirm before sending.', 'error');
   const r = await sendOutreachBatch();
   revalidatePath('/admin/outreach');
   back(`Sent ${r.sent} email${r.sent === 1 ? '' : 's'}.${'note' in r && r.note ? ` ${r.note}.` : ''}`);

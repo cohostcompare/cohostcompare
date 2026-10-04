@@ -5,8 +5,9 @@ import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
 
 /** Makes any missing reports for this quarter (a few per run) and emails managers about new ones. */
-export async function generateReports() {
+export async function generateReports(form: FormData) {
   await requireAdmin('/admin/reports');
+  if (form.get('confirm') !== 'yes') redirect(`/admin/reports?done=${encodeURIComponent('Tick the box to confirm before making reports.')}`);
   const { runReports } = await import('@/lib/reports');
   const r = await runReports();
   revalidatePath('/admin/reports');
