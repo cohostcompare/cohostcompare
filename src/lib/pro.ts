@@ -4,8 +4,8 @@ import { adminClient } from '@/lib/supabase/server';
 /*
  CoHostCompare Pro: optional paid tools for managers. The free profile, quote requests and replies stay free.
  Pro and Enterprise NEVER change search order, ratings, badges owners see, or the quote comparison.
- No billing yet: founding managers (claimed before FOUNDING_DEADLINE) get Pro free for FOUNDING_MONTHS,
- and everyone else can register interest.
+ Founding managers (claimed before FOUNDING_DEADLINE) get Pro free for FOUNDING_MONTHS; Pro is billed monthly through
+ Stripe (src/lib/stripe.ts). When Stripe isn't configured, managers can register interest instead.
 */
 
 export const FOUNDING_DEADLINE = '2027-01-31';

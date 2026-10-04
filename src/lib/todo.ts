@@ -56,6 +56,12 @@ export async function managerThreads(slugs: string[], limit = 300): Promise<Thre
   });
 }
 
+/** True when a different manager's thread on the same request has been accepted (the owner has moved on), same rule as managerThreads. */
+export async function otherAcceptedFor(requestId: string, mySlug: string) {
+  const { data } = await adminClient().from('quote_request_managers').select('manager_slug').eq('request_id', requestId).eq('status', 'accepted').neq('manager_slug', mySlug).limit(1);
+  return Boolean(data?.length);
+}
+
 export const todoLabel = (t: ThreadRow) =>
   t.todo.includes('confirm') ? `${t.owner} accepted your quote: confirm to get their details`
     : t.todo.includes('reply') ? `${t.owner} is waiting for your reply${t.unread ? ` (${t.unread} new message${t.unread === 1 ? '' : 's'})` : ''}`

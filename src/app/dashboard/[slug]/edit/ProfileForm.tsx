@@ -29,6 +29,7 @@ export default function ProfileForm({ slug, name, values: v, services, platforms
       <input type="hidden" name="slug" value={slug} />
 
       <Section title="About your business">
+        <label style={L}>Business name<input className="field" name="name" defaultValue={v.name || name} maxLength={80} required /><span className="hint" style={{ fontWeight: 400 }}>The name owners see. Your web address on CoHostCompare stays the same.</span></label>
         <label style={L}>One-line description<input className="field" name="tagline" defaultValue={v.tagline || ''} maxLength={120} placeholder="e.g. Boutique full-service management across the Eastern Suburbs" /></label>
         <label style={L}>About {name}<textarea className="field" name="about" rows={5} maxLength={1500} defaultValue={v.about || ''} /></label>
         <div style={grid(220)}>

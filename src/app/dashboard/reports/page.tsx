@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import ProInterest from '@/app/dashboard/ProInterest';
+import { startPro } from '@/app/dashboard/billing/actions';
+import { stripeOn } from '@/lib/stripe';
 import { myManagers } from '@/lib/managers';
 import { planName, PRO_FOLLOW_LIMIT, PRO_PRICE } from '@/lib/pro';
 import { allRegions, periodLabel, reportsFor } from '@/lib/reports';
@@ -42,7 +44,7 @@ export default async function Reports() {
               <div className="panel" style={{ display: 'grid', gap: 8, borderColor: 'var(--brand)' }}>
                 <b>Market reports are part of Pro ({PRO_PRICE})</b>
                 <span className="hint">Each report covers nightly rates and revenue by bedrooms and by suburb, seasonality, how busy the market is, how manager fees compare and how many owners are asking for quotes. Here&apos;s what&apos;s ready for {m.name}&apos;s regions:</span>
-                <ProInterest managerId={m.id} />
+                {stripeOn() ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary small">Start Pro</button></form> : <ProInterest managerId={m.id} />}
               </div>
             )}
             {!rows.length ? (

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireManager } from '@/lib/managers';
 import { planName, planOf, plansFor, SEATS } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
-import { removeMember, seatsUsed } from './actions';
+import { memberRole, removeMember, seatsUsed } from './actions';
 import InviteForm from './InviteForm';
 
 export const metadata: Metadata = { title: 'Team', robots: { index: false } };
@@ -14,8 +14,9 @@ export default async function Team({ params }: { params: Promise<{ slug: string 
   const { user, manager: m } = await requireManager(slug, `/dashboard/${slug}/team`);
   const db = adminClient();
   const plan = planOf((await plansFor([m.id])).get(m.id));
-  const { data: mem } = await db.from('manager_members').select('user_id').eq('manager_id', m.id);
-  const people = await Promise.all((mem || []).map(async (x) => ({ id: x.user_id, email: (await db.auth.admin.getUserById(x.user_id)).data.user?.email || 'unknown' })));
+  const { data: mem } = await db.from('manager_members').select('user_id, role').eq('manager_id', m.id);
+  const people = await Promise.all((mem || []).map(async (x) => ({ id: x.user_id, role: x.role as string | null, email: (await db.auth.admin.getUserById(x.user_id)).data.user?.email || 'unknown' })));
+  const owner = (await memberRole(m.id, user.id)) === 'owner';
   const { data: invites } = await db.from('manager_invites').select('id, email, created_at').eq('manager_id', m.id).is('accepted_at', null); // needs 015
   const used = await seatsUsed(m.id);
   const seats = SEATS[plan];
@@ -27,17 +28,19 @@ export default async function Team({ params }: { params: Promise<{ slug: string 
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         {people.map((p) => (
           <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--line)' }}>
-            <span>{p.email}{p.id === user.id ? <span className="hint"> (you)</span> : null}</span>
-            {p.id !== user.id && <form action={removeMember}><input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="user" value={p.id} /><button className="linkish">Remove</button></form>}
+            <span>{p.email}{p.id === user.id ? <span className="hint"> (you)</span> : null}{p.role === 'owner' ? <span className="hint"> · owner</span> : null}</span>
+            {owner && p.id !== user.id && <form action={removeMember}><input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="user" value={p.id} /><button className="linkish">Remove</button></form>}
+            {!owner && p.id === user.id && <form action={removeMember}><input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="user" value={p.id} /><button className="linkish">Leave this team</button></form>}
           </div>
         ))}
         {(invites || []).map((i) => (
           <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 18px', borderTop: '1px solid var(--line)' }}>
             <span>{i.email} <span className="hint">invited</span></span>
-            <form action={removeMember}><input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="invite" value={i.id} /><button className="linkish">Cancel</button></form>
+            {owner && <form action={removeMember}><input type="hidden" name="slug" value={m.slug} /><input type="hidden" name="invite" value={i.id} /><button className="linkish">Cancel</button></form>}
           </div>
         ))}
       </div>
+      {!owner && <p className="hint" style={{ margin: 0 }}>Only the profile&apos;s owner (the person who claimed it) can remove people or cancel invites. You can invite colleagues and leave the team yourself.</p>}
       <InviteForm slug={m.slug} disabled={used >= seats} />
       <p className="hint" style={{ margin: 0 }}>Please don&apos;t share a login between people. Each login is for one person, and we check for shared logins to keep accounts secure.</p>
     </main>
