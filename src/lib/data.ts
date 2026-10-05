@@ -107,12 +107,23 @@ export async function managersForPostcode(postcode: string): Promise<NearbyManag
   return ((rows || []) as Row[]).map((r) => ({ ...toPublic(r, stats.get(r.id), extras.get(r.id)), nearby: 0, nearbyRating: null, nearestKm: null }));
 }
 
-export async function publicManager(slug: string): Promise<PublicManager | null> {
-  const q = adminClient().from('managers').select(COLS).eq('slug', slug);
-  const { data: r } = slug === TEST_SLUG && (await viewerIsAdmin()) ? await q.maybeSingle() : await q.eq('published', true).maybeSingle();
+/** True when the signed-in user is on this manager's team. */
+export async function viewerIsMember(managerId: string) {
+  const { currentUser } = await import('@/lib/supabase/server');
+  const user = await currentUser().catch(() => null);
+  if (!user) return false;
+  const { count } = await adminClient().from('manager_members').select('user_id', { count: 'exact', head: true }).eq('manager_id', managerId).eq('user_id', user.id);
+  return Boolean(count);
+}
+
+/** A published profile, or an unpublished one for admins and the manager's own team (the page says it isn't public). */
+export async function publicManager(slug: string): Promise<(PublicManager & { published: boolean }) | null> {
+  const { data: r } = await adminClient().from('managers').select(`${COLS}, published`).eq('slug', slug).maybeSingle();
   if (!r) return null;
+  const published = Boolean((r as Row & { published: boolean }).published);
+  if (!published && !(await viewerIsAdmin()) && !(await viewerIsMember((r as Row).id))) return null;
   const [stats, extras] = await Promise.all([withStats([r as Row]), withExtras([r as Row])]);
-  return toPublic(r as Row, stats.get((r as Row).id), extras.get((r as Row).id));
+  return { ...toPublic(r as Row, stats.get((r as Row).id), extras.get((r as Row).id)), published };
 }
 
 /** Which of these managers cover a point (homes within COVER_KM). */

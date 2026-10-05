@@ -9,7 +9,7 @@ import OwnerReviews from '@/components/OwnerReviews';
 import { publishedReviews, stars } from '@/lib/reviews';
 import TrustBadges from '@/components/TrustBadges';
 import ProfileQuote from './ProfileQuote';
-import { COVER_KM, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
+import { COVER_KM, TEST_SLUG, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
 import { bump } from '@/lib/events';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
     description: metaDescription(m.about || m.tagline ? `${m.name} in ${m.cities.join(' and ')}: ${m.about || m.tagline}` : `${m.name}: short-term rental manager in ${m.cities.join(' and ')}${m.propertyCount ? `, ${m.propertyCount} homes tracked` : ''}. Compare fees and ratings with other managers and request a quote.`),
     alternates: { canonical: `/managers/${m.slug}` },
     openGraph: { title: m.name, url: `/managers/${m.slug}` },
+    ...(m.published ? {} : { robots: { index: false } }),
   };
 }
 
@@ -39,7 +40,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const user = await currentUser();
   // Don't count the manager's own team or admins looking at the profile.
   const own = user ? (await adminClient().from('manager_members').select('user_id', { count: 'exact', head: true }).eq('manager_id', m.id).eq('user_id', user.id)).count : 0;
-  if (!own && !isAdminEmail(user?.email)) await bump([m.id], 'view');
+  if (!own && !isAdminEmail(user?.email) && m.published) await bump([m.id], 'view');
   const gAll = await gatedDetails(m.slug); // full terms: shown to signed-in owners; used below only to see what's published
   const g = user ? gAll : null;
   const lat = Number(sp.lat), lng = Number(sp.lng);
@@ -92,6 +93,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
     <main className="profile" style={{ paddingBottom: 'calc(var(--qb-h, 120px) + 24px)' }}>
       <JsonLd data={[ld, breadcrumbs([['Home', '/'], ['All managers', '/directory'], [m.name, `/managers/${m.slug}`]])]} />
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
+        {!m.published && <p role="note" style={{ margin: 0, border: '1px solid var(--signal)', borderRadius: 10, padding: '10px 14px' }}><b>Not public.</b> Only you{isAdminEmail(user?.email) ? ' (admin)' : ' and your team'} can see this page{m.slug === TEST_SLUG ? ': it’s the internal test profile' : ''}. Owners won’t find it in search results. Questions? Email hello@cohostcompare.com.</p>}
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
           <div style={{ minWidth: 0 }}>
