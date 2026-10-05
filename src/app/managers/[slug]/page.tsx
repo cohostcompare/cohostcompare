@@ -205,6 +205,13 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
         {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>
 
+      {!!own && (
+        <div className="owner-bar" role="complementary" aria-label="Your profile">
+          <span>This is how owners see {m.name}.</span>
+          <Link className="btn primary small" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
+          <Link className="btn secondary small" href="/dashboard">Dashboard</Link>
+        </div>
+      )}
       <aside className="sticky" id="add-to-quote" style={{ scrollMarginTop: 80 }}>
         <ProfileQuote slug={m.slug} name={m.name} query={back.toString()} requirements={reqs ?? null} fresh={isAdminEmail(user?.email)} />
       </aside>

@@ -149,6 +149,10 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 62ch; }
 .caption-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.owner-bar { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; align-items: center; gap: 10px; background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 10px 8px 16px; font-size: 14px; box-shadow: 0 10px 30px rgba(16,48,47,.3); max-width: calc(100vw - 32px); }
+.owner-bar .btn.small { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.owner-bar .btn.secondary { background: transparent; color: #fff; border-color: rgba(255,255,255,.45); }
+@media (max-width: 560px) { .owner-bar { left: 16px; right: 16px; justify-content: space-between; } .owner-bar > span { display: none; } }
 .pg { display: grid; gap: 8px; }
 .pg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pg-nav { display: flex; align-items: center; gap: 8px; }
