@@ -52,7 +52,7 @@ export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; 
   },
   {
     subject: (c) => `How owners compare ${c.manager}`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nA quick look at how owners use CoHostCompare. They enter their address, see every manager running homes nearby, and compare guest ratings, homes managed and fees side by side. Then they send one request to up to five managers, who each reply in the same quote format.\n\nWe're neutral: no manager can pay to change their rating or place. Managers who've claimed their profile show "Replies on CoHostCompare". Unclaimed profiles show "Not yet on CoHostCompare", and owners are told replies may take longer.\n\nClaiming ${c.manager} takes two minutes.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nA quick look at how owners use CoHostCompare. They enter their address, see every manager running homes nearby, and compare guest ratings, homes managed and fees side by side. Then they send one request to up to five managers, who each reply in the same quote format.\n\nWe're unbiased: no manager can pay to change their rating or place. Managers who've claimed their profile show "Replies on CoHostCompare". Unclaimed profiles show "Not yet on CoHostCompare", and owners are told replies may take longer.\n\nClaiming ${c.manager} takes two minutes.`,
     cta: (c) => ({ label: `Claim ${c.manager}`, url: `${BASE}/claim/${c.slug}` }),
   },
   {
