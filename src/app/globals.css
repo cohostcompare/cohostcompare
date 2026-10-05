@@ -224,10 +224,11 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 @media (max-width: 480px) { .pop-cols { grid-template-columns: 1fr; } }
 /* Manager dashboard header: one row of actions on desktop, scrolls sideways on phones */
 .dash-head { display: grid; gap: 12px; }
-.dash-actions { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.dash-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 880px) { .dash-actions { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; } }
 .dash-actions > * { flex: none; }
 .dash-actions .sep { width: 1px; height: 28px; background: var(--line); margin: 0 4px; }
-.dash-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border-radius: 99px; font: 600 14px var(--body); color: var(--ink); text-decoration: none; background: var(--tint); border: 1px solid transparent; white-space: nowrap; cursor: pointer; }
+.dash-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 11px; border-radius: 99px; font: 600 14px var(--body); color: var(--ink); text-decoration: none; background: var(--tint); border: 1px solid transparent; white-space: nowrap; cursor: pointer; }
 .dash-tab:hover { border-color: var(--brand); }
 .dash-tab .ico { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .dash-tab.locked { color: var(--muted); }

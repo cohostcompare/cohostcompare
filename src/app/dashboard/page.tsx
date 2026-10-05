@@ -91,10 +91,10 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 </div>
               </div>
               <nav className="dash-actions" aria-label="Portal sections">
-                <Link className="dash-tab" href={`/managers/${m.slug}`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>Public profile</Link>
-                <Link className="dash-tab" href="/dashboard/requests"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4Z" /></svg>Quote requests</Link>
+                <Link className="dash-tab" href={`/managers/${m.slug}`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>Profile</Link>
+                <Link className="dash-tab" href="/dashboard/requests"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4Z" /></svg>Requests</Link>
                 <Link className="dash-tab" href={`/dashboard/${m.slug}/insights`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>Insights</Link>
-                <Link className="dash-tab" href="/dashboard/reports"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6V3Z" /><path d="M14 3v6h6M9 14h6M9 17h6" /></svg>Market reports</Link>
+                <Link className={`dash-tab${planOf(pro.get(m.id)) === 'free' ? ' locked' : ''}`} href="/dashboard/reports" title={planOf(pro.get(m.id)) === 'free' ? 'Regional reports are part of Pro' : undefined}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6V3Z" /><path d="M14 3v6h6M9 14h6M9 17h6" /></svg>Reports</Link>
                 <span className="sep" aria-hidden="true" />
                 <Link className="dash-tab" href={`/dashboard/${m.slug}/alerts`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>Alerts</Link>
                 <Link className="dash-tab" href={`/dashboard/${m.slug}/team`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3" /></svg>Team</Link>
@@ -127,6 +127,17 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 </Link>
               ) : null;
             })()}
+            {score < 100 && (
+              <div className="panel" style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <b>Finish your profile</b>
+                  <Link className="btn secondary small" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
+                </div>
+                <div className="meter" aria-hidden="true"><span style={{ width: `${score}%` }} /></div>
+                <p className="hint" style={{ margin: 0 }}>Owners compare fees, terms and photos first, so complete profiles get asked for more quotes.</p>
+                <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}><span className="sr-only">{ok ? 'Done: ' : 'To do: '}</span>{label}</li>)}</ul>
+              </div>
+            )}
             {(() => {
               const p = pro.get(m.id);
               const plan = planOf(p);
@@ -170,23 +181,12 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 </>
               );
             })()}
-            {score < 100 && (
-              <div className="panel" style={{ display: 'grid', gap: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <b>Finish your profile</b>
-                  <Link className="btn secondary small" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
-                </div>
-                <div className="meter" aria-hidden="true"><span style={{ width: `${score}%` }} /></div>
-                <p className="hint" style={{ margin: 0 }}>Owners compare fees, terms and photos first, so complete profiles get asked for more quotes.</p>
-                <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}><span className="sr-only">{ok ? 'Done: ' : 'To do: '}</span>{label}</li>)}</ul>
-              </div>
-            )}
             <div id="requests" style={{ display: 'grid', gap: 8, scrollMarginTop: 96 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
                 <h2 style={{ fontSize: 22, margin: 0 }}>Quote requests</h2>
                 <Link href="/dashboard/requests">Open full list →</Link>
               </div>
-              <RequestList rows={mine.slice(0, 12)} active={todo.length ? 'needs' : 'all'} base="/dashboard/requests" />
+              <RequestList rows={mine} limit={12} active={todo.length ? 'needs' : 'all'} base="/dashboard/requests" />
             </div>
           </section>
         );

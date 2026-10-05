@@ -18,9 +18,9 @@ const badge = (t: ThreadRow): [string, string] =>
             : ['Quote sent, waiting on owner', 'var(--brand)'];
 
 /** Filter chips plus the list of quote requests. */
-export default function RequestList({ rows, active, base, showManager }: { rows: ThreadRow[]; active: Stage | 'all'; base: string; showManager?: boolean }) {
+export default function RequestList({ rows, active, base, showManager, limit }: { rows: ThreadRow[]; active: Stage | 'all'; base: string; showManager?: boolean; limit?: number }) {
   const counts = Object.fromEntries(STAGES.map((s) => [s.key, s.key === 'all' ? rows.length : rows.filter((r) => r.stage === s.key).length]));
-  const list = active === 'all' ? rows : rows.filter((r) => r.stage === active);
+  const list = (active === 'all' ? rows : rows.filter((r) => r.stage === active)).slice(0, limit ?? rows.length);
   return (
     <div className="panel" style={{ display: 'grid', gap: 0, padding: 0, overflow: 'hidden' }}>
       <div className="req-filters">
