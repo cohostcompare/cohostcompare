@@ -51,7 +51,7 @@ export default function CoverageMap({ areas, compact, hideList }: { areas: Cover
       map.fitBounds(bounds, 32);
     }).catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; };
-  }, [shown, group]);
+  }, [shown, group, near]);
 
   if (!areas.length) return null;
   return (
