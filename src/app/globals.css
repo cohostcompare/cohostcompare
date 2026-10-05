@@ -216,6 +216,23 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 .acct .dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: var(--signal); color: #fff; font-size: 12px; font-weight: 700; }
 .acct-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: 280px; display: grid; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 8px; box-shadow: 0 10px 30px rgba(16,48,47,.16); }
 .acct-pop[hidden] { display: none; }
+.acct-pop-wide { width: min(520px, calc(100vw - 24px)); }
+.pop-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+.pop-cols > div { display: grid; gap: 1px; align-content: start; }
+.pop-head { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px 4px; }
+.acct-pop-wide a { font-size: 14px; padding: 6px 10px; }
+@media (max-width: 480px) { .pop-cols { grid-template-columns: 1fr; } }
+/* Manager dashboard header: one row of actions on desktop, scrolls sideways on phones */
+.dash-head { display: grid; gap: 12px; }
+.dash-actions { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.dash-actions > * { flex: none; }
+.dash-actions .sep { width: 1px; height: 28px; background: var(--line); margin: 0 4px; }
+.dash-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border-radius: 99px; font: 600 14px var(--body); color: var(--ink); text-decoration: none; background: var(--tint); border: 1px solid transparent; white-space: nowrap; cursor: pointer; }
+.dash-tab:hover { border-color: var(--brand); }
+.dash-tab .ico { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dash-tab.locked { color: var(--muted); }
+.req-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 16px; align-items: center; background: var(--tint); border-radius: var(--r-lg); padding: 14px 16px; }
+@media (max-width: 640px) { .req-card { grid-template-columns: 1fr; } }
 .acct-pop a, .acct-pop button { display: grid; gap: 1px; text-align: left; padding: 8px 10px; border-radius: var(--r-md); color: var(--ink) !important; font: 600 15px var(--body); text-decoration: none; background: none; border: 0; cursor: pointer; width: 100%; white-space: normal !important; }
 .acct-pop a:hover, .acct-pop button:hover { background: var(--tint); }
 .acct-pop a .hint { font-weight: 400; font-size: 13px; }

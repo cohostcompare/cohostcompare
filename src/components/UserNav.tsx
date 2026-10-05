@@ -15,7 +15,7 @@ export function OwnerSlot() {
 
 export function ManagerSlot() {
   const me = useMe();
-  if (me?.isManager) return <ManagerMenu items={me.todos || []} />;
+  if (me?.isManager) return <ManagerMenu items={me.todos || []} managers={me.managers || []} />;
   return <Link className="btn secondary small" href="/dashboard">Manager portal</Link>;
 }
 

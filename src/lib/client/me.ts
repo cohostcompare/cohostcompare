@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export type Me = { email: string | null; isAdmin?: boolean; isManager?: boolean; unread?: number; todos?: { id: string; label: string; manager: string }[]; ask?: boolean };
+export type Me = { email: string | null; isAdmin?: boolean; isManager?: boolean; managers?: { slug: string; name: string }[]; unread?: number; todos?: { id: string; label: string; manager: string }[]; ask?: boolean };
 
 // One request per page load, shared by every component that asks.
 let cache: Me | null = null;

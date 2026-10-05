@@ -6,6 +6,7 @@ import AbnForm from './AbnForm';
 import MediaUploader from './MediaUploader';
 import { adminClient } from '@/lib/supabase/server';
 import ProfileForm from './ProfileForm';
+import { describe, type Requirements } from '@/lib/requirements';
 
 export const metadata: Metadata = { title: 'Edit profile', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -23,11 +24,21 @@ export default async function EditProfile({ params }: { params: P }) {
           <Link href="/dashboard" className="hint">← Dashboard</Link>
           <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: '4px 0 0' }}>Edit {m.name}</h1>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Link className="btn secondary" href={`/dashboard/${m.slug}/requirements`}>Properties you take on</Link>
-          <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
-        </div>
+        <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
       </div>
+
+      {(() => {
+        const lines = describe((m.requirements as Requirements | null) || null);
+        return (
+          <section className="req-card" aria-labelledby="req-h">
+            <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+              <h2 id="req-h" style={{ fontSize: 18, margin: 0 }}>Properties you take on</h2>
+              {lines.length ? <p style={{ margin: 0 }}>{lines.join(' · ')}</p> : <p style={{ margin: 0 }}>Not set, so owners can send you a request for any property. Set a minimum availability (for example, all year), property types and bedrooms, and owners outside them can&apos;t send you a request.</p>}
+            </div>
+            <Link className={`btn ${lines.length ? 'secondary' : 'primary'}`} href={`/dashboard/${m.slug}/requirements`}>{lines.length ? 'Change' : 'Set them'}</Link>
+          </section>
+        );
+      })()}
 
       <section id="media" className="panel" style={{ display: 'grid', gap: 14 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>Logo and photos</h2>

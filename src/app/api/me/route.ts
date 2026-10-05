@@ -22,8 +22,17 @@ export async function GET() {
       return ids.length ? (await db.from('messages').select('id', { count: 'exact', head: true }).in('thread_id', ids).eq('read_by_owner', false).neq('sender', 'owner')).count ?? 0 : 0;
     } catch { return 0; }
   };
-  const [isManager, unread, todos] = await Promise.all([
-    db.from('manager_members').select('manager_id', { count: 'exact', head: true }).eq('user_id', user.id).then((r) => Boolean(r.count), () => false),
+  const myManagers = async () => {
+    try {
+      const { data: mem } = await db.from('manager_members').select('manager_id').eq('user_id', user.id);
+      const ids = (mem || []).map((m) => m.manager_id);
+      if (!ids.length) return [] as { slug: string; name: string }[];
+      const { data } = await db.from('managers').select('slug, name').in('id', ids).order('name');
+      return (data || []) as { slug: string; name: string }[];
+    } catch { return []; }
+  };
+  const [managers, unread, todos] = await Promise.all([
+    myManagers(),
     ownerUnread(),
     todosForUser(user.id).catch(() => []),
   ]);
@@ -31,7 +40,8 @@ export async function GET() {
   return NextResponse.json({
     email: user.email || '',
     isAdmin: isAdminEmail(user.email),
-    isManager,
+    isManager: managers.length > 0,
+    managers,
     unread,
     todos: todos.map((t) => ({ id: t.id, label: todoLabel(t), manager: t.manager_name })),
     ask,

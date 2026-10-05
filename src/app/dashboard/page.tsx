@@ -11,7 +11,7 @@ import ProInterest from './ProInterest';
 import { manageBilling, startPro } from './billing/actions';
 import { stripeOn } from '@/lib/stripe';
 
-export const metadata: Metadata = { title: 'Manager dashboard', robots: { index: false } };
+export const metadata: Metadata = { title: 'Manager portal', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 type SP = Promise<{ claimed?: string; pro?: string; billing?: string }>;
@@ -72,30 +72,38 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
           ['The services you offer', m.services.length > 0], ['Every platform you list on', (m.platforms || []).length > 1],
           ['Your logo', Boolean(m.logo_url)], ['At least 3 photos of homes you manage', m.photos.length >= 3],
           ['A phone number for owners who accept your quote', Boolean(m.contact_phone)], ['Your ABN, for the Verified business badge', verified.has(m.id)],
+          ['Which properties you take on (minimum availability, types, bedrooms)', Boolean(m.requirements && Object.keys(m.requirements).length)],
         ];
         const score = Math.round((checks.filter(([, ok]) => ok).length / checks.length) * 100);
         const ev = events.get(m.id) || { view: 0, search: 0 };
         const recent = threads.filter((t) => t.manager_slug === m.slug && new Date(t.created_at).getTime() >= since).length;
         return (
           <section key={m.id} style={{ display: 'grid', gap: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
-              <div>
-                <span className="label">Manager dashboard</span>
-                <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>{m.name}</h1>
+            <div className="dash-head">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
+                <div>
+                  <span className="label">Manager portal</span>
+                  <h1 style={{ fontSize: 'clamp(28px,4.4vw,38px)', margin: 0 }}>{m.name}</h1>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Link className="btn primary" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
+                  <Link className="btn secondary" href={`/dashboard/${m.slug}/requirements`}>Properties you take on</Link>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Link className="btn primary" href={`/dashboard/${m.slug}/edit`}>Edit profile</Link>
-                <Link className="btn secondary" href={`/managers/${m.slug}`}>View public profile</Link>
-                <Link className="btn secondary" href="/dashboard/reports">Market reports</Link>
-                <Link className="btn secondary" href={`/dashboard/${m.slug}/requirements`}>Requirements</Link>
-                <Link className="btn secondary" href={`/dashboard/${m.slug}/alerts`}>Alerts</Link>
-                <Link className="btn secondary" href={`/dashboard/${m.slug}/team`}>Team</Link>
-                <Link className="btn secondary" href={`/dashboard/${m.slug}/templates`} title={planOf(pro.get(m.id)) === 'free' ? 'Quote templates are part of Pro' : undefined}>{planOf(pro.get(m.id)) === 'free' ? '🔒 ' : ''}Templates</Link>
+              <nav className="dash-actions" aria-label="Portal sections">
+                <Link className="dash-tab" href={`/managers/${m.slug}`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>Public profile</Link>
+                <Link className="dash-tab" href="/dashboard/requests"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4Z" /></svg>Quote requests</Link>
+                <Link className="dash-tab" href={`/dashboard/${m.slug}/insights`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>Insights</Link>
+                <Link className="dash-tab" href="/dashboard/reports"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6V3Z" /><path d="M14 3v6h6M9 14h6M9 17h6" /></svg>Market reports</Link>
+                <span className="sep" aria-hidden="true" />
+                <Link className="dash-tab" href={`/dashboard/${m.slug}/alerts`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>Alerts</Link>
+                <Link className="dash-tab" href={`/dashboard/${m.slug}/team`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3" /></svg>Team</Link>
+                <Link className={`dash-tab${planOf(pro.get(m.id)) === 'free' ? ' locked' : ''}`} href={`/dashboard/${m.slug}/templates`} title={planOf(pro.get(m.id)) === 'free' ? 'Quote templates are part of Pro' : undefined}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true">{planOf(pro.get(m.id)) === 'free' ? <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></> : <><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h5" /></>}</svg>Templates</Link>
+                {ownerReviews.has(m.slug) && <Link className="dash-tab" href={`/dashboard/${m.slug}/reviews`}><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z" /></svg>Reviews ({ownerReviews.get(m.slug)!.count})</Link>}
                 {bill.get(m.id)?.stripe_customer_id && (
-                  <form action={manageBilling} style={{ display: 'contents' }}><input type="hidden" name="slug" value={m.slug} /><button className="btn secondary" type="submit">Billing</button></form>
+                  <form action={manageBilling} style={{ display: 'contents' }}><input type="hidden" name="slug" value={m.slug} /><button className="dash-tab" type="submit"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /></svg>Billing</button></form>
                 )}
-                {ownerReviews.has(m.slug) && <Link className="btn secondary" href={`/dashboard/${m.slug}/reviews`}>Reviews ({ownerReviews.get(m.slug)!.count})</Link>}
-              </div>
+              </nav>
             </div>
             {todo.length > 0 && (
               <section className="panel todo-panel" aria-label="Needs your attention">
