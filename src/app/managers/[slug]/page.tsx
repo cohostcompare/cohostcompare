@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AreaMap from '@/components/AreaMap';
 import JsonLd from '@/components/JsonLd';
+import PhotoGallery from '@/components/PhotoGallery';
 import { SITE, breadcrumbs } from '@/lib/seo';
 import OwnerReviews from '@/components/OwnerReviews';
 import { publishedReviews, stars } from '@/lib/reviews';
@@ -108,12 +109,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           </div>
         </div>
 
-        {(m.photos?.length ?? 0) > 0 && (
-          <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
-            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <figure key={p}><img src={p} alt={m.photoCaptions?.[p] ? `${m.photoCaptions[p]}, managed by ${m.name}` : `A home managed by ${m.name}`} loading="lazy" />{m.photoCaptions?.[p] && <figcaption>{m.photoCaptions[p]}</figcaption>}</figure>)}</div>
-            <p className="hint" style={{ margin: 0 }}>Homes {m.name} manages. Photos supplied by {m.name}.</p>
-          </section>
-        )}
+        {(m.photos?.length ?? 0) > 0 && <PhotoGallery photos={m.photos!} captions={m.photoCaptions || {}} name={m.name} />}
 
         {hasData ? (
           <div className="panel stats">
