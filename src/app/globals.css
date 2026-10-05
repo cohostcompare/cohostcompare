@@ -613,6 +613,11 @@ a.kpi:hover { border-color: var(--k); }
 .wb-hit { fill: transparent; }
 .wb-bar:hover .wb-mark { fill: var(--ink); }
 .wb-tick { font-size: 10px; fill: var(--muted); }
+.wb-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+.wb-val { font-size: 11px; font-weight: 700; fill: var(--ink); display: none; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.wb-bar:hover .wb-val { display: block; }
+.wb svg:hover .wb-mark { opacity: .3; }
+.wb svg .wb-bar:hover .wb-mark { opacity: 1; }
 .admin-sec { display: grid; gap: 8px; border-top: 4px solid var(--g); scroll-margin-top: 90px; }
 .admin-sec h2 { font-size: 18px; margin: 0; color: var(--g); }
 .admin-sec .row { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
