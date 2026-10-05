@@ -37,6 +37,8 @@ export function classify(p: { gclid?: string | null; utm_source?: string | null;
   let host = '';
   try { host = p.ref ? new URL(p.ref).hostname : ''; } catch { /* bad referrer */ }
   if (!host || OWN.test(host)) return null; // nothing new to say
+  // Webmail: a link clicked in Gmail arrives with a mail.google.com referrer, which is email, not a Google search.
+  if (/^mail\.|outlook\.(live|office)\.com|mail\.yahoo|protonmail|proton\.me|fastmail/i.test(host)) return 'email';
   if (/(^|\.)google\./i.test(host) || /(^|\.)bing\.com$|duckduckgo|ecosia|yahoo/i.test(host)) return 'google';
   if (SOCIAL.test(host + '.')) return 'social';
   return 'referral';
