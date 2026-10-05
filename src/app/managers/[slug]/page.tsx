@@ -42,7 +42,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   if (!own && !isAdminEmail(user?.email)) await bump([m.id], 'view');
   const g = user ? await gatedDetails(m.slug) : null;
   const lat = Number(sp.lat), lng = Number(sp.lng);
-  const near = user && sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? (await managersNear(lat, lng)).find((x) => x.slug === m.slug) : undefined;
+  const near = sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? (await managersNear(lat, lng).catch(() => [])).find((x) => x.slug === m.slug) : undefined;
   const q = new URLSearchParams({ managers: m.slug });
   for (const k of ['postcode', 'street', 'suburb', 'state', 'lat', 'lng'] as const) if (sp[k]) q.set(k, sp[k]!);
   const back = new URLSearchParams(q); back.delete('managers');
@@ -82,9 +82,16 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
           </div>
         </div>
 
+        {(m.photos?.length ?? 0) > 0 && (
+          <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
+            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
+            <p className="hint" style={{ margin: 0 }}>Homes {m.name} manages. Photos supplied by {m.name}.</p>
+          </section>
+        )}
+
         {hasData ? (
           <div className="panel stats">
-            <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">Airbnb homes tracked</div></div>
+            <div className="stat"><div className="n">{m.propertyCount}</div><div className="t">homes managed (Airbnb, tracked)</div></div>
             {m.avgRating != null && <div className="stat"><div className="n">{m.avgRating.toFixed(2)} ★</div><div className="t">average guest rating</div></div>}
             {!!m.reviewCount && <div className="stat"><div className="n">{m.reviewCount.toLocaleString('en-AU')}</div><div className="t">guest reviews</div></div>}
             {m.avgNightlyRate != null && <div className="stat"><div className="n">A${Math.round(m.avgNightlyRate)}</div><div className="t">average nightly rate</div></div>}
@@ -101,25 +108,11 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <p className="hint" style={{ margin: 0 }}>No guest ratings or booking figures yet. We found {m.name} through its own website rather than in the Airbnb listing data we track, so it may list mainly on Stayz, Booking.com or its own site. Figures appear once its listings are linked, or when the manager claims this profile.</p>
           </div>
         )}
+        {near && <p className="near-line" style={{ margin: 0 }}><b>Near your address:</b> {near.nearby} home{near.nearby === 1 ? '' : 's'} within {COVER_KM} km{near.nearbyRating ? <>, averaging <b>{near.nearbyRating.toFixed(2)} ★</b></> : null}{near.nearestKm != null ? `. The closest is about ${near.nearestKm} km away.` : '.'}</p>}
         {hasData && fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
+        {!m.claimed && <p className="hint" style={{ margin: 0 }}>Built from public information and refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link> · <a href="#claim">Is this your business?</a></p>}
 
-        {!m.claimed && (
-          <div className="claimbox">
-            <p style={{ margin: 0 }}>This profile is built from public information{hasData ? <>, including estimates from {m.name}&apos;s public listings,</> : <> on {m.name}&apos;s own website,</>} and is refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link></p>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-              <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
-              <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
-            </div>
-            <p className="hint" style={{ margin: 0 }}>Would you rather not be listed? Email <a href={`mailto:hello@cohostcompare.com?subject=${encodeURIComponent(`Remove ${m.name}`)}`}>hello@cohostcompare.com</a> from your business email and we&apos;ll remove this page.</p>
-          </div>
-        )}
 
-        {(m.photos?.length ?? 0) > 0 && (
-          <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
-            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
-            <p className="hint" style={{ margin: 0 }}>Photos supplied by {m.name}.</p>
-          </section>
-        )}
 
         <section className="panel">
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
@@ -150,7 +143,6 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
         {g ? (
           <section className="panel" style={{ display: 'grid', gap: 14 }} aria-label="Full fees and contract terms">
             <h2 style={{ fontSize: 20, margin: 0 }}>Full fees and contract terms</h2>
-            {near && <p style={{ margin: 0, background: 'var(--tint)', borderRadius: 10, padding: '10px 14px' }}>Near your address: <b>{near.nearby} home{near.nearby === 1 ? '' : 's'} within {COVER_KM} km</b>{near.nearbyRating ? <>, averaging <b>{near.nearbyRating.toFixed(2)} ★</b></> : null}{near.nearestKm != null ? `. The closest is about ${near.nearestKm} km away.` : '.'}</p>}
             <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '12px 24px', margin: 0 }}>
               <div><dt className="label">Management fee</dt><dd style={{ margin: 0 }}>{g.feeNote ?? NOT_PUBLISHED}</dd></div>
               <div><dt className="label">Setup fee</dt><dd style={{ margin: 0 }}>{g.setupNote ?? (g.setupFee == null ? NOT_PUBLISHED : g.setupFee === 0 ? 'None' : `A$${g.setupFee}`)}</dd></div>
@@ -170,6 +162,16 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             </ul>
             <Link className="btn secondary" href={`/signin?next=${encodeURIComponent(`/managers/${m.slug}?${back.toString()}`)}`}>Sign in free to see these</Link>
           </section>
+        )}
+        {!m.claimed && (
+          <div className="claimbox" id="claim" style={{ scrollMarginTop: 80 }}>
+            <p style={{ margin: 0 }}>This profile is built from public information{hasData ? <>, including estimates from {m.name}&apos;s public listings,</> : <> on {m.name}&apos;s own website,</>} and is refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link></p>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <span><b>Are you {m.name}?</b> Claim this page to add your fees, services, logo and photos, and reply to owners.</span>
+              <Link className="btn secondary" href={`/claim/${m.slug}`}>Claim this page</Link>
+            </div>
+            <p className="hint" style={{ margin: 0 }}>Would you rather not be listed? Email <a href={`mailto:hello@cohostcompare.com?subject=${encodeURIComponent(`Remove ${m.name}`)}`}>hello@cohostcompare.com</a> from your business email and we&apos;ll remove this page.</p>
+          </div>
         )}
         {hasData && <p className="hint" style={{ margin: 0 }}>Figures are estimates from {m.name}&apos;s public Airbnb listings over the last 12 months. We don&apos;t show nights booked, because homes also booked through Stayz, Booking.com or directly would look emptier than they are{m.dataAsOf ? `, updated ${new Date(m.dataAsOf).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}` : ''}. Data source: AirROI (<a href="https://www.airroi.com">www.airroi.com</a>).</p>}
       </div>

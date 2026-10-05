@@ -148,7 +148,10 @@ footer.site { border-top: 1px solid var(--line); padding-block: 28px 40px; color
 }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .lede { font-size: 18px; color: var(--muted); margin: 0; max-width: 62ch; }
-.gallery { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 34%); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+.gallery { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 30%); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+.gallery img:first-child { grid-column: span 2; }
+@media (max-width: 640px) { .gallery { grid-auto-columns: minmax(240px, 78%); } .gallery img:first-child { grid-column: auto; } }
+.near-line { background: var(--tint); border-radius: 10px; padding: 10px 14px; }
 .gallery img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: var(--r-lg); scroll-snap-align: start; max-width: 100%; }
 
 /* Quote comparison */
