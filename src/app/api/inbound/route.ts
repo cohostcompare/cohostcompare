@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
   if (!ok) return new NextResponse('Bad signature', { status: 401 });
   const evt = JSON.parse(raw) as { type?: string; data?: { email_id?: string; from?: string; to?: string[]; subject?: string; bounce?: { message?: string; type?: string; subType?: string } } };
   if (evt.type === 'email.bounced' || evt.type === 'email.complained') return handleBounce(evt.type === 'email.bounced' ? 'bounced' : 'complained', evt.data || {});
+  if (evt.type === 'email.opened' || evt.type === 'email.clicked') return handleEngagement(evt.type === 'email.opened' ? 'opened' : 'clicked', evt.data || {});
   if (evt.type !== 'email.received' || !evt.data?.email_id) return NextResponse.json({ ignored: true });
   const d = evt.data;
   const db = adminClient();
@@ -66,6 +67,20 @@ export async function POST(req: NextRequest) {
  * stop emailing that address everywhere (email_suppressions), end any outreach to it, drop setup guide tips,
  * and log it to email_failures (SQL 027) so it shows on /admin.
  */
+/** Opens and clicks (Resend tracking, SQL 029). Click links are stored without utm_* parameters. */
+async function handleEngagement(kind: 'opened' | 'clicked', d: { email_id?: string; to?: string[]; subject?: string; click?: { link?: string } }) {
+  const db = adminClient();
+  const addrs = [...new Set((d.to || []).map(bareEmail).filter((e) => e.includes('@')))];
+  let link: string | null = null;
+  if (kind === 'clicked' && d.click?.link) {
+    try { const u = new URL(d.click.link); [...u.searchParams.keys()].filter((k) => k.startsWith('utm_')).forEach((k) => u.searchParams.delete(k)); link = u.toString().slice(0, 500); } catch { link = d.click.link.slice(0, 500); }
+  }
+  for (const to_email of addrs) {
+    await db.from('email_events').insert({ email_id: d.email_id || null, to_email, kind, subject: (d.subject || '').slice(0, 300), link }).then(() => {}, (e) => console.error('email_events', e));
+  }
+  return NextResponse.json({ [kind]: addrs.length });
+}
+
 async function handleBounce(reason: 'bounced' | 'complained', d: { email_id?: string; to?: string[]; subject?: string; bounce?: { message?: string; type?: string; subType?: string } }) {
   const db = adminClient();
   const addrs = [...new Set((d.to || []).map(bareEmail).filter((e) => e.includes('@')))];

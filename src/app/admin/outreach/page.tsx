@@ -26,6 +26,24 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
   const pending = RESEARCHED_CONTACTS.filter((c) => !have.has(`${c.slug}|${c.email}`));
   const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
   const stats = await outreachStats();
+  // Opens and clicks (SQL 029): per contact, plus totals since the sequence started.
+  const { data: evRows } = await db.from('email_events').select('to_email, kind, link, created_at').gte('created_at', OUTREACH_START).order('created_at', { ascending: false }).limit(5000);
+  type Eng = { opens: number; clicks: number; lastOpen?: string; lastClick?: string; links: Map<string, number> };
+  const eng = new Map<string, Eng>();
+  for (const e of evRows || []) {
+    const k = e.to_email.toLowerCase();
+    const x = eng.get(k) || { opens: 0, clicks: 0, links: new Map<string, number>() };
+    if (e.kind === 'opened') { x.opens++; x.lastOpen ||= e.created_at; }
+    else { x.clicks++; x.lastClick ||= e.created_at; if (e.link) x.links.set(e.link, (x.links.get(e.link) || 0) + 1); }
+    eng.set(k, x);
+  }
+  const emailed = (contacts || []).filter((c) => c.step > 0);
+  const opened = emailed.filter((c) => eng.get(c.email.toLowerCase())?.opens).length;
+  const clicked = emailed.filter((c) => eng.get(c.email.toLowerCase())?.clicks).length;
+  const linkTotals = new Map<string, number>();
+  for (const x of eng.values()) for (const [l, n] of x.links) linkTotals.set(l, (linkTotals.get(l) || 0) + n);
+  const short = (l: string) => l.replace(/^https?:\/\/(www\.)?cohostcompare\.com/, '').replace(/\?.*$/, '') || '/';
+  const when = (iso?: string) => iso ? new Date(iso).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' }) : '';
   const counts = (contacts || []).reduce<Record<string, number>>((a, c) => ({ ...a, [c.status]: (a[c.status] || 0) + 1 }), {});
   const sample: Ctx = { manager: 'Example Stays', slug: 'example', first: 'Sam', homes: 24, rating: 4.86, suburbs: ['Bondi', 'Coogee'], waiting: 0, email: 'sam@example.com.au', source: 'https://example.com.au/contact' };
   const i = Math.min(Math.max(Number(sp.preview || 1), 1), SEQUENCE.length) - 1;
@@ -52,6 +70,17 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
           <div className="kpi k-amber"><span>Replied</span><b>{stats.replied}</b><small>marked as replied (check hello@)</small></div>
           <div className={`kpi ${stats.unsubscribed + stats.bounced > stats.contacted * 0.05 ? 'k-alert' : 'k-teal'}`}><span>Unsubscribed or bounced</span><b>{stats.unsubscribed + stats.bounced}</b><small>{stats.unsubscribed} unsubscribed · {stats.bounced} bounced{stats.unsubscribed + stats.bounced > stats.contacted * 0.05 ? ' · above 5%, check the wording and addresses' : ''}</small></div>
           <div className="kpi k-teal"><span>Still to start</span><b>{stats.queued}</b><small>{stats.finished} finished all five emails</small></div>
+        </section>
+      )}
+      {emailed.length > 0 && (
+        <section className="panel" style={{ display: 'grid', gap: 8 }} aria-label="Opens and clicks">
+          <b>Opens and clicks</b>
+          <div className="kpis">
+            <div className="kpi k-blue"><span>Opened</span><b>{opened}</b><small>of {emailed.length} contacts emailed ({Math.round((opened / emailed.length) * 100)}%)</small></div>
+            <div className="kpi k-green"><span>Clicked a link</span><b>{clicked}</b><small>{Math.round((clicked / emailed.length) * 100)}% of contacts emailed</small></div>
+          </div>
+          {linkTotals.size > 0 && <p className="hint" style={{ margin: 0 }}><b>Links clicked:</b> {[...linkTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([l, n]) => `${short(l)} (${n})`).join(' · ')}</p>}
+          <p className="hint" style={{ margin: 0 }}>Opens come from a tracking image, so they undercount (images off) and overcount (Apple Mail loads them automatically). Clicks are reliable, except that some company mail filters click every link once as a safety check. A reply or a claim is the real signal.</p>
         </section>
       )}
       <div className="chips">{Object.entries(counts).map(([k, v]) => <span key={k} className="chip">{k}: {v}</span>)}</div>
@@ -99,7 +128,15 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
           const m = (Array.isArray(c.managers) ? c.managers[0] : c.managers) as { name: string; slug: string } | null;
           return (
             <div key={c.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 10, padding: '10px 16px', borderTop: '1px solid var(--line)', alignItems: 'center' }}>
-              <span><b>{m?.name}</b> <span className="hint">· {c.email} · {c.status} · sent {c.step} of {SEQUENCE.length}{c.status === 'active' ? ` · next ${new Date(c.next_send_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : ''} · <a href={c.source_url} target="_blank" rel="noreferrer">source</a></span></span>
+              <span>
+                <b>{m?.name}</b> <span className="hint">· {c.email} · {c.status} · sent {c.step} of {SEQUENCE.length}{c.status === 'active' ? ` · next ${new Date(c.next_send_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : ''} · <a href={c.source_url} target="_blank" rel="noreferrer">source</a></span>
+                {(() => { const x = eng.get(c.email.toLowerCase()); if (!x || c.step === 0) return null; return (
+                  <span style={{ display: 'block', fontSize: 13, marginTop: 2 }}>
+                    {x.opens ? <span style={{ color: 'var(--brand)' }}>Opened {x.opens === 1 ? '' : `${x.opens}× `}{when(x.lastOpen)}</span> : <span className="hint">Not opened yet</span>}
+                    {x.clicks ? <> · <b style={{ color: 'var(--brand)' }}>Clicked</b> {[...x.links.entries()].map(([l, n]) => `${short(l)}${n > 1 ? ` ×${n}` : ''}`).join(', ')} · {when(x.lastClick)}</> : null}
+                  </span>
+                ); })()}
+              </span>
               <form action={setStatus} style={{ display: 'flex', gap: 6 }}>
                 <input type="hidden" name="id" value={c.id} />
                 {c.status === 'active' && <><button className="btn secondary small" name="status" value="replied">Replied</button><button className="btn secondary small" name="status" value="paused">Pause</button></>}

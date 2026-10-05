@@ -156,10 +156,14 @@ export async function suppressed(email: string) {
   return Boolean(data);
 }
 
+/** Adds utm parameters so visits and claims from the sequence show as "Email" on /admin/ads. */
+const tagged = (url: string, step: number) => { try { const u = new URL(url); u.searchParams.set('utm_source', 'outreach'); u.searchParams.set('utm_medium', 'email'); u.searchParams.set('utm_campaign', `step${step}`); return u.toString(); } catch { return url; } };
+
 async function send(c: Ctx, i: number) {
   const e = SEQUENCE[i];
+  const cta = e.cta(c);
   return sendEmail({
-    to: c.email, subject: e.subject(c), text: e.body(c) + footer(c), cta: e.cta(c),
+    to: c.email, subject: e.subject(c), text: e.body(c) + footer(c), cta: { label: cta.label, url: tagged(cta.url, i + 1) },
     from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
     replyTo: c.contactId ? outreachReplyTo(c.contactId) : undefined,
     headers: { 'List-Unsubscribe': `<${unsubscribeUrl(c.email, true)}>, <mailto:hello@cohostcompare.com?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },

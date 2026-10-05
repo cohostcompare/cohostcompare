@@ -142,6 +142,7 @@ export async function runDaily() {
   const sharing = await step('shared logins', async () => (await import('@/lib/activity')).checkSharing(), [] as string[]);
   const thanks = await step('feedback thank-yous', async () => (await db.from('feedback').select('id', { count: 'exact', head: true }).in('reward_status', ['to_send', 'manual'])).count ?? 0, 0);
   await step('purge rate events', async () => { await db.from('rate_events').delete().lt('created_at', new Date(Date.now() - 7 * 86400e3).toISOString()); }, undefined); // 019
+  await step('purge email events', async () => { await db.from('email_events').delete().lt('created_at', new Date(Date.now() - 180 * 86400e3).toISOString()); }, undefined); // 029
   const missed = await step('unclaimed catch-up', async () => (await import('@/lib/ownerJobs')).catchUpUnclaimed(), 0);
   const guideTips = await step('guide tips', async () => (await import('@/lib/guide')).runGuideEmails(), 0);
   const unreached = await step('unreached threads', async () => (await import('@/lib/outreach')).unreachedThreads(), [] as { manager: string; reason: 'no-email' | 'unsubscribed' | 'retrying' }[]);
