@@ -5,16 +5,34 @@ import { adminClient } from '@/lib/supabase/server';
 
 /*
  Numbers for the admin dashboard: this week vs last week, and 12 weekly buckets for the charts.
- Weeks are rolling 7-day periods ending now. Requests that only went to the internal test profile are left out.
+ Weeks are calendar weeks, Monday to Sunday, Sydney time (Ben, Oct 2026). The last bucket is the current week so far.
+ Requests that only went to the internal test profile are left out.
 */
 
 const DAY = 86400e3;
 export const WEEKS = 12;
 export type Series = { label: string; values: number[] };
 
+/** Midnight at the start of the current Monday in Sydney, as a UTC timestamp. */
+export function weekStart(now: number) {
+  const fmt = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+  const parts = Object.fromEntries(fmt.formatToParts(new Date(now)).map((x) => [x.type, x.value]));
+  const dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(parts.weekday);
+  // Sydney wall-clock → UTC: local midnight of the Monday is (local now − time of day − days since Monday); work it out via the offset.
+  const localAsUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour) % 24, Number(parts.minute));
+  const offset = localAsUtc - Math.floor(now / 60000) * 60000; // Sydney minus UTC, in ms
+  const mondayLocalAsUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) - Math.max(0, dow));
+  let t = mondayLocalAsUtc - offset;
+  // Daylight saving may have changed between Monday and now: re-check the offset at the Monday itself.
+  const p2 = Object.fromEntries(fmt.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  const drift = (Number(p2.hour) % 24) * 3600e3 + Number(p2.minute) * 60000;
+  if (drift) t -= drift > 12 * 3600e3 ? drift - 24 * 3600e3 : drift;
+  return t;
+}
+
 const bucket = (iso: string, now: number) => {
-  const age = now - new Date(iso).getTime();
-  const i = WEEKS - 1 - Math.floor(age / (7 * DAY));
+  const start0 = weekStart(now) - (WEEKS - 1) * 7 * DAY;
+  const i = Math.floor((new Date(iso).getTime() - start0) / (7 * DAY));
   return i >= 0 && i < WEEKS ? i : -1;
 };
 const zero = () => Array.from({ length: WEEKS }, () => 0);
@@ -64,7 +82,9 @@ export async function adminStats() {
   const scored = (feedback.data || []).map((f) => f.nps as number);
   const nps = scored.length ? Math.round(((scored.filter((n) => n >= 9).length - scored.filter((n) => n <= 6).length) / scored.length) * 100) : null;
 
-  const labels = Array.from({ length: WEEKS }, (_, i) => new Date(now - (WEEKS - i) * 7 * DAY + DAY).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }));
+  const start0 = weekStart(now) - (WEEKS - 1) * 7 * DAY;
+  const labels = Array.from({ length: WEEKS }, (_, i) => new Date(start0 + i * 7 * DAY + 12 * 3600e3).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }));
+  const weekDay = Math.min(7, Math.floor((now - weekStart(now)) / DAY) + 1); // 1 = Monday
   const last = (xs: number[]) => xs[WEEKS - 1], prev = (xs: number[]) => xs[WEEKS - 2];
   const visitors = ads.map((a, i) => a + google[i] + other[i]);
   return {
@@ -77,6 +97,7 @@ export async function adminStats() {
     claimsToReview: pending.count ?? 0, published: published.count ?? 0, claimed: claimed.count ?? 0,
     payingPro, freePro, mrr: payingPro * (PRO_CENTS / 100), unlocks30, nps, npsCount: scored.length,
     trackingReady: !visits.error,
+    weekDay, weekFrom: new Date(weekStart(now) + 12 * 3600e3).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }),
     overdueManagers: (late.data || []).length, overdueRequests: new Set((late.data || []).map((x) => x.request_id)).size,
   };
 }

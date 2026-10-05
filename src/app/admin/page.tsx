@@ -72,7 +72,7 @@ export default async function Admin() {
     ['possible shared logins', (flags || []).length, '#flags'], ['Pro months to credit by hand', thanks, '/admin/feedback'], ['site errors this week', openErrors, '#errors'],
     ['partner offer edits to review', partnerEdits, '/admin/partners'], ['approved partners with no link to send owners to', partnersNoLink, '/admin/partners'], ['email failures this week', emailFails, '#email-failures'],
   ] as [string, number, string][]).filter(([, n]) => n > 0);
-  const delta = ([a, b]: [number, number]) => { const d = a - b; return <span className={`wb-delta ${d > 0 ? 'up' : d < 0 ? 'down' : ''}`}>{d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '–'} vs last week</span>; };
+  const delta = ([a, b]: [number, number]) => { const d = a - b; return <span className={`wb-delta ${d > 0 ? 'up' : d < 0 ? 'down' : ''}`}>{d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '–'} vs all of last week</span>; };
   const conv = st.week.visitors[0] ? `${Math.round((st.week.requests[0] / st.week.visitors[0]) * 1000) / 10}%` : '–';
   const Sec = ({ id, tone, title, children }: { id: string; tone: string; title: string; children: React.ReactNode }) => (
     <section id={id} className={`panel admin-sec ${tone}`}><h2>{title}</h2>{children}</section>
@@ -107,6 +107,7 @@ export default async function Admin() {
         Last daily run: {lastRun ? <>{when(lastRun.started_at)} · {lastRun.finished_at ? (lastRun.ok ? <b style={{ color: 'var(--brand)' }}>ok</b> : <b style={{ color: '#B3261E' }}>problems</b>) : 'still running or cut short'}{lastRun.summary ? ` · ${lastRun.summary}` : ''}{lastRun.error ? <> · <span style={{ color: '#B3261E' }}>{lastRun.error.split('\n')[0]}</span></> : null}</> : 'none recorded yet (needs update 027; runs at 8am Sydney)'}.
       </p>
 
+      <p className="hint" style={{ margin: '-6px 0 -6px' }}>This week = Monday {st.weekFrom} to now (day {st.weekDay} of 7), Sydney time. Charts are Monday-to-Sunday weeks; the last bar is this week so far.</p>
       <section className="kpis" aria-label="This week at a glance">
         <Link href="/admin/requests?d=7" className="kpi k-blue"><span>Quote requests</span><b>{st.week.requests[0]}</b>{delta(st.week.requests as [number, number])}<small>{st.week.contacted[0]} managers contacted</small></Link>
         <Link href="/admin/requests?f=accepted&d=7" className="kpi k-green"><span>Accepted quotes</span><b>{st.week.accepted[0]}</b>{delta(st.week.accepted as [number, number])}<small>introductions made</small></Link>
