@@ -34,7 +34,7 @@ export default function WeekBars({ title, values, labels, href, note, unit = 'we
       <svg viewBox={`0 0 ${W} ${H + 16}`} role="img" aria-label={`${title}, ${unit === 'month' ? 'monthly' : 'weekly'} for the last ${n} ${unit}s: ${values.join(', ')}`}>
         {ticks.map((t) => {
           const y = H - (t / max) * (H - pad);
-          return <g key={t}><line x1={L} x2={W} y1={y} y2={y} className="wb-grid" /><text x={L - 5} y={y + 3.5} className="wb-tick" textAnchor="end">{fmtTick(t)}</text></g>;
+          return <g key={t}><line x1={L} x2={W} y1={y} y2={y} className="wb-gline" /><text x={L - 5} y={y + 3.5} className="wb-tick" textAnchor="end">{fmtTick(t)}</text></g>;
         })}
         <line x1={L} x2={W} y1={H} y2={H} className="wb-axis" />
         <text x={L - 5} y={H + 3.5} className="wb-tick" textAnchor="end">0</text>
