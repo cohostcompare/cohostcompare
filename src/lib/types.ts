@@ -33,6 +33,7 @@ export type PublicManager = {
   dataAsOf: string | null;
   logoUrl?: string | null;
   photos?: string[];
+  photoCaptions?: Record<string, string>; // url -> caption (SQL 028)
   tile?: { bg: string; fg: string };
   demo?: boolean;
 };

@@ -8,10 +8,10 @@ export const PLATFORMS = ['Airbnb', 'Booking.com', 'Stayz', 'Vrbo', 'Direct book
 export type ManagerRow = {
   id: string; slug: string; name: string; tagline: string | null; about: string | null; website: string | null; contact_phone: string | null;
   platforms: string[]; services: string[]; postcodes: string[]; fee_min: number | null; fee_max: number | null; fee_note: string | null;
-  licensed_agent: boolean | null; gated: Record<string, unknown>; logo_url: string | null; photos: string[]; claimed: boolean;
+  licensed_agent: boolean | null; gated: Record<string, unknown>; logo_url: string | null; photos: string[]; photo_captions?: Record<string, string> | null; claimed: boolean;
 };
 
-const COLS = 'id, slug, name, tagline, about, website, contact_phone, platforms, services, postcodes, fee_min, fee_max, fee_note, licensed_agent, gated, logo_url, photos, claimed';
+const COLS = 'id, slug, name, tagline, about, website, contact_phone, platforms, services, postcodes, fee_min, fee_max, fee_note, licensed_agent, gated, logo_url, photos, photo_captions, claimed';
 
 /** Profiles the signed-in user manages. */
 export async function myManagers(userId: string): Promise<ManagerRow[]> {

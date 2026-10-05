@@ -40,7 +40,8 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   // Don't count the manager's own team or admins looking at the profile.
   const own = user ? (await adminClient().from('manager_members').select('user_id', { count: 'exact', head: true }).eq('manager_id', m.id).eq('user_id', user.id)).count : 0;
   if (!own && !isAdminEmail(user?.email)) await bump([m.id], 'view');
-  const g = user ? await gatedDetails(m.slug) : null;
+  const gAll = await gatedDetails(m.slug); // full terms: shown to signed-in owners; used below only to see what's published
+  const g = user ? gAll : null;
   const lat = Number(sp.lat), lng = Number(sp.lng);
   const near = sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? (await managersNear(lat, lng).catch(() => [])).find((x) => x.slug === m.slug) : undefined;
   const q = new URLSearchParams({ managers: m.slug });
@@ -54,6 +55,28 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const { describe } = await import('@/lib/requirements');
   const slow = (await (await import('@/lib/reach')).withReach([m]))[0].slowReply;
   const ravg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
+
+  // At a glance: the basics owners otherwise scroll for, from data we already show on this page.
+  const glance: { t: string; hi?: boolean }[] = [];
+  if (near) glance.push({ t: `Covers your address (${near.nearby} home${near.nearby === 1 ? '' : 's'} within ${COVER_KM} km)`, hi: true });
+  if (m.services.some((x) => /full/i.test(x))) glance.push({ t: 'Full management' });
+  else if (m.services.some((x) => /co-?host/i.test(x))) glance.push({ t: 'Co-hosting' });
+  if (m.platforms.length) glance.push({ t: m.platforms.slice(0, 3).join(', ') });
+  if (g?.minTermMonths === 0) glance.push({ t: 'No lock-in' });
+  else if (g?.minTermMonths) glance.push({ t: `${g.minTermMonths}-month minimum` });
+  if (m.licensedAgent) glance.push({ t: 'Licensed real estate agency' });
+  if (m.claimed) glance.push({ t: 'Replies on CoHostCompare' });
+
+  // What to ask: turn gaps in the profile into questions, so "not published" becomes a prompt rather than a blank.
+  const ask: string[] = [];
+  if (!fee) ask.push('What is your management fee, as a percentage of booking income, and does it include GST?');
+  else if (!m.claimed) ask.push(`Is the ${fee} fee on your website still current, and does it include GST?`);
+  if (gAll?.setupFee == null) ask.push('Is there a setup or onboarding fee, and what does it cover (photos, listing, furnishing advice)?');
+  if (gAll?.minTermMonths == null) ask.push('Is there a minimum term, and how much notice do I give to leave?');
+  if (gAll?.cleaningPassedOn == null) ask.push('Who pays for cleaning and linen: me or the guest?');
+  if (!gAll?.ownerStaysAllowed) ask.push('Can I block out dates to use the property myself?');
+  if (!m.platforms.some((x) => /stayz|booking/i.test(x))) ask.push('Do you list on Stayz and Booking.com as well as Airbnb?');
+  ask.push('How do you set nightly prices, and how often do you review them?');
 
   const ld = {
     '@context': 'https://schema.org',
@@ -78,13 +101,14 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             </p>
             <div style={{ marginTop: 8 }}><TrustBadges m={m} full /></div>
             {slow && <p className="slow-note" style={{ marginTop: 6 }}>Not on CoHostCompare yet, so may be slow to reply. We'll still pass your request on.</p>}
+            {glance.length > 0 && <ul className="glance" aria-label="At a glance">{glance.map((x) => <li key={x.t} className={x.hi ? 'near-you' : undefined}>{x.t}</li>)}</ul>}
             {reviews.length > 0 && <a href="#owner-reviews" style={{ display: 'inline-block', marginTop: 6, fontWeight: 600 }}><span className="stars" style={{ color: '#E8A317' }} aria-hidden="true">{stars(ravg)}</span> {ravg.toFixed(1)} from {reviews.length} owner review{reviews.length === 1 ? '' : 's'}</a>}
           </div>
         </div>
 
         {(m.photos?.length ?? 0) > 0 && (
           <section aria-label={`Homes managed by ${m.name}`} style={{ display: 'grid', gap: 8 }}>
-            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>
+            <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.map((p) => <figure key={p}><img src={p} alt={m.photoCaptions?.[p] ? `${m.photoCaptions[p]}, managed by ${m.name}` : `A home managed by ${m.name}`} loading="lazy" />{m.photoCaptions?.[p] && <figcaption>{m.photoCaptions[p]}</figcaption>}</figure>)}</div>
             <p className="hint" style={{ margin: 0 }}>Homes {m.name} manages. Photos supplied by {m.name}.</p>
           </section>
         )}
@@ -108,6 +132,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
             <p className="hint" style={{ margin: 0 }}>No guest ratings or booking figures yet. We found {m.name} through its own website rather than in the Airbnb listing data we track, so it may list mainly on Stayz, Booking.com or its own site. Figures appear once its listings are linked, or when the manager claims this profile.</p>
           </div>
         )}
+        <p className="phone-only" style={{ margin: 0 }}><a className="btn primary" href="#add-to-quote" style={{ width: '100%' }}>Request a quote</a></p>
         {near && <p className="near-line" style={{ margin: 0 }}><b>Near your address:</b> {near.nearby} home{near.nearby === 1 ? '' : 's'} within {COVER_KM} km{near.nearbyRating ? <>, averaging <b>{near.nearbyRating.toFixed(2)} ★</b></> : null}{near.nearestKm != null ? `. The closest is about ${near.nearestKm} km away.` : '.'}</p>}
         {hasData && fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
         {!m.claimed && <p className="hint" style={{ margin: 0 }}>Built from public information and refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link> · <a href="#claim">Is this your business?</a></p>}
@@ -117,6 +142,12 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
         <section className="panel">
           <h2 style={{ fontSize: 20, marginTop: 0 }}>About</h2>
           <p style={{ margin: 0 }}>{m.about || `${m.name} manages short-term rental homes${m.cities.length ? ` in ${m.cities.join(' and ')}` : ''}.`}</p>
+        </section>
+
+        <section className="panel" style={{ display: 'grid', gap: 8 }} aria-labelledby="ask-h">
+          <h2 id="ask-h" style={{ fontSize: 20, margin: 0 }}>What to ask {m.name}</h2>
+          <p className="hint" style={{ margin: 0 }}>Based on what {m.name} {m.claimed ? 'has' : 'has and hasn’t'} published here. Every quote on CoHostCompare comes back in one format, so you can compare the answers.</p>
+          <ol className="ask-list">{ask.slice(0, 4).map((q) => <li key={q}>{q}</li>)}</ol>
         </section>
 
         {reqs && (

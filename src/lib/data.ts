@@ -11,11 +11,11 @@ const GENERIC_PLACES = new Set(['Sydney', 'Melbourne', 'Brisbane']);
 type Row = {
   id: string; slug: string; name: string; tagline: string | null; about: string | null; cities: string[]; postcodes: string[];
   platforms: string[]; services: string[]; fee_min: number | null; fee_max: number | null; fee_note: string | null;
-  licensed_agent: boolean | null; claimed: boolean; gated: Record<string, unknown>; logo_url: string | null; photos: string[] | null;
+  licensed_agent: boolean | null; claimed: boolean; gated: Record<string, unknown>; logo_url: string | null; photos: string[] | null; photo_captions?: Record<string, string> | null;
 };
 type Stats = { manager_id: string; property_count: number; avg_rating: number | null; review_count: number; avg_occupancy: number | null; avg_nightly_rate: number | null; localities: string[] | null; data_as_of: string | null };
 
-const COLS = 'id, slug, name, tagline, about, cities, postcodes, platforms, services, fee_min, fee_max, fee_note, licensed_agent, claimed, gated, logo_url, photos';
+const COLS = 'id, slug, name, tagline, about, cities, postcodes, platforms, services, fee_min, fee_max, fee_note, licensed_agent, claimed, gated, logo_url, photos, photo_captions';
 
 function initials(name: string) {
   return name.replace(/['’]/g, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || name.slice(0, 2).toUpperCase();
@@ -35,7 +35,7 @@ function toPublic(r: Row, s?: Stats, x?: Extras): PublicManager {
     platforms: r.platforms || [], services: r.services || [],
     feeMin: n(r.fee_min), feeMax: n(r.fee_max), licensedAgent: r.licensed_agent,
     responseHours: x?.responseHours ?? null, replies: x?.replies ?? 0, verified: x?.verified ?? false, claimed: r.claimed, dataAsOf: s?.data_as_of || null,
-    tile: tileColour(r.name), logoUrl: r.logo_url, photos: r.photos || [],
+    tile: tileColour(r.name), logoUrl: r.logo_url, photos: r.photos || [], photoCaptions: r.photo_captions || {},
   };
 }
 

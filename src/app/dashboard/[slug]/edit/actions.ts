@@ -102,13 +102,30 @@ export async function attachMedia(slug: string, uploaded: { kind: 'logo' | 'phot
   return { ok: true };
 }
 
+/** Captions for photos: "caption:<url>" fields, 60 chars max, blank removes. */
+export async function saveCaptions(form: FormData) {
+  const slug = String(form.get('slug') || '');
+  const { user, manager: m } = await requireManager(slug, `/dashboard/${slug}/edit`);
+  const captions: Record<string, string> = {};
+  for (const [k, v] of form.entries()) {
+    if (!k.startsWith('caption:')) continue;
+    const url = k.slice(8); const text = String(v || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (m.photos.includes(url) && text) captions[url] = text;
+  }
+  const db = adminClient();
+  await db.from('managers').update({ photo_captions: captions }).eq('id', m.id);
+  await db.from('manager_edits').insert({ manager_id: m.id, user_id: user.id, changes: { photo_captions: captions } });
+  revalidatePath(`/managers/${slug}`);
+  redirect(`/dashboard/${slug}/edit?media=captions#media`);
+}
+
 export async function removeMedia(form: FormData) {
   const slug = String(form.get('slug') || '');
   const { user, manager: m } = await requireManager(slug, `/dashboard/${slug}/edit`);
   const url = String(form.get('url') || '');
   const db = adminClient();
   if (form.get('kind') === 'logo') await db.from('managers').update({ logo_url: null }).eq('id', m.id);
-  else await db.from('managers').update({ photos: m.photos.filter((p) => p !== url) }).eq('id', m.id);
+  else { const caps = { ...(m.photo_captions || {}) }; delete caps[url]; await db.from('managers').update({ photos: m.photos.filter((p) => p !== url), photo_captions: caps }).eq('id', m.id); }
   await db.from('manager_edits').insert({ manager_id: m.id, user_id: user.id, changes: { removed: url } });
   revalidatePath(`/managers/${slug}`);
   redirect(`/dashboard/${slug}/edit?media=removed#media`);
