@@ -170,6 +170,43 @@ async function send(c: Ctx, i: number) {
   });
 }
 
+/**
+ * Who goes first when more contacts are due than the daily cap allows (Ben, 6 Oct 2026):
+ * 1. Follow-ups already in a sequence (their timing matters), oldest due first.
+ * 2. New starts: managers with an owner waiting for a quote; then where owners are (Sydney and Melbourne, where the ads run,
+ *    plus any postcode owners have searched in the last 30 days); then the bigger operators (homes we track).
+ */
+const PRIORITY_CITIES = /^(sydney|melbourne|northern beaches)$/i;
+async function prioritise<T extends { manager_id: string; step: number; next_send_at: string }>(due: T[]): Promise<T[]> {
+  const starts = due.filter((c) => c.step === 0);
+  if (starts.length < 2) return due;
+  const db = adminClient();
+  const ids = [...new Set(starts.map((c) => c.manager_id))];
+  const [{ data: ms }, { data: st }, { data: searched }] = await Promise.all([
+    db.from('managers').select('id, slug, cities, postcodes').in('id', ids),
+    db.from('manager_stats').select('manager_id, property_count').in('manager_id', ids),
+    db.from('search_log').select('postcode').gte('day', new Date(Date.now() - 30 * 86400e3).toISOString().slice(0, 10)),
+  ]);
+  const slugs = (ms || []).map((m) => m.slug);
+  const { data: waiting } = slugs.length ? await db.from('quote_request_managers').select('manager_slug').in('manager_slug', slugs).in('status', ['sent', 'viewed']) : { data: [] };
+  const waitingSlugs = new Set((waiting || []).map((w) => w.manager_slug));
+  const hot = new Set((searched || []).map((s) => s.postcode));
+  const homes = new Map((st || []).map((s) => [s.manager_id, Number(s.property_count) || 0]));
+  const info = new Map((ms || []).map((m) => [m.id, m]));
+  const score = (c: T) => {
+    const m = info.get(c.manager_id);
+    if (!m) return 0;
+    let s = 0;
+    if (waitingSlugs.has(m.slug)) s += 10000;
+    if ((m.cities || []).some((x: string) => PRIORITY_CITIES.test(x))) s += 1000;
+    if ((m.postcodes || []).some((p: string) => hot.has(p))) s += 500;
+    s += Math.min(homes.get(c.manager_id) || 0, 400);
+    return s;
+  };
+  const followUps = due.filter((c) => c.step > 0);
+  return [...followUps, ...starts.sort((a, b) => score(b) - score(a))];
+}
+
 /** Sends the next due email to up to `limit` contacts (respecting the daily cap). */
 export async function sendOutreachBatch(limit = DAILY_CAP) {
   if (!outreachOn()) return { sent: 0, note: 'Outreach is paused' };
@@ -178,10 +215,11 @@ export async function sendOutreachBatch(limit = DAILY_CAP) {
   const { count: sentToday } = await db.from('outreach_contacts').select('id', { count: 'exact', head: true }).gte('last_sent_at', since);
   const room = Math.max(0, Math.min(limit, DAILY_CAP - (sentToday ?? 0)));
   if (!room) return { sent: 0, note: 'Daily cap reached' };
-  const { data: due, error } = await db.from('outreach_contacts').select('*').eq('status', 'active').lte('next_send_at', new Date().toISOString()).order('next_send_at').limit(room * 2);
+  const { data: dueAll, error } = await db.from('outreach_contacts').select('*').eq('status', 'active').lte('next_send_at', new Date().toISOString()).order('next_send_at').limit(400);
   if (error) return { sent: 0, note: error.message };
+  const due = await prioritise(dueAll || []);
   let sent = 0;
-  for (const ct of due || []) {
+  for (const ct of due) {
     if (sent >= room) break;
     const { data: m } = await db.from('managers').select('claimed').eq('id', ct.manager_id).maybeSingle();
     if (m?.claimed) { await db.from('outreach_contacts').update({ status: 'claimed' }).eq('id', ct.id); continue; }

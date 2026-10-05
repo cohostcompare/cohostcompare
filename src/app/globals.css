@@ -612,9 +612,10 @@ a.kpi:hover { border-color: var(--k); }
 .wb-mark.now { fill: var(--brand); }
 .wb-hit { fill: transparent; }
 .wb-bar:hover .wb-mark { fill: var(--ink); }
-.wb-tick { font-size: 10px; fill: var(--muted); }
+.wb svg text { font-family: var(--body); }
+.wb-tick { font-size: 11px; font-weight: 600; fill: var(--ink); opacity: .75; }
 .wb-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
-.wb-val { font-size: 11px; font-weight: 700; fill: var(--ink); display: none; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.wb-val { font-size: 12px; font-weight: 700; fill: var(--ink); display: none; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 .wb-bar:hover .wb-val { display: block; }
 .wb svg:hover .wb-mark { opacity: .3; }
 .wb svg .wb-bar:hover .wb-mark { opacity: 1; }
