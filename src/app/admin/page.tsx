@@ -61,6 +61,9 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
   // Bounced outreach contacts, matched to failures by domain, so each failure can be resolved in place (030).
   const failDomains = [...new Set(emailFailRows.map((r) => (r.to_domain || '').toLowerCase()).filter(Boolean))];
   const failContacts = new Map<string, { email: string; status: string; name: string; slug: string; published: boolean }>();
+  const { data: priorFails } = failDomains.length ? await db.from('email_failures').select('to_domain, resolution').in('to_domain', failDomains).not('resolved_at', 'is', null) : { data: [] };
+  const priorCount = new Map<string, number>();
+  for (const f of priorFails || []) priorCount.set((f.to_domain || '').toLowerCase(), (priorCount.get((f.to_domain || '').toLowerCase()) || 0) + 1);
   for (const d of failDomains) {
     const { data: cs } = await db.from('outreach_contacts').select('email, status, managers(name, slug, published)').ilike('email', `%@${d}`).limit(3);
     const c = (cs || []).find((x) => x.status === 'bounced') || (cs || [])[0];
@@ -218,7 +221,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
           return (
             <div key={r.id} className="row" style={{ gap: 4 }}>
               <span><b>{r.status}</b>{transient ? ' (transient)' : ''} · {c ? <>{c.email} · <Link href={`/managers/${c.slug}`}>{c.name}</Link>{c.published ? '' : ' (hidden)'}</> : r.to_domain || '?'} <span className="hint">· {r.subject} · {when(r.created_at)}</span></span>
-              <span className="hint" style={{ overflowWrap: 'anywhere' }}>{(r.detail || '').split(' · ').slice(2).join(' ').slice(0, 160)}{c ? (transient ? ' Often a full mailbox or a flaky server: worth one retry.' : ' The address is dead: use another from their website, or hide the profile if the business has gone.') : ''}</span>
+              <span className="hint" style={{ overflowWrap: 'anywhere' }}>{priorCount.get((r.to_domain || '').toLowerCase()) ? <b>Bounced again after you resolved an earlier failure for this domain. </b> : null}{(r.detail || '').split(' · ').slice(2).join(' ').slice(0, 160)}{c ? (priorCount.get((r.to_domain || '').toLowerCase()) ? ' Treat the address as dead: use another from their website, or hide the profile.' : transient ? ' Often a full mailbox or a flaky server: worth one retry.' : ' The address is dead: use another from their website, or hide the profile if the business has gone.') : ''}</span>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <form action={resolveEmailFailure.bind(null, String(r.id), 'dismiss')}><button className="btn secondary small" type="submit">Dismiss</button></form>
                 {c && c.status === 'bounced' && <form action={resolveEmailFailure.bind(null, String(r.id), 'retry')}><button className="btn secondary small" type="submit">Retry same address</button></form>}
