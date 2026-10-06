@@ -220,15 +220,13 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
               <span><b>{r.status}</b> · {r.subject} <span className="hint">→ {r.to_domain || '?'} · {when(r.created_at)}</span></span>
               {r.detail && <span className="hint" style={{ overflowWrap: 'anywhere' }}>{r.detail.slice(0, 240)}</span>}
               {c && <span className="hint">Outreach contact: {c.email} for <Link href={`/managers/${c.slug}`}>{c.name}</Link> ({c.status}{c.published ? '' : ', profile hidden'}).{transient ? ' A transient bounce often means a full mailbox or a flaky server: worth one retry.' : ' A permanent bounce means the address is dead: find another on their website, or hide the profile if the business has gone.'}</span>}
-              <form action={resolveEmailFailure} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                <input type="hidden" name="id" value={r.id} />
-                <button className="btn secondary small" name="how" value="dismiss">Dismiss</button>
-                {c && c.status === 'bounced' && <button className="btn secondary small" name="how" value="retry">Retry same address</button>}
-                {c && c.published && <button className="btn secondary small" name="how" value="hide" title="Unpublishes the profile and stops outreach to it">Hide {c.name}</button>}
-              </form>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <form action={resolveEmailFailure.bind(null, String(r.id), 'dismiss')}><button className="btn secondary small" type="submit">Dismiss</button></form>
+                {c && c.status === 'bounced' && <form action={resolveEmailFailure.bind(null, String(r.id), 'retry')}><button className="btn secondary small" type="submit">Retry same address</button></form>}
+                {c && c.published && <form action={resolveEmailFailure.bind(null, String(r.id), 'hide')}><button className="btn secondary small" type="submit" title="Unpublishes the profile and stops outreach to it">Hide {c.name}</button></form>}
+              </div>
               {c && (
-                <form action={resolveEmailFailure} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <input type="hidden" name="id" value={r.id} /><input type="hidden" name="how" value="replace" />
+                <form action={resolveEmailFailure.bind(null, String(r.id), 'replace')} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                   <input className="field" name="email" type="email" placeholder="Different published email" required style={{ minHeight: 36, maxWidth: 260 }} />
                   <input className="field" name="source_url" type="url" placeholder="Page where it's published, https://…" required style={{ minHeight: 36, maxWidth: 300 }} />
                   <button className="btn primary small" type="submit">Use this email instead</button>

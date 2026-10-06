@@ -35,11 +35,9 @@ export async function setFlagStatus(form: FormData) {
  * - replace: use a different published address for that manager (adds to outreach, old one stays suppressed).
  * - hide: the business is gone or wrong; unpublish the profile and finish its outreach.
  */
-export async function resolveEmailFailure(form: FormData) {
+export async function resolveEmailFailure(id: string, how: string, form: FormData) {
   await requireAdmin('/admin');
   const db = adminClient();
-  const id = String(form.get('id') || '');
-  const how = String(form.get('how') || '');
   const back = (msg: string, kind: 'done' | 'error' = 'done'): never => { redirect(`/admin?${kind}=${encodeURIComponent(msg)}#email-failures`); };
   const { data: f } = await db.from('email_failures').select('id, to_domain').eq('id', id).maybeSingle();
   if (!f) return back('That failure is no longer listed.', 'error');
