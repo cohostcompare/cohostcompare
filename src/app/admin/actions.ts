@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
 
@@ -39,25 +40,34 @@ export async function resolveEmailFailure(form: FormData) {
   const db = adminClient();
   const id = String(form.get('id') || '');
   const how = String(form.get('how') || '');
+  const back = (msg: string, kind: 'done' | 'error' = 'done'): never => { redirect(`/admin?${kind}=${encodeURIComponent(msg)}#email-failures`); };
   const { data: f } = await db.from('email_failures').select('id, to_domain').eq('id', id).maybeSingle();
-  if (!f) return;
+  if (!f) return back('That failure is no longer listed.', 'error');
   const domain = (f.to_domain || '').toLowerCase();
   const { data: contacts } = domain ? await db.from('outreach_contacts').select('id, email, manager_id, status').ilike('email', `%@${domain}`) : { data: [] };
   const ct = (contacts || []).find((c) => c.status === 'bounced') || (contacts || [])[0];
-  if (how === 'retry' && ct) {
+  let msg = 'Dismissed.';
+  if (how === 'retry') {
+    if (!ct) back('No outreach contact matches that address, so there is nothing to retry.', 'error');
     await db.from('email_suppressions').delete().eq('email', ct.email.toLowerCase());
     await db.from('outreach_contacts').update({ status: 'active', next_send_at: new Date().toISOString() }).eq('id', ct.id);
-  } else if (how === 'replace' && ct) {
+    msg = `${ct.email} is unblocked and back in the sequence: it gets its next email with tomorrow morning's batch.`;
+  } else if (how === 'replace') {
+    if (!ct) back('No outreach contact matches that address.', 'error');
     const email = String(form.get('email') || '').trim().toLowerCase();
     const source_url = String(form.get('source_url') || '').trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^https?:\/\//.test(source_url)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^https?:\/\//.test(source_url)) back('Enter a valid email and the https:// page where it is published.', 'error');
     const { data: existing } = await db.from('outreach_contacts').select('id').eq('manager_id', ct.manager_id).ilike('email', email).maybeSingle();
     if (!existing) await db.from('outreach_contacts').insert({ manager_id: ct.manager_id, email, source_url, first_name: null, step: 0, status: 'active', next_send_at: new Date().toISOString() });
-  } else if (how === 'hide' && ct) {
+    msg = `${email} added to outreach: email 1 goes with tomorrow morning's batch.`;
+  } else if (how === 'hide') {
+    if (!ct) back('No outreach contact matches that address.', 'error');
     await db.from('managers').update({ published: false }).eq('id', ct.manager_id);
     await db.from('outreach_contacts').update({ status: 'finished' }).eq('manager_id', ct.manager_id);
-  } else if (how !== 'dismiss') return;
+    msg = 'Profile hidden and outreach to it stopped.';
+  } else if (how !== 'dismiss') back('Unknown action.', 'error');
   await db.from('email_failures').update({ resolved_at: new Date().toISOString(), resolution: how }).eq('id', id);
   revalidatePath('/admin');
   revalidatePath('/admin/outreach');
+  back(msg);
 }

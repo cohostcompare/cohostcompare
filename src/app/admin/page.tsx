@@ -11,7 +11,10 @@ import { setFeeStatus, setFlagStatus, resolveEmailFailure } from './actions';
 export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-export default async function Admin() {
+type SP = Promise<{ done?: string; error?: string }>;
+
+export default async function Admin({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams;
   await requireAdmin('/admin');
   const db = adminClient();
   const count = async (table: string, f?: (q: any) => any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -89,6 +92,8 @@ export default async function Admin() {
 
   return (
     <main className="admin" style={{ maxWidth: 1100, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
+      {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
+      {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 34, margin: 0 }}>Admin</h1>
         <span className="hint">Weeks are the last 7 days, compared with the 7 before. Your own visits and test requests aren&apos;t counted.</span>
@@ -206,7 +211,7 @@ export default async function Admin() {
       </div>
 
       <Sec id="email-failures" tone="g-rose" title={`Email failures (${emailFails} in 7 days)`}>
-        <span className="hint">Emails Resend refused, couldn&apos;t deliver (bounced) or that were marked as spam (complained). Bounced and complained addresses are never emailed again. Needs update 027.</span>
+        <span className="hint">Emails our sender refused, couldn&apos;t deliver (bounced) or that were marked as spam (complained). A bounced or complained address is blocked until you retry it. Resolve each one below and it leaves your list.</span>
         {!emailFailRows.length ? <span className="hint">Nothing to resolve.</span> : emailFailRows.map((r) => {
           const c = failContacts.get((r.to_domain || '').toLowerCase());
           const transient = /transient/i.test(r.detail || '');
