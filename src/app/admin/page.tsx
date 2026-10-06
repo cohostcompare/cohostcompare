@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import WeekBars from '@/components/WeekBars';
 import { requireAdmin } from '@/lib/admin';
 import { adminStats } from '@/lib/adminStats';
@@ -92,8 +93,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
 
   return (
     <main className="admin" style={{ maxWidth: 1100, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
-      {sp.done && sp.at !== 'failures' && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
-      {sp.error && sp.at !== 'failures' && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
+      <AdminNotice done={sp.done} error={sp.error} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 34, margin: 0 }}>Admin</h1>
         <span className="hint">Weeks are the last 7 days, compared with the 7 before. Your own visits and test requests aren&apos;t counted.</span>
@@ -212,8 +212,6 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
 
       <Sec id="email-failures" tone="g-rose" title={`Email failures (${emailFails} in 7 days)`}>
         <span className="hint">Emails our sender refused, couldn&apos;t deliver (bounced) or that were marked as spam (complained). A bounced or complained address is blocked until you retry it. Resolve each one below and it leaves your list.</span>
-        {sp.at === 'failures' && sp.done && <div role="status" className="row" style={{ background: 'var(--tint)', borderRadius: 8, padding: '8px 10px', borderTop: 0 }}>✓ {sp.done}</div>}
-        {sp.at === 'failures' && sp.error && <div role="alert" className="row" style={{ border: '1px solid var(--signal)', borderRadius: 8, padding: '8px 10px' }}>{sp.error}</div>}
         {!emailFailRows.length ? <span className="hint">Nothing to resolve.</span> : emailFailRows.map((r) => {
           const c = failContacts.get((r.to_domain || '').toLowerCase());
           const transient = /transient/i.test(r.detail || '');

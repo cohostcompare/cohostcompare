@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
 import { isPro, planName, planOf, plansFor } from '@/lib/pro';
@@ -60,8 +61,7 @@ export default async function AdminManagers({ searchParams }: { searchParams: SP
         <p style={{ margin: '4px 0 0' }}><Link href="/admin/managers/audit">Run the manager audit →</Link> <span className="hint">checks each manager&apos;s website to flag hotels or booking sites.</span></p>
         <p className="hint" style={{ margin: '4px 0 0' }}>Hide a manager to remove them from search results, their public profile and new quote requests (for example, if they ask to be removed). Their data is kept, and you can show them again at any time.</p>
       </div>
-      {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
-      {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>Done: manager {sp.done}.</div>}
+      <AdminNotice done={sp.done} error={sp.error} />
       <form style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input className="field" name="q" defaultValue={q} placeholder="Search by name" style={{ maxWidth: 320 }} />
         <select className="field" name="show" defaultValue={sp.show || ''} style={{ maxWidth: 200 }}><option value="">All managers</option><option value="hidden">Hidden only</option></select>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { newBusinesses, sweepBudget } from '@/lib/jobs/data';
 import { adminClient } from '@/lib/supabase/server';
@@ -32,8 +33,7 @@ export default async function AdminData({ searchParams }: { searchParams: SP }) 
         <h1 style={{ fontSize: 34, margin: 0 }}>Listing data</h1>
         <p className="hint" style={{ margin: '4px 0 0' }}>{(listings ?? 0).toLocaleString('en-AU')} listings stored · {calls.toLocaleString('en-AU')} AirROI calls used (about US${(calls * 0.5).toFixed(2)} at US$0.50 a call) · {open} of {(cells || []).length} areas still to fetch</p>
       </div>
-      {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
-      {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
+      <AdminNotice done={sp.done} error={sp.error} />
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <b>Fetch listings</b>

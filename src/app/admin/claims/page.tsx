@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { siteDomain } from '@/lib/claims';
 import { adminClient } from '@/lib/supabase/server';
@@ -43,8 +44,7 @@ export default async function Claims({ searchParams }: { searchParams: SP }) {
           <Link className={`btn ${show === 'all' ? 'primary' : 'secondary'}`} href="/admin/claims?show=all">All</Link>
         </div>
       </div>
-      {sp.error && <div className="panel" role="alert" style={{ borderColor: 'var(--signal)' }}><b>That didn&apos;t work:</b> {sp.error}</div>}
-      {sp.done && <div className="panel" style={{ background: 'var(--tint)' }}>Done.</div>}
+      <AdminNotice done={sp.done ? 'Done.' : undefined} error={sp.error ? `That didn’t work: ${sp.error}` : undefined} />
       {!claims.length && <div className="panel">{show === 'open' ? 'Nothing to review.' : 'No claims yet.'}</div>}
       {claims.map((c) => {
         const m = Array.isArray(c.managers) ? c.managers[0] : c.managers;

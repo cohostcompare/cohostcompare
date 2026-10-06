@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { TEST_SLUG } from '@/lib/data';
 import { CATCHUP_FROM, unclaimedReach, requestEmailsOn } from '@/lib/outreach';
@@ -98,7 +99,7 @@ export default async function AdminRequests({ searchParams }: { searchParams: SP
         <select className="field" name="d" defaultValue={days} style={{ width: 'auto' }}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="all">All time</option></select>
         <button className="btn secondary" type="submit">Filter</button>
       </form>
-      {(sp.done || sp.error) && <p role="status" className="panel" style={{ margin: 0, borderColor: sp.error ? 'var(--signal)' : 'var(--brand)' }}>{sp.done || sp.error}</p>}
+      <AdminNotice done={sp.done} error={sp.error} />
       {error && <p className="panel" style={{ margin: 0 }}>Couldn&apos;t load requests: {error.message}</p>}
       <p className="hint" style={{ margin: 0 }}>{rows.length} request{rows.length === 1 ? '' : 's'}. Overdue means a manager hasn&apos;t quoted, declined or replied {OVERDUE_HOURS} hours after the request. Claimed managers get a reminder email at that point; unclaimed ones appear in your daily email to chase by hand. &ldquo;Manager not told&rdquo; means an unclaimed manager couldn&apos;t be emailed about the request at all, with the reason on each one.</p>
       {rows.map((r) => (

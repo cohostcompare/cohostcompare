@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { inboundOn } from '@/lib/inbound';
 import { DAILY_CAP, OUTREACH_START, SEQUENCE, outreachOn, outreachStats, requestEmailsOn, type Ctx } from '@/lib/outreach';
@@ -60,8 +61,7 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
         <div role="status" className="panel" style={{ borderColor: 'var(--signal)', background: 'var(--surface)' }}><b>The outreach sequence is paused{process.env.OUTREACH_ENABLED === '0' ? '' : ` until ${new Date(OUTREACH_START).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}`}.</b> Approved contacts stay queued until then. {requestEmailsOn() ? 'The instant “an owner wants a quote” email to unclaimed managers is on.' : 'The instant “an owner wants a quote” email is also off (REQUEST_EMAILS=0).'} Test emails to hello@ still work. {replyTracking}</div>
       ) : <div role="status" className="panel" style={{ background: 'var(--tint)' }}><b>Outreach is on.</b> Up to {DAILY_CAP} emails a day go out with the daily run. Set OUTREACH_ENABLED=0 in Vercel to stop it. {replyTracking}</div>}
       {error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>Run supabase/009_launch_features.sql first. ({error.message})</div>}
-      {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
-      {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
+      <AdminNotice done={sp.done} error={sp.error} />
 
       {stats.contacted > 0 && (
         <section className="kpis" aria-label="Outreach results">

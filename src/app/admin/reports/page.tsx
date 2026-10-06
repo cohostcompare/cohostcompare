@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AdminNotice from '@/components/AdminNotice';
 import { requireAdmin } from '@/lib/admin';
 import { allRegions, periodLabel, periodOf } from '@/lib/reports';
 import { adminClient } from '@/lib/supabase/server';
@@ -30,7 +31,7 @@ export default async function AdminReports({ searchParams }: { searchParams: Pro
         <h1 style={{ fontSize: 34, margin: 0 }}>Regional reports</h1>
         <p className="hint" style={{ margin: '4px 0 0' }}>One report per region each quarter, with a by-suburb table. The daily run makes up to 8 a day and emails the managers who get them (Pro and Enterprise can open them). Regions with fewer than 10 homes are made but not sent.</p>
       </div>
-      {sp.done && <p role="status" className="panel" style={{ margin: 0, borderColor: 'var(--brand)' }}>{sp.done}</p>}
+      <AdminNotice done={sp.done} />
       {error && <p className="panel" style={{ margin: 0 }}>Couldn&apos;t load reports: {error.message}</p>}
       <section className="kpis">
         <div className="kpi k-blue"><span>{periodLabel(current)}</span><b>{thisQ.size} of {regions.length}</b><small>regions with a report this quarter</small></div>

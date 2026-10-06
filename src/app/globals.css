@@ -619,6 +619,9 @@ a.kpi:hover { border-color: var(--k); }
 .wb-bar:hover .wb-val { display: block; }
 .wb svg:hover .wb-mark { opacity: .3; }
 .wb svg .wb-bar:hover .wb-mark { opacity: 1; }
+.admin-notice { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; display: flex; align-items: center; gap: 12px; max-width: min(720px, calc(100vw - 32px)); background: var(--ink); color: #fff; border-radius: 12px; padding: 12px 10px 12px 16px; font-size: 15px; box-shadow: 0 12px 36px rgba(16,48,47,.35); }
+.admin-notice.err { background: #7A2E1F; }
+.admin-notice button { background: transparent; border: 0; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 8px; }
 .admin-sec { display: grid; gap: 8px; border-top: 4px solid var(--g); scroll-margin-top: 90px; }
 .admin-sec h2 { font-size: 18px; margin: 0; color: var(--g); }
 .admin-sec .row { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
