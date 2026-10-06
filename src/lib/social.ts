@@ -13,7 +13,6 @@ export const ORG_JSONLD = {
   logo: 'https://www.cohostcompare.com/brand/logo-square.png',
   email: 'hello@cohostcompare.com',
   description: 'Unbiased comparison site where Australian property owners compare short-term rental managers and request quotes from up to five. Free for owners.',
-  founder: { '@type': 'Person', name: 'Ben Deeley' },
   foundingDate: '2026',
   areaServed: [{ '@type': 'State', name: 'New South Wales' }, { '@type': 'State', name: 'Victoria' }],
   address: { '@type': 'PostalAddress', addressLocality: 'Sydney', addressRegion: 'NSW', addressCountry: 'AU' },

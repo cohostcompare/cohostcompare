@@ -53,13 +53,13 @@ export async function sendReviewInvites(limit = 40) {
     const managerPart = won && introduced
       ? `It's been a couple of weeks since you accepted ${won.manager_name}'s quote. How is it going? A short review of ${won.manager_name} helps the next owner choose, and it shows on their profile as a verified owner review:\n${SITE}/account/review/${won.id}\n\n`
       : '';
-    const text = `Hi ${first(r.owner_name)},\n\nThanks for using CoHostCompare to compare managers${r.suburb ? ` for your place in ${r.suburb}` : ''}.\n\n${managerPart}We're a small Australian business, and honest reviews, good or bad, are the best way for other owners to find us and for us to improve. Could you spare a minute to review CoHostCompare on Trustpilot?\n${TRUSTPILOT_WRITE}${productReview ? `\n\nOr on ProductReview:\n${productReview}` : ''}\n\nWe won't keep asking.\n\nThanks,\nBen Deeley\nFounder, CoHostCompare\n\nDon't want emails like this? ${unsubscribeUrl(email)}`;
+    const text = `Hi ${first(r.owner_name)},\n\nThanks for using CoHostCompare to compare managers${r.suburb ? ` for your place in ${r.suburb}` : ''}.\n\n${managerPart}We're a small Australian business, and honest reviews, good or bad, are the best way for other owners to find us and for us to improve. Could you spare a minute to review CoHostCompare on Trustpilot?\n${TRUSTPILOT_WRITE}${productReview ? `\n\nOr on ProductReview:\n${productReview}` : ''}\n\nWe won't keep asking.\n\nThanks,\nThe CoHostCompare team\n\nDon't want emails like this? ${unsubscribeUrl(email)}`;
     const ok = await sendEmail({
       to: r.owner_email,
       subject: won && introduced ? `How is it going with ${won.manager_name}?` : 'How did CoHostCompare go for you?',
       text,
       cta: won && introduced ? { label: `Review ${won.manager_name}`, url: `${SITE}/account/review/${won.id}` } : { label: 'Review us on Trustpilot', url: TRUSTPILOT_WRITE },
-      from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
+      from: 'CoHostCompare <hello@cohostcompare.com>',
       headers: { 'List-Unsubscribe': `<${unsubscribeUrl(email, true)}>, <mailto:hello@cohostcompare.com?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     });
     if (ok) { await mark(); sent++; }

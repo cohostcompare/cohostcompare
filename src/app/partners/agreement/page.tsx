@@ -12,7 +12,7 @@ export default function PartnerAgreement() {
       <h1>Partner agreement</h1>
       <p className="hint">Version {PARTNER_TERMS_VERSION} · last updated {date}</p>
 
-      <p>This agreement is between Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;), and the business that applies to list an offer for owners on cohostcompare.com (&ldquo;you&rdquo;, the &ldquo;partner&rdquo;). It starts when you accept it in your partner page, after we&apos;ve approved your application. Our general <Link href="/terms">terms of use</Link> and <Link href="/privacy">privacy policy</Link> also apply.</p>
+      <p>This agreement is between CoHostCompare (ABN 52 679 120 059), a business based in Sydney (&ldquo;we&rdquo;, &ldquo;us&rdquo;), and the business that applies to list an offer for owners on cohostcompare.com (&ldquo;you&rdquo;, the &ldquo;partner&rdquo;). It starts when you accept it in your partner page, after we&apos;ve approved your application. Our general <Link href="/terms">terms of use</Link> and <Link href="/privacy">privacy policy</Link> also apply.</p>
 
       <h2>1. What we do</h2>
       <ul>

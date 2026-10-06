@@ -9,7 +9,7 @@ export default function Privacy() {
       <h1>Privacy policy</h1>
       <p className="hint">Last updated 1 October 2026</p>
 
-      <p>CoHostCompare helps Australian property owners compare short-term rental managers and request quotes from them. It is run by Ben Deeley (ABN 52 679 120 059), a sole trader based in Sydney, trading as CoHostCompare (&ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what personal information we collect, why, who we share it with, and your choices. We handle personal information in line with the Australian Privacy Principles in the <i>Privacy Act 1988</i> (Cth).</p>
+      <p>CoHostCompare helps Australian property owners compare short-term rental managers and request quotes from them. It is run by CoHostCompare (ABN 52 679 120 059), a business based in Sydney (&ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what personal information we collect, why, who we share it with, and your choices. We handle personal information in line with the Australian Privacy Principles in the <i>Privacy Act 1988</i> (Cth).</p>
 
       <h2>What we collect</h2>
       <ul>

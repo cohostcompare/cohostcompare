@@ -152,7 +152,7 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
         <div className="chips">{SEQUENCE.map((_, n) => <Link key={n} className="chip" href={`/admin/outreach?preview=${n + 1}`} style={{ textDecoration: 'none', fontWeight: n === i ? 700 : 400 }}>Email {n + 1}</Link>)}</div>
         <p className="hint" style={{ margin: 0 }}>This preview uses an example business. Real emails use each manager&apos;s own name, homes, rating and suburbs. To see the real thing, send yourself a test below.</p>
         <p style={{ margin: 0 }}><b>Subject:</b> {SEQUENCE[i].subject(sample)}</p>
-        <p style={{ margin: 0, whiteSpace: 'pre-wrap', background: 'var(--surface)', padding: 14, borderRadius: 10 }}>{SEQUENCE[i].body(sample)}{'\n\n'}[{SEQUENCE[i].cta(sample).label}]{'\n\n'}Cheers,{'\n'}Ben Deeley{'\n'}Founder, CoHostCompare{'\n'}(Then the small print: why they&apos;re receiving it, your ABN, how we build profiles, and the unsubscribe link.)</p>
+        <p style={{ margin: 0, whiteSpace: 'pre-wrap', background: 'var(--surface)', padding: 14, borderRadius: 10 }}>{SEQUENCE[i].body(sample)}{'\n\n'}[{SEQUENCE[i].cta(sample).label}]{'\n\n'}Cheers,{'\n'}The CoHostCompare team{'\n'}(Then the small print: why they&apos;re receiving it, your ABN, how we build profiles, and the unsubscribe link.)</p>
         <form action={testEmail} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid var(--line)', paddingTop: 12 }}>
           <b>Send me a test:</b>
           <select className="field" name="manager_id" required defaultValue="" style={{ maxWidth: 280 }}><option value="" disabled>Pick a manager…</option>{(managers || []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>

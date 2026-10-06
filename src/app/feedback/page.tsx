@@ -38,7 +38,7 @@ export default async function Feedback({ searchParams }: { searchParams: SP }) {
       )}
       {ctx?.given && !ctx.reward && <p className="hint" style={{ margin: 0 }}>Thanks for your earlier feedback. You&apos;re welcome to send more any time.</p>}
       <FeedbackForm role={role} signedIn={Boolean(user)} page={sp.from} minGenuine={MIN_GENUINE} reward={ctx?.reward ?? null} />
-      <p className="hint" style={{ margin: 0 }}>Your feedback goes to Ben, the founder. We don&apos;t publish it or share it with managers or owners. See our <Link href="/privacy">privacy policy</Link>.</p>
+      <p className="hint" style={{ margin: 0 }}>Your feedback goes straight to the people who run CoHostCompare. We don&apos;t publish it or share it with managers or owners. See our <Link href="/privacy">privacy policy</Link>.</p>
     </main>
   );
 }

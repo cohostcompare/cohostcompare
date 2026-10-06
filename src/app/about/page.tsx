@@ -16,13 +16,13 @@ export default function About() {
       <p>CoHostCompare helps Australian property owners find and compare the managers who run short-stay homes near them, then request quotes from up to five in one standard format. It&apos;s free for owners, and no manager can pay to rank higher or change their rating.</p>
 
       <h2>Who we are</h2>
-      <p>CoHostCompare was founded in 2026 by Ben Deeley in Sydney. Ben built it after seeing how hard it is for owners to compare managers: fees are hidden behind sales calls, and every manager describes their service differently.</p>
+      <p>CoHostCompare was started in Sydney in 2026 after seeing how hard it is for owners to compare managers: fees are hidden behind sales calls, and every manager describes their service differently. It&apos;s a small, independent Australian business.</p>
       <p>We&apos;re not a property manager, real estate agent or booking platform, and we don&apos;t manage any homes ourselves.</p>
 
       <h2>Business details</h2>
       <ul>
         <li>Trading name: CoHostCompare</li>
-        <li>Run by Ben Deeley, sole trader, ABN 52 679 120 059 (<a href="https://abr.business.gov.au/ABN/View?abn=52679120059">check it on the ABN Lookup</a>)</li>
+        <li>ABN 52 679 120 059</li>
         <li>Based in Sydney, NSW. We work online and don&apos;t have a shopfront.</li>
         <li>Email: <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a></li>
       </ul>

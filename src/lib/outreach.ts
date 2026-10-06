@@ -36,18 +36,18 @@ export const unsubscribeUrl = (email: string, api = false) => `${BASE}${api ? '/
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 
 function footer(c: Ctx) {
-  return `\n\nCheers,\nBen Deeley\nFounder, CoHostCompare\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
+  return `\n\nCheers,\nThe CoHostCompare team\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou're getting this because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. CoHostCompare (ABN 52 679 120 059), Sydney NSW. How we build profiles: ${BASE}/managers#why-listed\nTo stop these emails: ${unsubscribeUrl(c.email)}`;
 }
 
 /** Footer for the one transactional notice (an owner asked for a quote) sent to an address that has unsubscribed: sender details only. */
 function unsubscribedFooter(c: Ctx) {
-  return `\n\nCheers,\nBen Deeley\nFounder, CoHostCompare\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou've unsubscribed from our other emails, so this is the only kind you'll get: a notice when an owner asks ${c.manager} for a quote. We send it because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. If you'd rather not be listed at all, reply and we'll remove the profile. CoHostCompare is run by Ben Deeley (ABN 52 679 120 059), Sydney NSW.`;
+  return `\n\nCheers,\nThe CoHostCompare team\nhttps://www.cohostcompare.com | hello@cohostcompare.com\n\nYou've unsubscribed from our other emails, so this is the only kind you'll get: a notice when an owner asks ${c.manager} for a quote. We send it because ${c.email} is published on ${host(c.source)} as a contact for ${c.manager}. If you'd rather not be listed at all, reply and we'll remove the profile. CoHostCompare (ABN 52 679 120 059), Sydney NSW.`;
 }
 
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
   {
     subject: (c) => `${c.manager}'s profile on CoHostCompare`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nI'm Ben, founder of CoHostCompare, a new free site where property owners across NSW and Victoria compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first ${FREE_ACCEPTS_PER_MONTH} new clients each month, then ${SUCCESS_FEE_TEXT} per client you win, or Pro. Claim by 31 January and you get Pro free for three months.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nCoHostCompare is a new free site where property owners across NSW and Victoria compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first ${FREE_ACCEPTS_PER_MONTH} new clients each month, then ${SUCCESS_FEE_TEXT} per client you win, or Pro. Claim by 31 January and you get Pro free for three months.`,
     cta: (c) => ({ label: 'See your profile', url: `${BASE}/managers/${c.slug}` }),
   },
   {
@@ -69,7 +69,7 @@ export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; 
   },
   {
     subject: (c) => `Last note about ${c.manager}`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nThis is my last email about this. ${c.manager}'s profile stays on CoHostCompare either way, and owners can still find it.\n\nIf you'd like to claim it later, the link below works any time. If you'd rather not be listed at all, just reply and I'll remove it.\n\nThanks for reading.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nThis is our last email about this. ${c.manager}'s profile stays on CoHostCompare either way, and owners can still find it.\n\nIf you'd like to claim it later, the link below works any time. If you'd rather not be listed at all, just reply and we'll remove it.\n\nThanks for reading.`,
     cta: (c) => ({ label: 'Claim when you’re ready', url: `${BASE}/claim/${c.slug}` }),
   },
 ];
@@ -164,7 +164,7 @@ async function send(c: Ctx, i: number) {
   const cta = e.cta(c);
   return sendEmail({
     to: c.email, subject: e.subject(c), text: e.body(c) + footer(c), cta: { label: cta.label, url: tagged(cta.url, i + 1) },
-    from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
+    from: 'CoHostCompare <hello@cohostcompare.com>',
     replyTo: c.contactId ? outreachReplyTo(c.contactId) : undefined,
     headers: { 'List-Unsubscribe': `<${unsubscribeUrl(c.email, true)}>, <mailto:hello@cohostcompare.com?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
   });
@@ -255,7 +255,7 @@ export async function notifyUnclaimedOfRequest(slug: string, where: string, thre
       to: ct.email, subject: `An owner in ${where} wants a quote from ${m.name}`,
       text: `Hi ${ct.first_name || 'there'},\n\nAn owner in ${where} has asked ${m.name} for a quote through CoHostCompare, the free site where owners compare short-term rental managers.\n\nClaim your free profile to see the property details and reply. It takes about two minutes, and it's free.${off ? unsubscribedFooter(c) : footer(c)}`,
       cta: { label: 'See the request', url: `${BASE}/claim/${slug}` },
-      from: 'Ben from CoHostCompare <hello@cohostcompare.com>',
+      from: 'CoHostCompare <hello@cohostcompare.com>',
       replyTo: outreachReplyTo(ct.id),
       ...(off ? {} : { headers: { 'List-Unsubscribe': `<${unsubscribeUrl(ct.email, true)}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } }),
     });
@@ -275,8 +275,8 @@ export async function unsubscribe(email: string) {
 
 /** Sends one sequence email for a real manager to hello@ so it can be checked before going out. */
 export async function sendTest(managerId: string, step: number) {
-  const c = await context({ email: 'hello@cohostcompare.com', first_name: 'Ben', source_url: 'https://www.cohostcompare.com', manager_id: managerId });
+  const c = await context({ email: 'hello@cohostcompare.com', first_name: 'there', source_url: 'https://www.cohostcompare.com', manager_id: managerId });
   if (!c) return false;
   const e = SEQUENCE[Math.min(Math.max(step, 0), SEQUENCE.length - 1)];
-  return sendEmail({ to: 'hello@cohostcompare.com', subject: `[TEST] ${e.subject(c)}`, text: e.body(c) + footer(c), cta: e.cta(c), from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });
+  return sendEmail({ to: 'hello@cohostcompare.com', subject: `[TEST] ${e.subject(c)}`, text: e.body(c) + footer(c), cta: e.cta(c), from: 'CoHostCompare <hello@cohostcompare.com>' });
 }

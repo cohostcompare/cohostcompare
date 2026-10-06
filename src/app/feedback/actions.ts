@@ -45,7 +45,7 @@ export async function sendFeedback(_: State, form: FormData): Promise<State> {
     const what = status === 'granted' ? `We've added ${ctx!.reward} to ${ctx!.managerName || 'your account'}. You'll see it on your dashboard straight away.`
       : status === 'to_send' ? `As a thank you, we'll email you ${ctx!.reward} within a few business days.`
       : `As a thank you, we'll credit a month of Pro to your account. We'll confirm by email once it's done.`;
-    await sendEmail({ to: email, subject: 'Thanks for your feedback', text: `Hi,\n\nThank you for taking the time to tell us what you think. CoHostCompare is new, and feedback like yours decides what we build next.\n\n${what}\n\nIf anything else comes to mind, just reply to this email.\n\nBen Deeley\nFounder, CoHostCompare`, from: 'Ben from CoHostCompare <hello@cohostcompare.com>' });
+    await sendEmail({ to: email, subject: 'Thanks for your feedback', text: `Hi,\n\nThank you for taking the time to tell us what you think. CoHostCompare is new, and feedback like yours decides what we build next.\n\n${what}\n\nIf anything else comes to mind, just reply to this email.\n\nThe CoHostCompare team`, from: 'CoHostCompare <hello@cohostcompare.com>' });
   }
   redirect(`/feedback?thanks=1${status !== 'none' ? `&r=${status}` : ''}`);
 }

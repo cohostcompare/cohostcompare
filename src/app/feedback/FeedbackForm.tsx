@@ -42,7 +42,7 @@ export default function FeedbackForm({ role, signedIn, page, minGenuine, reward 
         <select name="heard_from" className="field" defaultValue=""><option value="">Choose one</option>{HEARD.map((h) => <option key={h}>{h}</option>)}</select></label>
 
       {!signedIn && <label><span>Your email <i className="hint">(optional, if you&apos;d like a reply)</i></span><input className="field" type="email" name="email" /></label>}
-      <label className="check"><input type="checkbox" name="contact_ok" /> I&apos;m happy for Ben, the founder, to contact me about my feedback</label>
+      <label className="check"><input type="checkbox" name="contact_ok" /> I&apos;m happy for CoHostCompare to contact me about my feedback</label>
 
       {state.error && <p role="alert" style={{ margin: 0, color: 'var(--signal)' }}>{state.error}</p>}
       <button className="btn primary" type="submit" disabled={pending} style={{ justifySelf: 'start' }}>{pending ? 'Sending…' : 'Send feedback'}</button>
