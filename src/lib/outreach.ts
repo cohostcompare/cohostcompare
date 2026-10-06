@@ -211,7 +211,8 @@ async function prioritise<T extends { manager_id: string; step: number; next_sen
 export async function sendOutreachBatch(limit = DAILY_CAP) {
   if (!outreachOn()) return { sent: 0, note: 'Outreach is paused' };
   const db = adminClient();
-  const since = new Date(Date.now() - 86400e3).toISOString();
+  // "Today" is a 20-hour window: the daily run fires at the same time each morning, so a rolling 24h window still contained yesterday's batch.
+  const since = new Date(Date.now() - 20 * 3600e3).toISOString();
   const { count: sentToday } = await db.from('outreach_contacts').select('id', { count: 'exact', head: true }).gte('last_sent_at', since);
   const room = Math.max(0, Math.min(limit, DAILY_CAP - (sentToday ?? 0)));
   if (!room) return { sent: 0, note: 'Daily cap reached' };

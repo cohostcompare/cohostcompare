@@ -11,7 +11,7 @@ import { setFeeStatus, setFlagStatus, resolveEmailFailure } from './actions';
 export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
-type SP = Promise<{ done?: string; error?: string }>;
+type SP = Promise<{ done?: string; error?: string; at?: string }>;
 
 export default async function Admin({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
@@ -92,8 +92,8 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
 
   return (
     <main className="admin" style={{ maxWidth: 1100, paddingBlock: '16px 64px', display: 'grid', gap: 22 }}>
-      {sp.done && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
-      {sp.error && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
+      {sp.done && sp.at !== 'failures' && <div role="status" className="panel" style={{ background: 'var(--tint)' }}>{sp.done}</div>}
+      {sp.error && sp.at !== 'failures' && <div role="alert" className="panel" style={{ borderColor: 'var(--signal)' }}>{sp.error}</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 34, margin: 0 }}>Admin</h1>
         <span className="hint">Weeks are the last 7 days, compared with the 7 before. Your own visits and test requests aren&apos;t counted.</span>
@@ -212,14 +212,15 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
 
       <Sec id="email-failures" tone="g-rose" title={`Email failures (${emailFails} in 7 days)`}>
         <span className="hint">Emails our sender refused, couldn&apos;t deliver (bounced) or that were marked as spam (complained). A bounced or complained address is blocked until you retry it. Resolve each one below and it leaves your list.</span>
+        {sp.at === 'failures' && sp.done && <div role="status" className="row" style={{ background: 'var(--tint)', borderRadius: 8, padding: '8px 10px', borderTop: 0 }}>✓ {sp.done}</div>}
+        {sp.at === 'failures' && sp.error && <div role="alert" className="row" style={{ border: '1px solid var(--signal)', borderRadius: 8, padding: '8px 10px' }}>{sp.error}</div>}
         {!emailFailRows.length ? <span className="hint">Nothing to resolve.</span> : emailFailRows.map((r) => {
           const c = failContacts.get((r.to_domain || '').toLowerCase());
           const transient = /transient/i.test(r.detail || '');
           return (
-            <div key={r.id} className="row" style={{ gap: 6 }}>
-              <span><b>{r.status}</b> · {r.subject} <span className="hint">→ {r.to_domain || '?'} · {when(r.created_at)}</span></span>
-              {r.detail && <span className="hint" style={{ overflowWrap: 'anywhere' }}>{r.detail.slice(0, 240)}</span>}
-              {c && <span className="hint">Outreach contact: {c.email} for <Link href={`/managers/${c.slug}`}>{c.name}</Link> ({c.status}{c.published ? '' : ', profile hidden'}).{transient ? ' A transient bounce often means a full mailbox or a flaky server: worth one retry.' : ' A permanent bounce means the address is dead: find another on their website, or hide the profile if the business has gone.'}</span>}
+            <div key={r.id} className="row" style={{ gap: 4 }}>
+              <span><b>{r.status}</b>{transient ? ' (transient)' : ''} · {c ? <>{c.email} · <Link href={`/managers/${c.slug}`}>{c.name}</Link>{c.published ? '' : ' (hidden)'}</> : r.to_domain || '?'} <span className="hint">· {r.subject} · {when(r.created_at)}</span></span>
+              <span className="hint" style={{ overflowWrap: 'anywhere' }}>{(r.detail || '').split(' · ').slice(2).join(' ').slice(0, 160)}{c ? (transient ? ' Often a full mailbox or a flaky server: worth one retry.' : ' The address is dead: use another from their website, or hide the profile if the business has gone.') : ''}</span>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <form action={resolveEmailFailure.bind(null, String(r.id), 'dismiss')}><button className="btn secondary small" type="submit">Dismiss</button></form>
                 {c && c.status === 'bounced' && <form action={resolveEmailFailure.bind(null, String(r.id), 'retry')}><button className="btn secondary small" type="submit">Retry same address</button></form>}

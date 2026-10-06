@@ -38,7 +38,7 @@ export async function setFlagStatus(form: FormData) {
 export async function resolveEmailFailure(id: string, how: string, form: FormData) {
   await requireAdmin('/admin');
   const db = adminClient();
-  const back = (msg: string, kind: 'done' | 'error' = 'done'): never => { redirect(`/admin?${kind}=${encodeURIComponent(msg)}#email-failures`); };
+  const back = (msg: string, kind: 'done' | 'error' = 'done'): never => { redirect(`/admin?${kind}=${encodeURIComponent(msg)}&at=failures#email-failures`); };
   const { data: f } = await db.from('email_failures').select('id, to_domain').eq('id', id).maybeSingle();
   if (!f) return back('That failure is no longer listed.', 'error');
   const domain = (f.to_domain || '').toLowerCase();
