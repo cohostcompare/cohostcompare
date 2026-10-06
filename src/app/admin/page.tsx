@@ -6,7 +6,7 @@ import { adminStats } from '@/lib/adminStats';
 import { TEST_SLUG } from '@/lib/data';
 import { DAILY_OVERDUE_HOURS, lastGoodRunHours, recentCronRuns } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
-import { setFeeStatus, setFlagStatus } from './actions';
+import { setFeeStatus, setFlagStatus, resolveEmailFailure } from './actions';
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -49,11 +49,20 @@ export default async function Admin() {
     import('@/lib/outreach').then((o) => o.unreachedThreads()).then((x) => x.length, () => 0),
     count('partners', (q) => q.eq('pending_review', true)).catch(() => 0), // 027
     db.from('partners').select('id').eq('status', 'approved').not('agreed_at', 'is', null).is('offer_url', null).is('website', null).then((r) => r.data?.length ?? 0, () => 0),
-    count('email_failures', (q) => q.gte('created_at', new Date(Date.now() - 7 * 86400e3).toISOString())).catch(() => 0), // 027
-    db.from('email_failures').select('id, created_at, to_domain, subject, status, detail').order('created_at', { ascending: false }).limit(20).then((r) => r.data || [], () => []),
+    count('email_failures', (q) => q.gte('created_at', new Date(Date.now() - 7 * 86400e3).toISOString()).is('resolved_at', null)).catch(() => 0), // 027/030
+    db.from('email_failures').select('id, created_at, to_domain, subject, status, detail').is('resolved_at', null).order('created_at', { ascending: false }).limit(20).then((r) => r.data || [], () => []),
     recentCronRuns(5).catch(() => []),
     lastGoodRunHours().catch(() => null),
   ]);
+  // Bounced outreach contacts, matched to failures by domain, so each failure can be resolved in place (030).
+  const failDomains = [...new Set(emailFailRows.map((r) => (r.to_domain || '').toLowerCase()).filter(Boolean))];
+  const failContacts = new Map<string, { email: string; status: string; name: string; slug: string; published: boolean }>();
+  for (const d of failDomains) {
+    const { data: cs } = await db.from('outreach_contacts').select('email, status, managers(name, slug, published)').ilike('email', `%@${d}`).limit(3);
+    const c = (cs || []).find((x) => x.status === 'bounced') || (cs || [])[0];
+    const mg = c ? ((Array.isArray(c.managers) ? c.managers[0] : c.managers) as { name: string; slug: string; published: boolean } | null) : null;
+    if (c && mg) failContacts.set(d, { email: c.email, status: c.status, name: mg.name, slug: mg.slug, published: mg.published });
+  }
   const awaiting = (fees || []).filter((f) => f.status === 'awaiting_unlock').length;
   const openErrors = (errors || []).filter((e) => Date.now() - new Date(e.last_seen_at).getTime() < 7 * 86400e3).length;
   const runOverdue = lastGood == null || lastGood > DAILY_OVERDUE_HOURS;
@@ -198,9 +207,31 @@ export default async function Admin() {
 
       <Sec id="email-failures" tone="g-rose" title={`Email failures (${emailFails} in 7 days)`}>
         <span className="hint">Emails Resend refused, couldn&apos;t deliver (bounced) or that were marked as spam (complained). Bounced and complained addresses are never emailed again. Needs update 027.</span>
-        {!emailFailRows.length ? <span className="hint">None recorded.</span> : emailFailRows.map((r) => (
-          <div key={r.id} className="row"><span><b>{r.status}</b> · {r.subject} <span className="hint">→ {r.to_domain || '?'} · {when(r.created_at)}</span></span>{r.detail && <span className="hint" style={{ overflowWrap: 'anywhere' }}>{r.detail.slice(0, 240)}</span>}</div>
-        ))}
+        {!emailFailRows.length ? <span className="hint">Nothing to resolve.</span> : emailFailRows.map((r) => {
+          const c = failContacts.get((r.to_domain || '').toLowerCase());
+          const transient = /transient/i.test(r.detail || '');
+          return (
+            <div key={r.id} className="row" style={{ gap: 6 }}>
+              <span><b>{r.status}</b> · {r.subject} <span className="hint">→ {r.to_domain || '?'} · {when(r.created_at)}</span></span>
+              {r.detail && <span className="hint" style={{ overflowWrap: 'anywhere' }}>{r.detail.slice(0, 240)}</span>}
+              {c && <span className="hint">Outreach contact: {c.email} for <Link href={`/managers/${c.slug}`}>{c.name}</Link> ({c.status}{c.published ? '' : ', profile hidden'}).{transient ? ' A transient bounce often means a full mailbox or a flaky server: worth one retry.' : ' A permanent bounce means the address is dead: find another on their website, or hide the profile if the business has gone.'}</span>}
+              <form action={resolveEmailFailure} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input type="hidden" name="id" value={r.id} />
+                <button className="btn secondary small" name="how" value="dismiss">Dismiss</button>
+                {c && c.status === 'bounced' && <button className="btn secondary small" name="how" value="retry">Retry same address</button>}
+                {c && c.published && <button className="btn secondary small" name="how" value="hide" title="Unpublishes the profile and stops outreach to it">Hide {c.name}</button>}
+              </form>
+              {c && (
+                <form action={resolveEmailFailure} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input type="hidden" name="id" value={r.id} /><input type="hidden" name="how" value="replace" />
+                  <input className="field" name="email" type="email" placeholder="Different published email" required style={{ minHeight: 36, maxWidth: 260 }} />
+                  <input className="field" name="source_url" type="url" placeholder="Page where it's published, https://…" required style={{ minHeight: 36, maxWidth: 300 }} />
+                  <button className="btn primary small" type="submit">Use this email instead</button>
+                </form>
+              )}
+            </div>
+          );
+        })}
       </Sec>
     </main>
   );
