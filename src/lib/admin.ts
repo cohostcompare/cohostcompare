@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from './supabase/server';
 
 // Who can open /admin. Set ADMIN_EMAILS in Vercel (comma-separated) to change it.
-const ADMINS = (process.env.ADMIN_EMAILS || 'hello@cohostcompare.com,ben.deeley@outlook.com')
+export const ADMINS = (process.env.ADMIN_EMAILS || 'hello@cohostcompare.com,ben.deeley@outlook.com')
   .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 export function isAdminEmail(email?: string | null) {

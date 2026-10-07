@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import AdminNotice from '@/components/AdminNotice';
 import WeekBars from '@/components/WeekBars';
-import { requireAdmin } from '@/lib/admin';
+import { requireAdmin, ADMINS } from '@/lib/admin';
 import { adminStats } from '@/lib/adminStats';
 import { TEST_SLUG } from '@/lib/data';
 import { DAILY_OVERDUE_HOURS, lastGoodRunHours, recentCronRuns } from '@/lib/reminders';
@@ -27,7 +27,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
   const [openClaims, allReqs, owners] = await Promise.all([
     count('manager_claims', (q) => q.in('status', ['pending', 'info_requested', 'info_received'])),
     db.from('quote_requests').select('id, quote_request_managers(manager_slug)').limit(20000).then((r) => r.data || []),
-    count('waitlist'),
+    count('waitlist', (q) => q.not('email', 'in', `(${ADMINS.join(',')})`)), // admin test sign-ups don't count
   ]);
   // Requests that only went to the internal test profile aren't counted or listed here (they're under Quote requests → Test requests).
   const requests = allReqs.filter((r) => !isTest(r.quote_request_managers as { manager_slug: string }[] | null)).length;
