@@ -152,7 +152,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
       </section>
 
       <Sec id="requests" tone="g-blue" title="Latest quote requests">
-        <span className="hint">{requests.toLocaleString('en-AU')} in total · {owners} waitlist sign-ups · <Link href="/admin/requests">See all with filters →</Link></span>
+        <span className="hint">{requests.toLocaleString('en-AU')} in total · <Link href="/admin/owners#waitlist">{owners} waitlist sign-up{owners === 1 ? '' : 's'}</Link> · <Link href="/admin/requests">See all with filters →</Link></span>
         {!recent?.length ? <span className="hint">None yet.</span> : recent.map((r) => (
           <div key={r.id} className="row">
             <span><b>{r.owner_name}</b> <span className="hint">{r.owner_email} · {when(r.created_at)}</span></span>

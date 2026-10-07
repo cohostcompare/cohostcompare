@@ -17,6 +17,8 @@ export default async function Owners({ searchParams }: { searchParams: Promise<{
   const q = ((await searchParams).q || '').trim().toLowerCase();
   const { data } = await adminClient().from('quote_requests').select('id, created_at, owner_id, owner_name, owner_email, owner_phone, suburb, postcode, source, quote_request_managers(status, manager_slug)').order('created_at', { ascending: false }).limit(3000);
   const { data: gs } = await adminClient().from('guide_signups').select('id, created_at, email, first_name, state, consent, step, downloads, source').order('created_at', { ascending: false }).limit(1000); // SQL 025
+  const { data: wl } = await adminClient().from('waitlist').select('id, created_at, type, email, postcode, business, postcodes, properties, source').order('created_at', { ascending: false }).limit(200);
+  const waitlist = ((wl || []) as { id: string; created_at: string; type: string; email: string; postcode: string | null; business: string | null; postcodes: string | null; properties: string | null; source: string | null }[]).filter((w) => !isAdminEmail(w.email));
   const guides = (gs || []) as { id: string; created_at: string; email: string; first_name: string | null; state: string; consent: boolean; step: number; downloads: number; source: string | null }[];
   const owned = new Set(((data || []) as unknown as R[]).map((r) => r.owner_email.toLowerCase()));
   const by = new Map<string, O>();
@@ -65,6 +67,28 @@ export default async function Owners({ searchParams }: { searchParams: Promise<{
         </table>
       </div>
       <p className="hint" style={{ margin: 0 }}>Admin and test requests aren&apos;t included. Owner details are for running the service only; see the privacy policy.</p>
+
+      <section id="waitlist" style={{ display: 'grid', gap: 10, borderTop: '1px solid var(--line)', paddingTop: 18, scrollMarginTop: 90 }}>
+        <h2 style={{ fontSize: 24, margin: 0 }}>Waitlist sign-ups</h2>
+        <p className="hint" style={{ margin: 0 }}>Owners who asked to be told when we cover their area, and managers who couldn&apos;t find their business (&ldquo;Tell us about your business&rdquo; on /managers). {waitlist.length} in total; your own test sign-ups aren&apos;t shown.</p>
+        <div className="cmp-wrap">
+          <table className="cmp" style={{ minWidth: 720 }}>
+            <thead><tr>{['Who', 'Email', 'Area or business', 'Came from', 'Signed up'].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+            <tbody>
+              {waitlist.map((w) => (
+                <tr key={w.id}>
+                  <th scope="row" style={{ position: 'static', width: 'auto' }}>{w.type === 'manager' ? 'Manager' : 'Owner'}</th>
+                  <td><a href={`mailto:${w.email}`}>{w.email}</a></td>
+                  <td>{w.type === 'manager' ? [w.business, w.postcodes, w.properties ? `${w.properties} properties` : null].filter(Boolean).join(' · ') || '–' : w.postcode || '–'}</td>
+                  <td>{w.source || '–'}</td>
+                  <td>{d(w.created_at)}</td>
+                </tr>
+              ))}
+              {!waitlist.length && <tr><td colSpan={5} className="hint">No sign-ups yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section id="guide" style={{ display: 'grid', gap: 10, borderTop: '1px solid var(--line)', paddingTop: 18 }}>
         <h2 style={{ fontSize: 24, margin: 0 }}>Setup guide sign-ups</h2>
