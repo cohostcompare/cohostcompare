@@ -24,13 +24,18 @@ export async function addContact(form: FormData) {
   back(`Added ${email}. Their first email goes out with the next daily batch.`);
 }
 
-export async function setStatus(form: FormData) {
+export async function setStatus(id: string, status: string) {
   await requireAdmin('/admin/outreach');
-  const status = String(form.get('status'));
-  if (!['active', 'paused', 'replied'].includes(status)) back('Unknown status', 'error');
-  await adminClient().from('outreach_contacts').update({ status }).eq('id', String(form.get('id')));
+  if (!['active', 'paused', 'replied', 'unsubscribed'].includes(status)) back('Unknown status', 'error');
+  const db = adminClient();
+  if (status === 'unsubscribed') {
+    // Someone replied "unsubscribe" (or asked by phone): block the address like the unsubscribe link would.
+    const { data: c } = await db.from('outreach_contacts').select('email').eq('id', id).maybeSingle();
+    if (c?.email) await db.from('email_suppressions').upsert({ email: c.email.toLowerCase(), reason: 'unsubscribed' }, { onConflict: 'email', ignoreDuplicates: true });
+  }
+  await db.from('outreach_contacts').update({ status }).eq('id', id);
   revalidatePath('/admin/outreach');
-  back('Updated.');
+  back(status === 'unsubscribed' ? 'Unsubscribed: they get no more emails from us.' : 'Updated.');
 }
 
 export async function sendNow(form: FormData) {

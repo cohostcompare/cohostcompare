@@ -137,11 +137,11 @@ export default async function Outreach({ searchParams }: { searchParams: SP }) {
                   </span>
                 ); })()}
               </span>
-              <form action={setStatus} style={{ display: 'flex', gap: 6 }}>
-                <input type="hidden" name="id" value={c.id} />
-                {c.status === 'active' && <><button className="btn secondary small" name="status" value="replied">Replied</button><button className="btn secondary small" name="status" value="paused">Pause</button></>}
-                {c.status === 'paused' && <button className="btn secondary small" name="status" value="active">Resume</button>}
-              </form>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {c.status === 'active' && <><form action={setStatus.bind(null, c.id, 'replied')}><button className="btn secondary small" type="submit">Replied</button></form><form action={setStatus.bind(null, c.id, 'paused')}><button className="btn secondary small" type="submit">Pause</button></form></>}
+                {c.status === 'paused' && <form action={setStatus.bind(null, c.id, 'active')}><button className="btn secondary small" type="submit">Resume</button></form>}
+                {['active', 'paused', 'replied', 'finished'].includes(c.status) && <form action={setStatus.bind(null, c.id, 'unsubscribed')}><button className="btn secondary small" type="submit" title="They asked to stop (for example, replied “unsubscribe”)">Unsubscribe</button></form>}
+              </div>
             </div>
           );
         })}
