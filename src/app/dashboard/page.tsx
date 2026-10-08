@@ -25,10 +25,21 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
   if (managers.length) { const { recordActivity } = await import('@/lib/activity'); await recordActivity(user.id); }
 
   if (!managers.length) {
+    // A manager who signed in from an outreach email lands here with nothing to claim yet: find their profile by email domain.
+    const domain = (user.email || '').split('@')[1]?.toLowerCase() || '';
+    const generic = /^(gmail|outlook|hotmail|yahoo|icloud|live|bigpond|optusnet|me|protonmail|proton)\./i.test(domain);
+    const { data: likely } = domain && !generic ? await adminClient().from('managers').select('slug, name, website').eq('published', true).eq('claimed', false).ilike('website', `%${domain}%`).limit(3) : { data: [] };
+    const matches = (likely || []).filter((m) => { try { return new URL(m.website || '').hostname.replace(/^www\./, '') === domain; } catch { return false; } });
     return (
       <main style={{ maxWidth: 640, paddingBlock: '16px 64px', display: 'grid', gap: 14 }}>
         <span className="label">Manager portal</span>
-        <h1 style={{ fontSize: 34, margin: 0 }}>You don&apos;t manage a profile yet</h1>
+        <h1 style={{ fontSize: 34, margin: 0 }}>{matches.length ? 'Is this your business?' : 'You don’t manage a profile yet'}</h1>
+        {matches.map((m) => (
+          <div key={m.slug} className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', borderColor: 'var(--brand)' }}>
+            <span><b>{m.name}</b> <span className="hint">· matches your email domain, so claiming is approved instantly</span></span>
+            <Link className="btn primary" href={`/claim/${m.slug}`}>Claim {m.name}</Link>
+          </div>
+        ))}
         <div className="panel" style={{ display: 'grid', gap: 8 }}>
           <p style={{ margin: 0 }}>Search for your business by an address you manage near, open your profile and click <b>Claim this page</b>. If you use an email address on your business&apos;s own domain, you&apos;re approved instantly.</p>
           <p style={{ margin: 0 }}>Not listed yet? <Link href="/managers">Tell us about your business</Link>.</p>
