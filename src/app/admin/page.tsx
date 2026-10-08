@@ -143,15 +143,15 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
         <p className="hint" style={{ margin: '-6px 0 0' }}>Each bar is one calendar week, Monday to Sunday, Sydney time, labelled by its Monday. The last bar is this week so far ({st.weekFrom} to now). Hover a bar for the number.</p>
         {!st.trackingReady && <p className="hint" style={{ margin: 0 }}>Visitor charts fill in once traffic tracking (update 017) has data.</p>}
         <div className="wb-grid" style={{ gridTemplateColumns: '1fr' }}>
-          <WeekBars title="Owner searches per day" values={daily.values} labels={daily.labels} unit="day" href="/admin/ads" note={`Searches by owners over the last ${DAYS} days (your own and other admins' searches aren't counted). Where they searched is on the traffic page.`} />
+          <WeekBars title="Owner searches per day" values={daily.values} labels={daily.labels} parts={daily.parts} unit="day" href="/admin/ads" note={`Searches by owners over the last ${DAYS} days (your own and other admins' searches aren't counted). Where they searched is on the traffic page.`} />
         </div>
         <div className="wb-grid">
-          <WeekBars title="Visitors from Google Ads" values={st.series.ads} labels={st.labels} href="/admin/ads" />
-          <WeekBars title="Visitors from Google search (free)" values={st.series.google} labels={st.labels} href="/admin/ads" />
-          <WeekBars title="All other visitors" values={st.series.other} labels={st.labels} href="/admin/ads" note="Direct, social, email and other websites" />
-          <WeekBars title="Quote requests" values={st.series.requests} labels={st.labels} href="/admin/requests?d=90" />
-          <WeekBars title="Accepted quotes" values={st.series.accepted} labels={st.labels} href="/admin/requests?f=accepted&d=90" />
-          <WeekBars title="New profile claims" values={st.series.claims} labels={st.labels} href="/admin/claims" />
+          <WeekBars title="Visitors from Google Ads" values={st.series.ads} labels={st.labels} parts={st.parts.ads} href="/admin/ads" />
+          <WeekBars title="Visitors from Google search (free)" values={st.series.google} labels={st.labels} parts={st.parts.google} href="/admin/ads" />
+          <WeekBars title="All other visitors" values={st.series.other} labels={st.labels} parts={st.parts.other} href="/admin/ads" note="Direct, social, email and other websites" />
+          <WeekBars title="Quote requests" values={st.series.requests} labels={st.labels} parts={st.parts.requests} href="/admin/requests?d=90" />
+          <WeekBars title="Accepted quotes" values={st.series.accepted} labels={st.labels} parts={st.parts.accepted} href="/admin/requests?f=accepted&d=90" />
+          <WeekBars title="New profile claims" values={st.series.claims} labels={st.labels} parts={st.parts.claims} href="/admin/claims" />
         </div>
       </section>
 
