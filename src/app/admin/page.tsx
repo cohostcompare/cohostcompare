@@ -3,7 +3,7 @@ import Link from 'next/link';
 import AdminNotice from '@/components/AdminNotice';
 import WeekBars from '@/components/WeekBars';
 import { requireAdmin, ADMINS } from '@/lib/admin';
-import { adminStats } from '@/lib/adminStats';
+import { adminStats, DAYS, dailySearches } from '@/lib/adminStats';
 import { TEST_SLUG } from '@/lib/data';
 import { DAILY_OVERDUE_HOURS, lastGoodRunHours, recentCronRuns } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
@@ -17,6 +17,7 @@ type SP = Promise<{ done?: string; error?: string; at?: string }>;
 export default async function Admin({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   await requireAdmin('/admin');
+  const daily = await dailySearches();
   const db = adminClient();
   const count = async (table: string, f?: (q: any) => any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     let q = db.from(table).select('*', { count: 'exact', head: true });
@@ -141,6 +142,9 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
         <h2 style={{ fontSize: 22, margin: 0 }}>Last 12 weeks</h2>
         <p className="hint" style={{ margin: '-6px 0 0' }}>Each bar is one calendar week, Monday to Sunday, Sydney time, labelled by its Monday. The last bar is this week so far ({st.weekFrom} to now). Hover a bar for the number.</p>
         {!st.trackingReady && <p className="hint" style={{ margin: 0 }}>Visitor charts fill in once traffic tracking (update 017) has data.</p>}
+        <div className="wb-grid" style={{ gridTemplateColumns: '1fr' }}>
+          <WeekBars title="Owner searches per day" values={daily.values} labels={daily.labels} unit="day" href="/admin/ads" note={`Searches by owners over the last ${DAYS} days (your own and other admins' searches aren't counted). Where they searched is on the traffic page.`} />
+        </div>
         <div className="wb-grid">
           <WeekBars title="Visitors from Google Ads" values={st.series.ads} labels={st.labels} href="/admin/ads" />
           <WeekBars title="Visitors from Google search (free)" values={st.series.google} labels={st.labels} href="/admin/ads" />

@@ -37,6 +37,28 @@ const bucket = (iso: string, now: number) => {
 };
 const zero = () => Array.from({ length: WEEKS }, () => 0);
 
+export const DAYS = 28;
+
+/** Start of today in Sydney, as a UTC timestamp (same approach as weekStart). */
+export function dayStart(now: number) {
+  const fmt = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+  const p = Object.fromEntries(fmt.formatToParts(new Date(now)).map((x) => [x.type, x.value]));
+  const localAsUtc = Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day), Number(p.hour) % 24, Number(p.minute));
+  const offset = localAsUtc - Math.floor(now / 60000) * 60000;
+  return Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day)) - offset;
+}
+
+/** Owner searches per day for the last DAYS days (funnel events exclude admins). */
+export async function dailySearches() {
+  const now = Date.now();
+  const start0 = dayStart(now) - (DAYS - 1) * DAY;
+  const { data } = await adminClient().from('funnel_events').select('created_at').eq('kind', 'search').gte('created_at', new Date(start0).toISOString()).limit(50000);
+  const values = Array.from({ length: DAYS }, () => 0);
+  for (const r of data || []) { const i = Math.floor((new Date(r.created_at).getTime() - start0) / DAY); if (i >= 0 && i < DAYS) values[i]++; }
+  const labels = Array.from({ length: DAYS }, (_, i) => new Date(start0 + i * DAY + 12 * 3600e3).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }));
+  return { values, labels };
+}
+
 export async function adminStats() {
   const db = adminClient();
   const now = Date.now();
