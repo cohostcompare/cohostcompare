@@ -619,13 +619,11 @@ a.kpi:hover { border-color: var(--k); }
 .wb-bar:hover .wb-val { display: block; }
 .wb-val-detail { font-weight: 600; font-size: 11px; }
 .wb-seg { stroke: var(--panel); stroke-width: .6; }
-.wb svg:hover .wb-seg { opacity: .3; }
-.wb svg .wb-bar:hover .wb-seg { opacity: 1; }
+.wb-bar:hover .wb-seg { stroke: var(--ink); stroke-width: 1.4; }
+.wb-bar:hover .wb-hit { fill: rgba(16,48,47,.06); }
 .wb-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
 .wb-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .wb-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-.wb svg:hover .wb-mark { opacity: .3; }
-.wb svg .wb-bar:hover .wb-mark { opacity: 1; }
 .admin-notice { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70; display: flex; align-items: center; gap: 12px; max-width: min(720px, calc(100vw - 32px)); background: var(--ink); color: #fff; border-radius: 12px; padding: 12px 10px 12px 16px; font-size: 15px; box-shadow: 0 12px 36px rgba(16,48,47,.35); }
 .admin-notice.err { background: #7A2E1F; }
 .admin-notice button { background: transparent; border: 0; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 8px; }

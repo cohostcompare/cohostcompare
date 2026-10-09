@@ -55,11 +55,15 @@ export default function WeekBars({ title, values, labels, href, note, unit = 'we
                 // Stack the segments bottom-up; the top one gets the rounded corners.
                 const segs = parts.values[i] || []; let acc = 0; const out = [];
                 const scale = (H - y) / v;
+                let topColor = parts.colors[0];
+                for (let k = 0; k < segs.length; k++) if (segs[k]) topColor = parts.colors[k];
+                // The full rounded bar in the top segment's colour, then the lower segments drawn over it.
+                out.push(<path key="top" d={bar(x, y, bw)} className="wb-seg" style={{ fill: topColor }} />);
                 for (let k = 0; k < segs.length; k++) {
                   const sv = segs[k]; if (!sv) continue;
                   const h = sv * scale, yTop = H - (acc + sv) * scale; acc += sv;
-                  const top = acc === v;
-                  out.push(top ? <path key={k} d={bar(x, yTop, bw)} className="wb-seg" style={{ fill: parts.colors[k] }} /> : <rect key={k} x={x} y={yTop} width={bw} height={h} className="wb-seg" style={{ fill: parts.colors[k] }} />);
+                  if (acc === v) break; // the top segment is already the rounded path
+                  out.push(<rect key={k} x={x} y={yTop} width={bw} height={h} className="wb-seg" style={{ fill: parts.colors[k] }} />);
                 }
                 return out;
               })() : <path d={bar(x, y, bw)} className={i === n - 1 ? 'wb-mark now' : 'wb-mark'} />}
