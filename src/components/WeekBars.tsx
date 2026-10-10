@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import BarReadout from './BarReadout';
 
 /*
  A small single-series bar chart of the last N weeks (server-rendered SVG, no library).
@@ -42,14 +43,12 @@ export default function WeekBars({ title, values, labels, href, note, unit = 'we
         <text x={L - 5} y={H + 3.5} className="wb-tick" textAnchor="end">0</text>
         {values.map((v, i) => {
           const x = L + i * slot + (slot - bw) / 2;
-          const cx = L + i * slot + slot / 2;
           const y = top(v);
           const head = `${v.toLocaleString('en-AU')} · ${i === n - 1 ? (unit === 'day' ? 'today' : `this ${unit}`) : unit === 'day' ? labels[i] : `${Unit.toLowerCase()} of ${labels[i]}`}`;
           const detail = parts && v > 0 ? (parts.values[i] || []).map((sv, k) => (sv ? `${parts.labels[k]} ${sv}` : null)).filter(Boolean).join(' · ') : '';
-          // Keep the hover label inside the chart: centre it on the bar, then clamp by its approximate width.
-          const place = (t: string) => { const w = t.length * 7; return Math.min(W - w / 2, Math.max(L + w / 2, cx)); };
+          const label = detail ? `${head}: ${detail}` : head;
           return (
-            <g key={i} className="wb-bar">
+            <g key={i} className="wb-bar" data-label={label}>
               <rect x={L + i * slot} y="0" width={slot} height={H} className="wb-hit" />
               {parts && v > 0 ? (() => {
                 // Stack the segments bottom-up; the top one gets the rounded corners.
@@ -67,14 +66,14 @@ export default function WeekBars({ title, values, labels, href, note, unit = 'we
                 }
                 return out;
               })() : <path d={bar(x, y, bw)} className={i === n - 1 ? 'wb-mark now' : 'wb-mark'} />}
-              <text x={place(head)} y={Math.max(detail ? 24 : 10, y - (detail ? 20 : 6))} className="wb-val" textAnchor="middle">{head}</text>
-              {detail && <text x={place(detail)} y={Math.max(24, y - 6)} className="wb-val wb-val-detail" textAnchor="middle">{detail}</text>}
+
             </g>
           );
         })}
         <text x={L} y={H + 13} className="wb-tick">{labels[0]}</text>
         <text x={W} y={H + 13} className="wb-tick" textAnchor="end">{unit === 'day' ? 'Today' : `This ${unit}`}</text>
       </svg>
+      <BarReadout idle={`Hover or tap a bar for its ${unit === 'day' ? 'day' : unit}${parts ? ' and breakdown' : ''}`} />
       {parts && <div className="wb-legend" aria-hidden="true">{parts.labels.map((l, k) => <span key={l}><i style={{ background: parts.colors[k] }} />{l}</span>)}</div>}
       {note && <figcaption className="hint">{note}</figcaption>}
     </figure>
