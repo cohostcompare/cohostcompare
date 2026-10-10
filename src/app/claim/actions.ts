@@ -34,10 +34,15 @@ export async function submitClaim(_: unknown, form: FormData): Promise<{ error?:
   if (auto) {
     await approveClaim(claim.id);
     const extras = await claimWelcomeExtras(m.id, origin);
+    const { data: planRow } = await adminClient().from('managers').select('pro_until, pro_note, plan').eq('id', m.id).maybeSingle();
+    const founding = planRow?.pro_note === 'founding' && planRow.pro_until && new Date(planRow.pro_until).getTime() > Date.now();
+    const planLine = founding
+      ? `Plan: founding Pro, free until ${new Date(planRow!.pro_until!).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })} (no card, nothing charged; they decide then). Paid Pro sign-ups get their own "New Pro subscriber" email.`
+      : `Plan: ${planRow?.plan || 'free'}.`;
     await sendEmail({
       to: 'hello@cohostcompare.com',
-      subject: `Claimed (auto-approved): ${m.name}`,
-      text: `${name}${role ? ` (${role})` : ''} <${user.email}>${phone ? `, ${phone}` : ''} claimed ${m.name}. Their email matched the business website (${m.website}), so it was approved automatically. No action needed.`,
+      subject: `Claimed (auto-approved): ${m.name}${founding ? ' · founding Pro' : ''}`,
+      text: `${name}${role ? ` (${role})` : ''} <${user.email}>${phone ? `, ${phone}` : ''} claimed ${m.name}. Their email matched the business website (${m.website}), so it was approved automatically. No action needed.\n\n${planLine}`,
       cta: { label: 'View claims', url: `${origin}/admin/claims?show=all` },
     });
     await sendEmail({
