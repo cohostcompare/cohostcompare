@@ -43,7 +43,7 @@ export const DAYS = 28;
 export type Parts = { labels: string[]; colors: string[]; values: number[][] };
 export const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DOW_COLORS = ['#0F5E57', '#2B8A7E', '#4FB3A6', '#8ED1C8', '#BFE3DD', '#E3A24A', '#B7791F']; // weekdays teal, weekend amber
-const DEVICES = ['phone', 'desktop', 'tablet'], DEVICE_COLORS = ['#0F5E57', '#2B6CB0', '#9DB2AE'];
+const DEVICES = ['phone', 'desktop', 'tablet', ''], DEVICE_COLORS = ['#0F5E57', '#2B6CB0', '#9DB2AE', '#DCE5E2']; // '' = before device tracking (4 Oct 2026)
 const SRC = ['ads', 'google', 'email', 'direct'], SRC_LABELS = ['Google Ads', 'Google search', 'Email', 'Direct or other'], SRC_COLORS = ['#B7791F', '#2B6CB0', '#7A5AA5', '#8FA6A1'];
 const dowFmt = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short' });
 export const sydneyDow = (iso: string) => DOW.indexOf(dowFmt.format(new Date(iso)));
@@ -94,10 +94,10 @@ export async function adminStats() {
   ]);
 
   const ads = zero(), google = zero(), other = zero();
-  const adsDev = grid(WEEKS, 3), googleDev = grid(WEEKS, 3), otherDev = grid(WEEKS, 3);
+  const adsDev = grid(WEEKS, 4), googleDev = grid(WEEKS, 4), otherDev = grid(WEEKS, 4);
   for (const v of visits.data || []) {
     const i = bucket(v.created_at, now); if (i < 0) continue;
-    const d = Math.max(0, DEVICES.indexOf((v as { device?: string }).device || 'desktop'));
+    const d = Math.max(0, DEVICES.indexOf((v as { device?: string }).device || ''));
     if (v.source === 'ads') { ads[i]++; adsDev[i][d]++; } else if (v.source === 'google') { google[i]++; googleDev[i][d]++; } else { other[i]++; otherDev[i][d]++; }
   }
   const requests = zero(), requestsDow = grid(WEEKS, 7);
@@ -113,7 +113,7 @@ export async function adminStats() {
   }
   const claimSeries = zero(), claimsDow = grid(WEEKS, 7);
   for (const c of claims.data || []) { const i = bucket(c.created_at, now); if (i >= 0) { claimSeries[i]++; claimsDow[i][sydneyDow(c.created_at)]++; } }
-  const device = (values: number[][]): Parts => ({ labels: ['Phone', 'Desktop', 'Tablet'], colors: DEVICE_COLORS, values });
+  const device = (values: number[][]): Parts => ({ labels: ['Phone', 'Desktop', 'Tablet', 'Not recorded'], colors: DEVICE_COLORS, values });
 
   const live = (d?: string | null) => Boolean(d && new Date(d).getTime() > now);
   const payingPro = (plans.data || []).filter((m) => m.stripe_subscription_id).length;
