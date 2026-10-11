@@ -1,187 +1,29 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { coveringSlugs, publicManager } from '@/lib/data';
-import { memberEmails } from '@/lib/managers';
-import { headers } from 'next/headers';
-import { sendEmail } from '@/lib/email';
-import { inboundOn, threadReplyTo } from '@/lib/inbound';
-import { smsManager } from '@/lib/sms';
-import { availabilityLabel } from '@/lib/requirements';
 import { adminClient, currentUser } from '@/lib/supabase/server';
+import { parseRequest, sendRequest } from '@/lib/quoteRequest';
 
-const SITUATIONS = ['I own the property', 'I’m buying it now (under contract or about to settle)', "I'm buying it now (under contract or about to settle)", 'I’m planning to buy a property', "I'm planning to buy a property"];
-const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
+export type SubmitState = { error?: string; pending?: { id: string; email: string; count: number } };
 
-/*
- Limits so nobody can spam managers (admins exempt). An owner can send up to REQUESTS_PER_DAY requests in 24 hours
- and reach up to MANAGERS_PER_MONTH managers in 30 days (each request goes to up to 5). Hitting a limit blocks the
- request with a friendly message and tells hello@, who can help a genuine owner with several properties.
-*/
-const REQUESTS_PER_DAY = 3;
-const MANAGERS_PER_MONTH = 15;
-
-async function requestLimit(userId: string, email: string, adding: number, where: string): Promise<string | null> {
-  const { isAdminEmail } = await import('@/lib/admin');
-  if (isAdminEmail(email)) return null;
-  const db = adminClient();
-  const ago = (d: number) => new Date(Date.now() - d * 86400e3).toISOString();
-  const { data, error } = await db.from('quote_requests').select('id, created_at, quote_request_managers(id)').eq('owner_id', userId).gte('created_at', ago(30));
-  if (error) return null; // never block on a lookup error
-  const today = (data || []).filter((r) => r.created_at >= ago(1)).length;
-  const reached = (data || []).reduce((n, r) => n + ((r.quote_request_managers as unknown[]) || []).length, 0);
-  let msg: string | null = null;
-  if (today >= REQUESTS_PER_DAY) msg = `You've sent ${today} quote requests in the last 24 hours (each request is one property, to up to 5 managers), which is our daily limit. Please try again tomorrow. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
-  else if (reached + adding > MANAGERS_PER_MONTH) msg = `This would take you past ${MANAGERS_PER_MONTH} managers contacted in 30 days${reached < MANAGERS_PER_MONTH ? `. You can still ask ${MANAGERS_PER_MONTH - reached} more` : ''}. We limit this so managers can trust every request is genuine. If you're arranging management for several properties, email hello@cohostcompare.com and we'll help.`;
-  if (msg) {
-    await sendEmail({ to: 'hello@cohostcompare.com', subject: 'Quote request limit reached', text: `${email} hit the quote request limit.
-
-In the last 30 days: ${data?.length ?? 0} requests, ${reached} managers contacted (${today} requests in the last 24 hours). They tried to add ${adding} more for ${where}.
-
-If they're genuine (e.g. several properties), reply to them and send the request on their behalf, or ask Claude to raise their limit.`, replyTo: email }).catch(() => {});
-  }
-  return msg;
-}
-
-export async function submitQuoteRequest(_: unknown, form: FormData): Promise<{ error?: string }> {
+/**
+ * The quote form's submit. Signed in: the request goes out now. Not signed in: it's held (SQL 031) and the form
+ * sends a sign-in link to the owner's email; opening it lands on /quote/send/[id], which sends the request.
+ */
+export async function submitQuoteRequest(_: unknown, form: FormData): Promise<SubmitState> {
+  const parsed = await parseRequest(form);
+  if ('error' in parsed) return parsed;
+  const { fields } = parsed;
   const user = await currentUser();
-  if (!user?.email) return { error: 'Your sign-in has expired. Refresh the page and sign in again.' };
-
-  const slugs = String(form.get('managers') || '').split(',').filter(Boolean).slice(0, 5);
-  const managers = (await Promise.all(slugs.map(publicManager))).filter((m): m is NonNullable<typeof m> => Boolean(m));
-  if (!managers.length) return { error: 'Pick at least one manager first.' };
-
-  const postcode = String(form.get('postcode') || '').trim();
-  const bedrooms = Number(form.get('bedrooms'));
-  const services = form.getAll('services').map(String).filter((s) => SERVICES.includes(s));
-  const name = String(form.get('name') || '').trim().slice(0, 120);
-  const street = String(form.get('street') || '').trim().slice(0, 160);
-  const suburb = String(form.get('suburb') || '').trim().slice(0, 80);
-  const stateCode = String(form.get('state') || '').trim().slice(0, 3);
-  if (!name) return { error: 'Enter your name.' };
-  const email = String(form.get('email') || user.email).trim().toLowerCase().slice(0, 200);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Enter a valid email address.' };
-  const situation = SITUATIONS.find((s) => s === String(form.get('situation') || '')) || null;
-  if (!suburb) return { error: "Enter your property's suburb." };
-  if (!/^\d{4}$/.test(postcode)) return { error: "Enter your property's 4-digit postcode." };
-  const lat = Number(form.get('lat')), lng = Number(form.get('lng'));
-  if (!form.get('lat') || !form.get('lng') || !Number.isFinite(lat) || !Number.isFinite(lng)) return { error: 'Pick the property address from the suggestions so we can check which managers cover it.' };
-  const covering = await coveringSlugs(lat, lng, managers.map((m) => m.slug), postcode);
-  const notCovering = managers.filter((m) => !covering.has(m.slug));
-  if (notCovering.length) return { error: `${notCovering.map((m) => m.name).join(' and ')} ${notCovering.length === 1 ? "doesn't" : "don't"} run homes near this address. Remove them or search again for this address.` };
-  if (!Number.isInteger(bedrooms) || bedrooms < 0 || bedrooms > 20) return { error: 'Choose the number of bedrooms.' };
-  if (!services.length) return { error: 'Choose at least one service you want.' };
-
-  // Managers' requirements (SQL 021): never send a request a manager has said they won't take on.
-  const availability = String(form.get('availability') || '');
-  {
-    const { requirementsFor } = await import('@/lib/requirementsServer');
-    const { mismatches, AVAILABILITY } = await import('@/lib/requirements');
-    if (!AVAILABILITY.some((a) => a.v === availability)) return { error: 'Choose how much of the year the property will be available for guests.' };
-    const reqs = await requirementsFor(managers.map((m) => m.slug));
-    const details = { availability, type: String(form.get('property_type') || ''), beds: bedrooms, services, situation: String(form.get('situation') || '') };
-    const unfit = managers.map((m) => ({ m, why: mismatches(reqs.get(m.slug), details) })).filter((x) => x.why.length);
-    if (unfit.length) return { error: `${unfit.map((u) => `${u.m.name}: ${u.why.join('; ')}`).join('. ')}. Remove ${unfit.length === 1 ? 'them' : 'them'} or change your property details.` };
+  if (!user?.email) {
+    const { allow, callerKey } = await import('@/lib/rate');
+    if (!(await allow('pending-quote', await callerKey(), 6, 3600e3))) return { error: 'Too many requests from this connection in the last hour. Please try again later.' };
+    const { data, error } = await adminClient().from('pending_requests').insert({ email: fields.email, fields }).select('id').single();
+    if (error || !data) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
+    return { pending: { id: data.id, email: fields.email, count: fields.managers.length } };
   }
-
-  const limited = await requestLimit(user.id, user.email, managers.length, `${suburb} ${stateCode} ${postcode}`);
-  if (limited) return { error: limited };
-
-  const row = {
-    owner_id: user.id,
-    owner_email: email,
-    owner_name: name,
-    owner_phone: String(form.get('phone') || '').trim().slice(0, 30) || null,
-    street: street || null,
-    suburb,
-    state: stateCode,
-    address: [street, suburb, `${stateCode} ${postcode}`].filter(Boolean).join(', '),
-    postcode,
-    property_type: String(form.get('property_type') || '').slice(0, 40),
-    bedrooms,
-    currently_listed: String(form.get('currently_listed') || '').slice(0, 60),
-    services,
-    start_timing: String(form.get('start_timing') || '').slice(0, 40),
-    notes: String(form.get('notes') || '').trim().slice(0, 2000) || null,
-  };
-
-  const db = adminClient();
-  // lat/lng need 008_owner_reminders.sql; fall back gracefully if it hasn't been run yet.
-  let { data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng, situation }).select('id').single(); // situation needs 016
-  if (error && /situation/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert({ ...row, lat, lng }).select('id').single());
-  if (error && /lat|lng|column/i.test(error.message)) ({ data: req, error } = await db.from('quote_requests').insert(row).select('id').single());
-  if (error || !req) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
-  { // Where this owner came from (Google Ads etc.), for the admin ad results. Needs 017; best-effort.
-    const { currentSource, logFunnel } = await import('@/lib/traffic');
-    const { source, campaign } = await currentSource();
-    await db.from('quote_requests').update({ source, campaign }).eq('id', req.id).then(() => {}, () => {});
-    await db.from('quote_requests').update({ availability }).eq('id', req.id).then(() => {}, () => {}); // needs 021
-    await db.from('quote_drafts').update({ done: true }).eq('user_id', user.id).then(() => {}, () => {}); // needs 022
-    await logFunnel('quote');
-  }
-  const { data: threads, error: e2 } = await db.from('quote_request_managers').insert(
-    managers.map((m) => ({ request_id: req.id, manager_slug: m.slug, manager_name: m.name })),
-  ).select('id');
-  if (e2) console.error(e2);
-  if (threads?.length) {
-    await db.from('messages').insert(threads.map((t) => ({
-      thread_id: t.id, sender: 'system', read_by_owner: true,
-      body: 'Quote request sent.',
-    })));
-  }
-
-  const summary = [
-    `Property: ${row.address}`,
-    `Type: ${row.property_type}, ${bedrooms} bedroom${bedrooms === 1 ? '' : 's'}`,
-    `Listed now: ${row.currently_listed}`,
-    `Available for guests: ${availabilityLabel(availability)}`,
-    `Wants: ${services.join(', ')}`,
-    situation ? `Your situation: ${situation}` : '',
-    `Start: ${row.start_timing}`,
-    row.notes ? `Notes: ${row.notes}` : '',
-  ].filter(Boolean).join('\n');
-
-  await sendEmail({
-    to: email,
-    subject: `Your quote request has gone to ${managers.length} manager${managers.length === 1 ? '' : 's'}`,
-    text: `Hi ${name},\n\nYour request has gone to: ${managers.map((m) => m.name).join(', ')}.\n\n${summary}\n\nEach manager replies with a quote in the same format, so you can compare them side by side, and message them, in your inbox.\n\nThe CoHostCompare team`,
-    cta: { label: 'Open my inbox', url: 'https://www.cohostcompare.com/account' },
-  });
-
-  // Managers who've claimed their profile get the request by email; the rest come to us to follow up.
-  const h = await headers();
-  const origin = `${h.get('x-forwarded-proto') || 'https'}://${h.get('host')}`;
-  const { data: tRows } = await db.from('quote_request_managers').select('id, manager_slug').eq('request_id', req.id);
-  const { notifyUnclaimedOfRequest, requestEmailsOn } = await import('@/lib/outreach');
-  const noContact: { slug: string; name: string }[] = [];
-  for (const t of tRows || []) {
-    const to = await memberEmails(t.manager_slug);
-    if (!to.length) {
-      const n = await notifyUnclaimedOfRequest(t.manager_slug, `${suburb} ${stateCode}`.trim(), t.id).catch(() => 0);
-      if (!n) noContact.push({ slug: t.manager_slug, name: managers.find((m) => m.slug === t.manager_slug)?.name || t.manager_slug });
-      continue;
-    }
-    await sendEmail({
-      to,
-      subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
-      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}\nListed now: ${row.currently_listed}\nAvailable for guests: ${availabilityLabel(availability)}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
-      cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
-      replyTo: threadReplyTo(t.id, 'm'),
-    });
-    await smsManager(t.manager_slug, 'request', `CoHostCompare: new quote request for a ${bedrooms === 0 ? 'studio' : `${bedrooms}-bed ${String(row.property_type).toLowerCase()}`} in ${suburb} ${stateCode}. Send your quote: ${origin}/dashboard/requests/${t.id}`);
-  }
-
-  await sendEmail({
-    to: 'hello@cohostcompare.com',
-    subject: `${noContact.length ? `ACTION: ${noContact.length} manager${noContact.length === 1 ? '' : 's'} not told · ` : ''}New quote request: ${postcode}, ${managers.map((m) => m.name).join(', ')}`,
-    text: `${noContact.length ? await (async () => {
-      const { unclaimedReach } = await import('@/lib/outreach');
-      const reach = await unclaimedReach(noContact.map((x) => x.slug));
-      const why = (r?: string) => r === 'no-email' ? 'no email on file. Add one at /admin/outreach and they’ll be told within a day' : r === 'unsubscribed' ? 'they’ve unsubscribed from our emails. Phone them or contact them through their website' : r === 'ok' && !requestEmailsOn() ? 'request emails are switched off (REQUEST_EMAILS=0)' : 'the email failed to send. We’ll retry tomorrow morning';
-      return `ACTION: ${noContact.length === 1 ? 'this unclaimed manager hasn’t' : 'these unclaimed managers haven’t'} been told about the request:\n${noContact.map((x) => `- ${x.name}: ${why(reach.get(x.slug))}`).join('\n')}\nThe owner is waiting. See ${origin}/admin/requests?f=unreached\n\n`;
-    })() : ''}Owner: ${name} <${user.email}>${row.owner_phone ? `, ${row.owner_phone}` : ''}\nManagers: ${managers.map((m) => `${m.name}${m.demo ? ' (DEMO)' : ''}`).join(', ')}\n\n${summary}\n\nRequest id: ${req.id}`,
-    replyTo: user.email,
-  });
-
-  redirect(`/account?sent=${managers.length}&r=${req.id}`);
+  const id = await sendRequest({ id: user.id, email: user.email }, fields);
+  if (typeof id !== 'string') return id;
+  redirect(`/account?sent=${fields.managers.length}&r=${id}`);
 }
+

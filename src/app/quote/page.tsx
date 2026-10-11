@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import EmailSignIn from '@/components/EmailSignIn';
 import { publicManager } from '@/lib/data';
 import { currentUser } from '@/lib/supabase/server';
 import { isAdminEmail } from '@/lib/admin';
@@ -27,23 +26,20 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
     const now = new Date().toISOString();
     await db.from('quote_drafts').upsert({ user_id: user.id, email: user.email, managers: slugs, names: picked.map((m) => m.name).join(', '), query: q, updated_at: now, done: false, ...(keep ? {} : { reminded_at: null, created_at: now }) }).then(() => {}, () => {});
   }
-  const here = `/quote?${new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString()}`;
 
   return (
     <main style={{ maxWidth: 720, paddingBlock: '16px 64px', display: 'grid', gap: 16 }}>
       <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>Request quotes</h1>
       {picked.length ? (
         <p style={{ color: 'var(--muted)', margin: 0 }}>
-          Describe your property once and each manager replies with a quote in the same format, so you can compare them side by side.
+          Describe your property once and each manager replies with a quote in the same format, so you can compare them side by side.{!user?.email && ' No account needed to start.'}
         </p>
       ) : (
         <div className="panel">Pick managers from your search results first. <Link href="/">Start a search</Link></div>
       )}
-      {picked.length > 0 && (user?.email ? (
-        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name, claimed: m.claimed, slowReply: m.slowReply, requirements: reqs.get(m.slug) ?? null }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '', lat: sp.lat ? Number(sp.lat) : null, lng: sp.lng ? Number(sp.lng) : null }} email={user.email} fresh={isAdminEmail(user.email)} />
-      ) : (
-        <EmailSignIn next={here} intro="First, confirm your email. We'll send a one-click link that brings you straight back here. This also unlocks full fees and contract terms on every profile." />
-      ))}
+      {picked.length > 0 && (
+        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name, claimed: m.claimed, slowReply: m.slowReply, requirements: reqs.get(m.slug) ?? null }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '', lat: sp.lat ? Number(sp.lat) : null, lng: sp.lng ? Number(sp.lng) : null }} email={user?.email || ''} fresh={Boolean(user?.email && isAdminEmail(user.email))} />
+      )}
     </main>
   );
 }

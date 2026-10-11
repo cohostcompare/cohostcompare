@@ -1,8 +1,10 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 import PlacesInput from '@/components/PlacesInput';
-import { submitQuoteRequest } from './actions';
+import { submitQuoteRequest, type SubmitState } from './actions';
 import { checkCoverage } from './coverage';
 import { AVAILABILITY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
 import { loadProperty, saveProperty } from '@/lib/client/property';
@@ -18,7 +20,17 @@ type Addr = { street: string; suburb: string; state: string; postcode: string; l
 type M = { slug: string; name: string; claimed?: boolean; slowReply?: boolean; requirements?: Requirements | null };
 
 export default function QuoteForm({ managers, initial, email, fresh }: { managers: M[]; initial: Addr; email: string; fresh?: boolean }) {
-  const [state, action, pending] = useActionState(submitQuoteRequest, {});
+  const [state, action, pending] = useActionState<SubmitState, FormData>(submitQuoteRequest, {});
+  const signedIn = Boolean(email);
+  // Not signed in: the request is held and we email a sign-in link; opening it sends the request (/quote/send/[id]).
+  const [link, setLink] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
+  useEffect(() => {
+    if (!state.pending || link !== 'idle') return;
+    setLink('sending');
+    const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    supabase.auth.signInWithOtp({ email: state.pending.email, options: { emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(`/quote/send/${state.pending.id}`)}`, shouldCreateUser: true } })
+      .then(({ error }) => setLink(error ? 'failed' : 'sent'));
+  }, [state.pending]); // eslint-disable-line react-hooks/exhaustive-deps
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
   const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode) && initial.lat != null);
   const [editing, setEditing] = useState(!known);
@@ -66,6 +78,22 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   // Typing over the suburb means we no longer know exactly where the property is. Filling in a missing postcode doesn't.
   const set = (k: 'street' | 'suburb' | 'state' | 'postcode') => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setAddr({ ...addr, [k]: e.target.value, ...(k === 'suburb' ? { lat: null, lng: null } : {}) });
+
+  if (state.pending) {
+    return (
+      <div className="panel" style={{ background: 'var(--tint)', display: 'grid', gap: 10 }}>
+        <h2 style={{ margin: 0, fontSize: 22 }}>{link === 'failed' ? "We couldn't send the email" : 'One last step: check your inbox'}</h2>
+        {link === 'failed' ? (
+          <p style={{ margin: 0 }}>Your request to {state.pending.count} manager{state.pending.count === 1 ? '' : 's'} is saved. <a href={`/signin?next=${encodeURIComponent(`/quote/send/${state.pending.id}`)}`}>Sign in with {state.pending.email}</a> and it goes straight out.</p>
+        ) : (
+          <>
+            <p style={{ margin: 0 }}>We&apos;ve {link === 'sent' ? 'sent' : 'sending'} a link to <b>{state.pending.email}</b>. Tap it and your request goes to {state.pending.count} manager{state.pending.count === 1 ? '' : 's'} straight away. It can take a minute, so check spam if it hasn&apos;t arrived.</p>
+            <p className="hint" style={{ margin: 0 }}>This confirms your email so managers can reply to you. No password needed, and it also signs you in to your free inbox to compare the quotes.</p>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <form action={action} className="panel" style={{ display: 'grid', gap: 16 }}>
@@ -195,7 +223,7 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
         {pending ? 'Sending…' : checking ? 'Checking coverage…' : !ptype || beds < 0 ? 'Choose the property type and bedrooms' : !avail ? 'Choose how much of the year it’s available' : services.length === 0 ? 'Tick at least one service' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
       {state?.error && <p role="alert" style={{ color: 'var(--signal)', margin: 0 }}>{state.error}</p>}
-      <p className="hint" style={{ margin: 0 }}>Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept. By sending, you agree to our <a href="/terms">terms</a>.</p>
+      <p className="hint" style={{ margin: 0 }}>{!signedIn && <>We&apos;ll email you a link to confirm your address before it&apos;s sent; no password needed. </>}Managers see your property details and first name. Your email and phone are shared only with managers whose quote you accept. By sending, you agree to our <a href="/terms">terms</a>.</p>
     </form>
   );
 }

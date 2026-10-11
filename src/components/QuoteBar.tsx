@@ -18,10 +18,10 @@ export default function QuoteBar({ picks, query, backHref, emptyAction }: { pick
     return () => { ro.disconnect(); document.documentElement.style.removeProperty('--qb-h'); };
   }, []);
   return (
-    <div className="quotebar" role="region" aria-label="Quote request" ref={ref}>
+    <div className={`quotebar${picks.length === 0 && !emptyAction ? ' empty' : ''}`} role="region" aria-label="Quote request" ref={ref}>
       <div className="wrap">
         <span style={{ minWidth: 0 }}>
-          {picks.length === 0 ? `Pick up to ${MAX_PICKS} managers to request quotes from.` : <><b>{picks.length} of {MAX_PICKS} picked<span className="qb-names">:</span></b><span className="qb-names"> {picks.map((p) => p.name).join(', ')}</span></>}
+          {picks.length === 0 ? <><b>Add up to {MAX_PICKS} managers</b> with “+ Add to quote”, then request quotes all at once.</> : <><b>{picks.length} of {MAX_PICKS} picked<span className="qb-names">:</span></b><span className="qb-names"> {picks.map((p) => p.name).join(', ')}</span></>}
           {picks.length === 1 && <span className="compare-tip">Pick one more to compare them side by side</span>}
           {backHref && <> · <Link href={backHref}>Back to results to add more</Link></>}
         </span>
@@ -40,7 +40,7 @@ export default function QuoteBar({ picks, query, backHref, emptyAction }: { pick
         ) : emptyAction ? (
           <a className="btn primary" href={emptyAction.href}>{emptyAction.label}</a>
         ) : (
-          <button className="btn primary" type="button" disabled>Request a quote</button>
+          <button className="btn primary qb-empty" type="button" disabled>Request a quote</button>
         )}
       </div>
     </div>
