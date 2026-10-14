@@ -1,7 +1,7 @@
 // Plain-English summary of short-term rental rules by state. General information, not legal advice.
 // Every point is backed by an official government source (state, territory or council). No blogs or industry sites. Review and update regularly (last checked below).
-export const RULES_CHECKED = '1 October 2026';
-export const RULES_CHECKED_ISO = '2026-10-01'; // keep in step with RULES_CHECKED
+export const RULES_CHECKED = '15 October 2026';
+export const RULES_CHECKED_ISO = '2026-10-15'; // keep in step with RULES_CHECKED
 /** Days since the rules were last checked against official sources. Over 45 = overdue for review. */
 export const rulesAgeDays = () => Math.floor((Date.now() - new Date(`${RULES_CHECKED_ISO}T00:00:00+10:00`).getTime()) / 86400e3);
 export const RULES_STALE_DAYS = 45;
@@ -22,8 +22,8 @@ export const RULES: StateRules[] = [
     code: 'nsw', name: 'New South Wales',
     summary: 'Every short-term rental must be registered, meet a fire safety standard and follow a mandatory code of conduct. Unhosted stays are capped at 180 nights a year in Greater Sydney and some regional areas, and 60 nights in most of Byron Shire.',
     points: [
-      'Register the property on the NSW Planning Portal short-term rental accommodation (STRA) register before you advertise it. Registration costs $65, with a $25 renewal each year.',
-      'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney, and in parts of Ballina, Clarence Valley and Muswellbrook. Hosted stays aren’t capped.',
+      'Register the property on the NSW Planning Portal short-term rental accommodation (STRA) register before you advertise it. Registration costs $65, with a $25 renewal each year. Show your STRA property ID on online listings.',
+      'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney, in the Ballina area, and in parts of Clarence Valley and Muswellbrook. Hosted stays aren’t capped.',
       'Bookings of 21 or more consecutive nights don’t count toward the cap.',
       'In most of Byron Shire, unhosted stays are capped at 60 nights a year, from 23 September 2024 or your first renewal after that. Mapped precincts in Byron Bay town centre and Brunswick Heads have no cap.',
       'The property must meet the STRA fire safety standard, including interconnected smoke alarms and an evacuation plan.',
@@ -41,6 +41,7 @@ export const RULES: StateRules[] = [
       { label: 'NSW Department of Planning, Housing and Infrastructure: short-term rental accommodation', url: 'https://www.planning.nsw.gov.au/the-planning-system/housing/short-term-rental-accommodation' },
       { label: 'NSW Department of Planning, Housing and Infrastructure: Byron Shire', url: 'https://www.planning.nsw.gov.au/policy-and-legislation/housing/short-term-rental-accommodation/byron-shire' },
       { label: 'NSW Government: host obligations for short-term rental accommodation', url: 'https://www.nsw.gov.au/housing-and-construction/short-term-rental-accommodation/host-obligations' },
+      { label: 'NSW Planning Portal: short-term rental accommodation register', url: 'https://www.planningportal.nsw.gov.au/stra' },
     ],
   },
   {
@@ -93,7 +94,7 @@ export const RULES: StateRules[] = [
     sources: [
       { label: 'WA Government: short-term rental accommodation register', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/short-term-rental-accommodation-register' },
       { label: 'WA Government: STRA register frequently asked questions', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/short-term-rental-accommodation-register-frequently-asked-questions' },
-      { label: 'WA Government: STRA registration and fees', url: 'https://www.wa.gov.au/organisation/department-of-energy-mines-industry-regulation-and-safety/registration-and-fees' },
+      { label: 'WA Government: STRA registration and fees', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/registration-and-fees' },
       { label: 'Consumer Protection WA: managing short-term rental accommodation', url: 'https://www.consumerprotection.wa.gov.au/managing-short-term-rental-accommodation' },
       { label: 'WA Department of Planning: STRA planning reforms', url: 'https://www.planning.wa.gov.au/planning-reform/short-term-rental-accommodation-planning-reforms' },
     ],
@@ -111,7 +112,6 @@ export const RULES: StateRules[] = [
     watch: ['In August 2026, Hobart City Council voted to seek a planning scheme change that would stop new whole-home short stays in most residential zones. Existing permits wouldn’t be affected. It needs Tasmanian Planning Commission approval before it applies.'],
     sources: [
       { label: 'Tasmanian State Planning Office: short stay accommodation fact sheet (September 2025)', url: 'https://www.stateplanning.tas.gov.au/__data/assets/pdf_file/0009/605718/Short-Stay-Accommodation-fact-sheet-September-2025.PDF' },
-      { label: 'Consumer, Building and Occupational Services Tasmania: short and medium term visitor accommodation', url: 'https://cbos.tas.gov.au/topics/housing/short-and-medium-term-visitor-accommodation' },
       { label: 'Tasmanian Department of Treasury and Finance: Short Stay Levy Bill', url: 'https://www.treasury.tas.gov.au/economy/short-stay-levy-bill-2025-consultation' },
       { label: 'City of Hobart: visitor accommodation (Airbnb)', url: 'https://www.hobartcity.com.au/Development/Planning/Planning-guidelines-and-help/Visitor-accommodation-Airbnb' },
     ],
@@ -148,7 +148,7 @@ export const RULES: StateRules[] = [
     code: 'nt', name: 'Northern Territory',
     summary: 'There is no specific short-term rental registration scheme or night cap. Larger operations may need to register as a commercial accommodation business.',
     points: [
-      'If you accommodate seven or more paying visitors, you may need to register as a commercial visitor accommodation business. Small bed and breakfasts are excluded. Registration or renewal costs $372.',
+      'If you accommodate seven or more paying visitors, you may need to register as a commercial visitor accommodation business. Small bed and breakfasts are excluded. Registration or renewal costs $372, paid online when you apply, and lasts five years.',
       'Check the NT Planning Scheme for whether your use needs a development permit, and your body corporate rules for units.',
     ],
     sources: [
