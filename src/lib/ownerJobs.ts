@@ -2,6 +2,8 @@ import 'server-only';
 import { TEST_SLUG, managersForArea } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
 import { CATCHUP_FROM, unsubscribeUrl } from '@/lib/outreach';
+import { mismatches } from '@/lib/requirements';
+import type { NearbyManager } from '@/lib/types';
 import { adminClient } from '@/lib/supabase/server';
 
 /* Daily jobs for owners (SQL 022). Every one is best-effort and returns how many emails went. */
@@ -76,6 +78,98 @@ export async function newManagerAlerts(limit = 30) {
       headers: unsubHeaders(r.owner_email),
     });
     n++;
+  }
+  return n;
+}
+
+/** Days after a request before we tell the owner a manager hasn't replied (managers get their own nudge at 48 hours). */
+export const NO_REPLY_DAYS = 3;
+
+/** Signed link for an owner to turn on "email me when new managers cover it" from an email (/watch). */
+export const watchUrl = async (requestId: string) => `${SITE}/watch?r=${requestId}&s=${(await import('@/lib/claims')).sign(`watch:${requestId}`)}`;
+
+const names = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/**
+ * Once per thread: if a manager hasn't replied NO_REPLY_DAYS after a request, tell the owner why that can happen,
+ * that the request stays open, and either list other managers on the site who cover the property (and fit it)
+ * or, if there are none, say so and offer to email them when one starts. One email per request (SQL 032).
+ */
+export async function noReplyFollowUps(limit = 40) {
+  const db = adminClient();
+  const { data, error } = await db.from('quote_request_managers')
+    .select('id, request_id, manager_slug, manager_name')
+    .in('status', ['sent', 'viewed']).is('owner_no_reply_at', null)
+    .lt('created_at', ago(NO_REPLY_DAYS * 24)).gte('created_at', ago(30 * 24) > CATCHUP_FROM ? ago(30 * 24) : CATCHUP_FROM)
+    .neq('manager_slug', TEST_SLUG).limit(300);
+  if (error || !data?.length) return 0; // error = 032 not run yet
+  const byReq = new Map<string, typeof data>();
+  for (const t of data) byReq.set(t.request_id, [...(byReq.get(t.request_id) || []), t]);
+  const { withReach } = await import('@/lib/reach');
+  const { requirementsFor } = await import('@/lib/requirementsServer');
+  let n = 0;
+  for (const [reqId, waiting] of byReq) {
+    if (n >= limit) break;
+    const { data: r } = await db.from('quote_requests')
+      .select('id, owner_email, owner_name, address, street, suburb, state, postcode, lat, lng, property_type, bedrooms, availability, services, situation, watch_new')
+      .eq('id', reqId).maybeSingle();
+    const mark = () => db.from('quote_request_managers').update({ owner_no_reply_at: new Date().toISOString() }).in('id', waiting.map((t) => t.id));
+    if (!r?.owner_email) { await mark(); continue; }
+    const { data: all } = await db.from('quote_request_managers').select('manager_slug, status').eq('request_id', reqId);
+    const asked = new Set((all || []).map((t) => t.manager_slug));
+    const quoted = (all || []).filter((t) => t.status === 'quoted' || t.status === 'accepted').length;
+    const { data: ms } = await db.from('managers').select('slug, claimed').in('slug', waiting.map((t) => t.manager_slug));
+    const claimed = new Set((ms || []).filter((m) => m.claimed).map((m) => m.slug));
+
+    // Other managers on the site who cover this property and whose requirements it meets. Same order as search results.
+    let others: (NearbyManager & { slowReply: boolean })[] = [];
+    if (r.lat != null && r.lng != null) {
+      const area = (await managersForArea(Number(r.lat), Number(r.lng), r.postcode)).filter((m) => !asked.has(m.slug) && m.slug !== TEST_SLUG);
+      const reqs = await requirementsFor(area.map((m) => m.slug));
+      const details = { type: r.property_type, beds: r.bedrooms, availability: r.availability, services: r.services, situation: r.situation };
+      const fit = area.filter((m) => !mismatches(reqs.get(m.slug), details).length);
+      const score = (m: (typeof fit)[number]) => m.nearbyRating ?? m.avgRating ?? -1;
+      others = await withReach(fit.sort((a, b) => score(b) - score(a)));
+    }
+
+    const place = r.address || [r.street, r.suburb].filter(Boolean).join(', ') || `postcode ${r.postcode}`;
+    const area = r.suburb || r.postcode;
+    const who = names(waiting.map((t) => t.manager_name));
+    const one = waiting.length === 1;
+    const unclaimedOnly = waiting.every((t) => !claimed.has(t.manager_slug));
+    const why = [
+      `That happens sometimes. Managers can be busy, full for now, or not taking on new homes in your area.`,
+      unclaimedOnly
+        ? `${one ? `${who} isn’t` : 'They aren’t'} on CoHostCompare yet, so we contacted ${one ? 'them' : 'each of them'} directly, which can take longer.`
+        : `We’ve sent ${one ? 'them' : 'each of them'} a reminder.`,
+      `Your request stays open. If ${one ? 'they reply' : 'any of them reply'}, we’ll email you straight away.`,
+    ].join(' ');
+    const firstName = String(r.owner_name || '').trim().split(/\s+/)[0] || 'there';
+    const intro = `Hi ${firstName.charAt(0).toUpperCase() + firstName.slice(1)},\n\nIt’s been ${NO_REPLY_DAYS} days since you asked ${who} for a quote for ${place}, and ${one ? 'they haven’t' : 'none of them have'} replied yet.\n\n${why}${quoted ? `\n\nYou already have ${quoted === 1 ? 'a quote' : `${quoted} quotes`} to look at in your inbox.` : ''}`;
+
+    let ok: boolean;
+    if (others.length) {
+      const shown = others.slice(0, 6);
+      const line = (m: (typeof shown)[number]) => {
+        const bits = [m.nearby ? `${m.nearby} home${m.nearby === 1 ? '' : 's'} nearby` : null, (m.nearbyRating ?? m.avgRating) ? `${(m.nearbyRating ?? m.avgRating)!.toFixed(2)} guest rating` : null, m.feeMin != null ? `fees from ${m.feeMin}%` : null].filter(Boolean);
+        return `- ${m.name}${bits.length ? ` (${bits.join(', ')})` : ''}${m.slowReply ? '. Not on CoHostCompare yet, so may be slow to reply' : ''}`;
+      };
+      const q = new URLSearchParams({ managers: shown.slice(0, 5).map((m) => m.slug).join(','), postcode: r.postcode, ...(r.street ? { street: r.street } : {}), ...(r.suburb ? { suburb: r.suburb } : {}), ...(r.state ? { state: r.state } : {}), lat: String(r.lat), lng: String(r.lng) });
+      ok = await sendEmail({
+        to: r.owner_email,
+        subject: `${others.length === 1 ? 'Another manager covers' : `${others.length} other managers cover`} ${area}`,
+        text: `${intro}\n\nWhile you wait, ${others.length === 1 ? 'one other manager on CoHostCompare covers' : `${others.length} other managers on CoHostCompare cover`} your property and take${others.length === 1 ? 's' : ''} on homes like yours:\n\n${shown.map(line).join('\n')}${others.length > shown.length ? `\n- and ${others.length - shown.length} more` : ''}\n\nYou can compare them and send ${others.length === 1 ? 'them' : 'any of them'} the same request in a couple of minutes. It’s free and there’s no obligation.\n\nThe CoHostCompare team`,
+        cta: { label: others.length === 1 ? 'See this manager' : 'Compare these managers', url: `${SITE}/compare?${q.toString()}` },
+      });
+    } else {
+      ok = await sendEmail({
+        to: r.owner_email,
+        subject: `No reply yet from ${one ? who : 'the managers you asked'}`,
+        text: `${intro}\n\nRight now, no other managers on CoHostCompare cover ${area} and take on homes like yours. We’re adding managers all the time.\n\n${r.watch_new ? 'You’ve asked us to tell you when a new manager starts covering your property, so we’ll email you as soon as one does.' : 'We can email you as soon as a new manager starts covering your property. Just tap the button below.'}\n\nIf anything about your plans changes, reply to this email.\n\nThe CoHostCompare team`,
+        cta: r.watch_new ? { label: 'See your request', url: `${SITE}/account` } : { label: 'Email me when one does', url: await watchUrl(r.id) },
+      });
+    }
+    if (ok) { await mark(); n++; }
   }
   return n;
 }

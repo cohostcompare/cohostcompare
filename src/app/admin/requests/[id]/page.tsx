@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  quote or decline, the conversation and any client confirmation fee. Nothing here changes anything.
 */
 
-type Thread = { id: string; manager_slug: string; manager_name: string; status: string; quote: Quote | null; created_at: string; updated_at: string; quoted_at: string | null; accepted_at: string | null; owner_seen_at: string | null; manager_reminded_at: string | null; unclaimed_notified_at: string | null };
+type Thread = { id: string; manager_slug: string; manager_name: string; status: string; quote: Quote | null; created_at: string; updated_at: string; quoted_at: string | null; accepted_at: string | null; owner_seen_at: string | null; manager_reminded_at: string | null; unclaimed_notified_at: string | null; owner_no_reply_at?: string | null };
 type Msg = { id: string; thread_id: string; sender: string; body: string; created_at: string; read_by_owner: boolean; read_by_manager: boolean };
 type Fee = { id: string; thread_id: string; amount: number; status: string; note: string | null; created_at: string; updated_at: string };
 
@@ -33,7 +33,7 @@ export default async function AdminRequest({ params }: { params: Promise<{ id: s
   const db = adminClient();
   const { data: r } = await db.from('quote_requests').select('*').eq('id', id).maybeSingle();
   if (!r) notFound();
-  const { data: ts } = await db.from('quote_request_managers').select('id, manager_slug, manager_name, status, quote, created_at, updated_at, quoted_at, accepted_at, owner_seen_at, manager_reminded_at, unclaimed_notified_at').eq('request_id', id).order('created_at');
+  const { data: ts } = await db.from('quote_request_managers').select('id, manager_slug, manager_name, status, quote, created_at, updated_at, quoted_at, accepted_at, owner_seen_at, manager_reminded_at, unclaimed_notified_at, owner_no_reply_at').eq('request_id', id).order('created_at');
   const threads = (ts || []) as Thread[];
   const threadIds = threads.map((t) => t.id);
   const [{ data: msgs }, { data: fees }, { data: mgrs }] = await Promise.all([
@@ -119,6 +119,7 @@ export default async function AdminRequest({ params }: { params: Promise<{ id: s
                 <Row k="Owner saw the quote" v={t.owner_seen_at ? when(t.owner_seen_at) : t.quote ? 'Not yet' : null} />
                 <Row k="Manager reminded" v={t.manager_reminded_at ? when(t.manager_reminded_at) : null} />
                 <Row k="Unclaimed manager emailed" v={t.unclaimed_notified_at ? when(t.unclaimed_notified_at) : null} />
+                <Row k="Owner told no reply yet" v={t.owner_no_reply_at ? when(t.owner_no_reply_at) : null} />
                 <Row k="Last change" v={when(t.updated_at)} />
               </dl>
               {decline && <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '10px 12px' }}><b>Declined.</b> <span style={{ whiteSpace: 'pre-wrap' }}>{decline.body.replace(/^.*?can’t take on this property\.\s*/s, '')}</span></div>}

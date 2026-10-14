@@ -147,6 +147,7 @@ export async function runDaily() {
   const guideTips = await step('guide tips', async () => (await import('@/lib/guide')).runGuideEmails(), 0);
   const unreached = await step('unreached threads', async () => (await import('@/lib/outreach')).unreachedThreads(), [] as { manager: string; reason: 'no-email' | 'unsubscribed' | 'retrying' }[]);
   const why: Record<string, string> = { 'no-email': 'no email on file', unsubscribed: 'unsubscribed', retrying: 'email failed, retrying' };
+  const noReply = await step('no-reply follow-ups', async () => (await import('@/lib/ownerJobs')).noReplyFollowUps(), 0);
   const drafts = await step('draft reminders', async () => (await import('@/lib/ownerJobs')).draftReminders(), 0);
   const alerts = await step('new-manager alerts', async () => (await import('@/lib/ownerJobs')).newManagerAlerts(), 0);
   const onboard = await step('manager onboarding', async () => (await import('@/lib/onboarding')).runOnboarding(), 0);
@@ -172,6 +173,7 @@ export async function runDaily() {
     ...(invites ? [`Review invites sent to owners: ${invites}.`] : []),
     ...(missed ? [`Request emails sent to unclaimed managers (catch-up): ${missed}.`] : []),
     ...(unreached.length ? [`ACTION: unclaimed managers not told about a request (owners waiting): ${unreached.map((u) => `${u.manager} (${why[u.reason]})`).join('; ')}. Admin → Quote requests → Manager not told.`] : []),
+    ...(noReply ? [`Owners told a manager hasn’t replied after 3 days (with other managers or a new-manager alert): ${noReply}.`] : []),
     ...(drafts ? [`Unsent quote request reminders: ${drafts}.`] : []),
     ...(guideTips ? [`Setup guide tip emails: ${guideTips}.`] : []),
     ...(alerts ? [`New-manager alerts to owners: ${alerts}.`] : []),
@@ -189,7 +191,7 @@ export async function runDaily() {
       cta: { label: 'Open admin', url: `${siteBase()}/admin` },
     }), false);
   }
-  const summary = `owner reminders ${owners}; outreach ${outreach.sent}; reports ${reports.made}; review invites ${invites}; onboarding ${onboard}; guide tips ${guideTips}; catch-up ${missed}; digest ${lines.length ? 'sent' : 'nothing to send'}`;
+  const summary = `owner reminders ${owners}; no-reply ${noReply}; outreach ${outreach.sent}; reports ${reports.made}; review invites ${invites}; onboarding ${onboard}; guide tips ${guideTips}; catch-up ${missed}; digest ${lines.length ? 'sent' : 'nothing to send'}`;
   if (runId != null) await db.from('cron_runs').update({ finished_at: new Date().toISOString(), ok: problems.length === 0, summary, error: problems.length ? problems.join('\n').slice(0, 4000) : null }).eq('id', runId).then(() => {}, () => {});
   return { ownerReminders: owners, outreach, reports, reviewInvites: invites, adminDigest: lines.length > 0, problems };
 }
