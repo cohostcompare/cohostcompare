@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { CONTACT_HINT, contactDetailsError, findContactDetails } from '@/lib/contactGuard';
 import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
 import { declineRequest, saveTemplate, sendManagerMessage, sendQuote } from '../actions';
 import { GST_OPTIONS, gstModeOf } from '@/lib/gst';
@@ -22,6 +23,7 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
   const ref = useRef<HTMLFormElement>(null);
   const d = q || defaults || {};
   const paid = plan !== 'free';
+  const [noteWarn, setNoteWarn] = useState('');
   return (
     <form ref={ref} action={action} style={{ display: 'grid', gap: 14 }}>
       <input type="hidden" name="thread" value={thread} />
@@ -48,7 +50,11 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
         <label style={L}>Estimated nights booked (%, optional)<input className="field" name="est_occ" inputMode="numeric" defaultValue={d.estOccupancyPct ?? ''} /></label>
       </div>
       <label style={L}>What&apos;s included (one per line)<textarea className="field" name="included" rows={3} defaultValue={(d.included || []).join('\n')} /></label>
-      <label style={L}>Note to the owner (optional)<textarea className="field" name="note" rows={3} maxLength={1500} defaultValue={d.note || ''} placeholder="Why you're a good fit for this property, or anything you'd need to confirm." /></label>
+      <label style={L}>Note to the owner (optional)<textarea className="field" name="note" rows={3} maxLength={1500} defaultValue={d.note || ''} placeholder="Why you're a good fit for this property, or anything you'd need to confirm."
+        onBlur={(e) => { const k = findContactDetails(e.currentTarget.value); setNoteWarn(k.length ? contactDetailsError(k, 'note') : ''); }} />
+        <span className="hint" style={{ fontWeight: 400 }}>{CONTACT_HINT}</span>
+        {noteWarn && <span role="alert" style={{ color: 'var(--signal)', fontWeight: 400 }}>{noteWarn}</span>}
+      </label>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button className="btn primary" type="submit" disabled={pending || locked}>{pending ? 'Sending…' : q ? 'Update quote' : 'Send quote'}</button>
         {state?.error && <span role="alert" style={{ color: 'var(--signal)' }}>{state.error}</span>}
@@ -68,7 +74,7 @@ export function QuoteForm({ thread, q, defaults, locked, plan, templates, feeTex
   );
 }
 
-export function ManagerComposer({ thread, name }: { thread: string; name: string }) {
+export function ManagerComposer({ thread, name, accepted }: { thread: string; name: string; accepted?: boolean }) {
   const [state, action, pending] = useActionState(sendManagerMessage, {});
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state?.ok) ref.current?.reset(); }, [state]);
@@ -83,6 +89,7 @@ export function ManagerComposer({ thread, name }: { thread: string; name: string
         {state?.error && <span role="alert" style={{ color: 'var(--signal)' }}>{state.error}</span>}
         {state?.ok && <span className="hint">Sent.</span>}
       </div>
+      {!accepted && <p className="hint" style={{ margin: 0 }}>{CONTACT_HINT}</p>}
     </form>
   );
 }

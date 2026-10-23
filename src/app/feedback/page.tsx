@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { feedbackContext, MIN_GENUINE } from '@/lib/feedback';
 import { currentUser } from '@/lib/supabase/server';
 import FeedbackForm from './FeedbackForm';
+import { formToken } from '@/lib/spam';
 
 export const metadata: Metadata = { title: 'Feedback', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ export default async function Feedback({ searchParams }: { searchParams: SP }) {
         </div>
       )}
       {ctx?.given && !ctx.reward && <p className="hint" style={{ margin: 0 }}>Thanks for your earlier feedback. You&apos;re welcome to send more any time.</p>}
-      <FeedbackForm role={role} signedIn={Boolean(user)} page={sp.from} minGenuine={MIN_GENUINE} reward={ctx?.reward ?? null} />
+      <FeedbackForm role={role} signedIn={Boolean(user)} page={sp.from} minGenuine={MIN_GENUINE} reward={ctx?.reward ?? null} token={formToken()} />
       <p className="hint" style={{ margin: 0 }}>Your feedback goes straight to the people who run CoHostCompare. We don&apos;t publish it or share it with managers or owners. See our <Link href="/privacy">privacy policy</Link>.</p>
     </main>
   );

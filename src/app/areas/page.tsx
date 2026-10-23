@@ -4,6 +4,7 @@ import CoverageMap from '@/components/CoverageMap';
 import JsonLd from '@/components/JsonLd';
 import { breadcrumbs, itemList } from '@/lib/seo';
 import { areas } from '@/lib/areas';
+import { liveSuburbs, suburbHref } from '@/lib/suburbs';
 
 export const revalidate = 1800;
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Areas() {
-  const all = await areas();
+  const [all, subs] = await Promise.all([areas(), liveSuburbs()]);
   const cities = [...new Set(all.map((a) => a.city))];
   return (
     <main style={{ maxWidth: 900, paddingBlock: '16px 64px', display: 'grid', gap: 24 }}>
@@ -29,6 +30,14 @@ export default async function Areas() {
           <div className="chips">{all.filter((a) => a.city === c).map((a) => <Link key={a.slug} className="chip" href={`/areas/${a.slug}`} style={{ textDecoration: 'none', fontSize: 15, padding: '6px 12px' }}>{a.label}</Link>)}</div>
         </section>
       ))}
+      {subs.length > 0 && (
+        <section style={{ display: 'grid', gap: 10 }}>
+          <h2 style={{ fontSize: 24, margin: 0 }}>Popular suburbs</h2>
+          {(['NSW', 'VIC'] as const).map((st) => (
+            <div key={st} className="chips">{subs.filter((s) => s.state === st).sort((x, y) => x.name.localeCompare(y.name)).map((s) => <Link key={s.slug} className="chip" href={suburbHref(s)} style={{ textDecoration: 'none', fontSize: 15, padding: '6px 12px' }}>{s.name}</Link>)}</div>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

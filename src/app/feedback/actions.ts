@@ -5,17 +5,27 @@ import { redirect } from 'next/navigation';
 import { sendEmail } from '@/lib/email';
 import { feedbackContext, grantReward, MIN_GENUINE, shouldPrompt } from '@/lib/feedback';
 import { adminClient, currentUser } from '@/lib/supabase/server';
+import { allow, callerKey } from '@/lib/rate';
+import { looksLikeSpam, tokenOk } from '@/lib/spam';
 
 type State = { error?: string };
 const t = (f: FormData, k: string, n: number) => String(f.get(k) || '').trim().slice(0, n) || null;
 const num = (f: FormData, k: string, lo: number, hi: number) => { const v = f.get(k); if (v === null || v === '') return null; const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
 
 export async function sendFeedback(_: State, form: FormData): Promise<State> {
-  if (form.get('website_url')) redirect('/feedback?thanks=1'); // honeypot
+  // Spam layers (src/lib/spam.ts): honeypot, signed form-shown token + a field only a real browser fills, rate limit.
+  if (form.get('website_url')) redirect('/feedback?thanks=1');
   const user = await currentUser();
+  if (!user && (form.get('js') !== '1' || !tokenOk(String(form.get('ft') || '')))) redirect('/feedback?thanks=1');
+  if (!(await allow('feedback', user ? `u:${user.id}` : await callerKey(), 3, 3600e3))) return { error: 'Thanks, we’ve had a few messages from you just now. Please try again in an hour, or email hello@cohostcompare.com.' };
   const ctx = user ? await feedbackContext(user) : null;
   const improve = t(form, 'improve', 3000);
   if (!improve || improve.length < 10) return { error: 'Tell us at least one thing we could do better.' };
+  // Signed-out sales pitches and link drops are kept for the record but flagged, not emailed.
+  if (!user && looksLikeSpam(improve, t(form, 'confusing', 3000), t(form, 'wish', 3000), t(form, 'email', 200))) {
+    await adminClient().from('feedback').insert({ role: 'visitor', email: t(form, 'email', 200), improve, confusing: t(form, 'confusing', 3000), wish: t(form, 'wish', 3000), heard_from: t(form, 'heard_from', 80), page: t(form, 'page', 200), admin_note: 'Spam (filtered automatically, not emailed)' }).then(() => {}, () => {});
+    redirect('/feedback?thanks=1');
+  }
   const email = user?.email || t(form, 'email', 200);
   const row = {
     user_id: user?.id ?? null, email, role: ctx?.role ?? 'visitor', manager_id: ctx?.managerId ?? null,

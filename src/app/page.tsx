@@ -8,7 +8,9 @@ import CoverageMap from '@/components/CoverageMap';
 import HeroBackdrop from '@/components/HeroBackdrop';
 import Photo from '@/components/Photo';
 import { areas } from '@/lib/areas';
+import { liveSuburbs, suburbHref } from '@/lib/suburbs';
 import RulesTrust from '@/components/RulesTrust';
+import StickySearch from '@/components/StickySearch';
 
 export const metadata: Metadata = {
   title: { absolute: 'CoHostCompare: compare Airbnb and short-term rental managers in Australia' },
@@ -28,8 +30,17 @@ const faqs: [string, string][] = [
 
 export const revalidate = 1800;
 
+// One-tap starting points under the search: places owners search most (search_log, Oct 2026). Only live pages show.
+const POPULAR = ['Bondi Beach', 'Bronte', 'Coogee', 'Potts Point', 'South Yarra', 'St Kilda', 'Fitzroy', 'Byron Bay', 'Hyams Beach', 'Sorrento'];
+
 export default async function Home() {
-  const all = await areas().catch(() => []);
+  const [all, subs] = await Promise.all([areas().catch(() => []), liveSuburbs().catch(() => [])]);
+  const popular = POPULAR.map((name) => {
+    const sub = subs.find((x) => x.name === name);
+    if (sub) return { href: suburbHref(sub), label: name };
+    const a = all.find((x) => x.label.toLowerCase().startsWith(name.toLowerCase()));
+    return a ? { href: `/areas/${a.slug}`, label: name } : null;
+  }).filter((x): x is { href: string; label: string } => Boolean(x));
   return (
     <main>
       <section className="home-hero">
@@ -40,9 +51,18 @@ export default async function Home() {
           <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
           <div className="hero-actions">
             <div className="hero-search"><AddressSearch /></div>
+            <ul className="hero-ticks" aria-label="Why owners use us">
+              <li>Free for owners</li><li>No sales calls</li><li>No paid rankings</li>
+            </ul>
           </div>
+          {popular.length > 0 && (
+            <nav className="hero-popular" aria-label="Popular places">
+              <span className="hint">Popular:</span>
+              {popular.map((p) => <Link key={p.href} href={p.href} className="chip">{p.label}</Link>)}
+            </nav>
+          )}
           <div className="hero-or">
-            <span className="hint">or</span>
+            <span className="hint desk-only">or</span>
             <Link href="/earnings" className="btn-earn"><svg className="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.7 0-2.8.8-2.8 2s1 1.7 2.8 2 2.8.8 2.8 2-1.1 2-2.8 2c-1.3 0-2.4-.5-2.9-1.3M12 6.5V8m0 8v1.5" /></svg>See what your property could earn</Link>
           </div>
         </div>
@@ -57,7 +77,7 @@ export default async function Home() {
       </div>
       </section>
 
-      <section className="steps home-steps" aria-labelledby="how">
+      <section className="steps home-steps desk-only" aria-labelledby="how">
         <div className="steps-head">
           <span className="label">How it works</span>
           <h2 id="how">Compare managers in three steps. Up to five quotes. Zero sales calls.</h2>
@@ -104,13 +124,13 @@ export default async function Home() {
 
       <section className="band" id="coverage" aria-labelledby="coverage-h">
         <h2 id="coverage-h" style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: '0 0 8px' }}>Where you can compare managers</h2>
-        <p className="lede" style={{ marginBottom: 18 }}>Sydney, Melbourne and holiday spots across NSW and Victoria. Tap an area to compare the managers there.</p>
-        <CoverageMap areas={all.map((a) => ({ slug: a.slug, label: a.label, city: a.city, lat: a.lat, lng: a.lng }))} />
+        <p className="lede" style={{ marginBottom: 18 }}>Sydney, Melbourne and holiday spots across NSW and Victoria. <span className="desk-only-inline">Tap an area to compare the managers there.</span></p>
+        <div className="desk-only"><CoverageMap areas={all.map((a) => ({ slug: a.slug, label: a.label, city: a.city, lat: a.lat, lng: a.lng }))} /></div>
         <p style={{ margin: '16px 0 0' }}><Link className="btn secondary btn-browse" href="/areas">Browse all areas →</Link></p>
       </section>
 
       <section className="band split">
-        <Photo name="bed" ratio="4 / 3" sizes="(max-width: 880px) 100vw, 520px" />
+        <div className="desk-only"><Photo name="bed" ratio="4 / 3" sizes="520px" /></div>
         <div style={{ display: 'grid', gap: 14 }}>
           <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Unbiased, so you can trust the comparison</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>We&apos;re not a manager. No manager can pay for a better position, and what a manager pays us never changes what you see or how quotes compare. Every manager&apos;s figures come from the same public data, shown the same way, and every quote comes back in the same format.</p>
@@ -126,6 +146,7 @@ export default async function Home() {
         </div>
         <p style={{ margin: '16px 0 0' }}><Link href="/guides">Guides for owners →</Link> · <Link href="/facts">Market facts →</Link></p>
       </section>
+      <StickySearch />
     </main>
   );
 }

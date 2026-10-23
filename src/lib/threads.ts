@@ -4,6 +4,7 @@ import { replyHint, threadReplyTo } from '@/lib/inbound';
 import { memberEmails } from '@/lib/managers';
 import { smsManager } from '@/lib/sms';
 import { adminClient } from '@/lib/supabase/server';
+import { redactContactDetails } from '@/lib/contactGuard';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cohostcompare.com';
 
@@ -33,12 +34,32 @@ export async function postOwnerMessage(threadId: string, body: string, ownerEmai
   return true;
 }
 
+/** True once the owner accepted and the introduction (with both sides' contact details) has gone out. */
+export async function isIntroduced(threadId: string, status: string) {
+  if (status !== 'accepted') return false;
+  const { data: fee } = await adminClient().from('success_fees').select('status').eq('thread_id', threadId).maybeSingle();
+  return !(fee && ['awaiting_unlock', 'expired'].includes(fee.status));
+}
+
 /** Saves a manager's message on a thread and tells the owner. */
 export async function postManagerMessage(threadId: string, body: string, via: 'site' | 'email' = 'site') {
   const db = adminClient();
-  const { data: t } = await db.from('quote_request_managers').select('id, manager_name, status, request_id').eq('id', threadId).single();
+  const { data: t } = await db.from('quote_request_managers').select('id, manager_slug, manager_name, status, request_id').eq('id', threadId).single();
   if (!t) return false;
   const { data: req } = await db.from('quote_requests').select('owner_email').eq('id', t.request_id).single();
+  // Before acceptance, contact details (often in email signatures) are hidden; the site form asks the manager to remove them.
+  if (!(await isIntroduced(t.id, t.status))) {
+    const r = redactContactDetails(body);
+    if (r.removed.length) {
+      body = `${r.text}\n\n(Contact details are shared when the owner accepts a quote.)`;
+      const to = await memberEmails(t.manager_slug);
+      if (to.length) await sendEmail({
+        to, subject: 'We hid contact details in your reply',
+        text: `Your reply to an owner was delivered, but we hid the contact details in it (often an email signature).\n\nThe owner gets your contact details, and you get theirs, as soon as they accept your quote, in one introduction email.`,
+        cta: { label: 'Open the request', url: `${SITE}/dashboard/requests/${t.id}` },
+      });
+    }
+  }
   const { error } = await db.from('messages').insert({ thread_id: t.id, sender: 'manager', body, read_by_manager: true });
   if (error) { console.error(error); return false; }
   if (t.status === 'sent') await db.from('quote_request_managers').update({ status: 'viewed' }).eq('id', t.id);

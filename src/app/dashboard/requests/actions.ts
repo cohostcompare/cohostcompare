@@ -9,9 +9,10 @@ import { notifyIfAllReplied } from '@/lib/reminders';
 import { adminClient } from '@/lib/supabase/server';
 import { isPro, plansFor } from '@/lib/pro';
 import { threadReplyTo } from '@/lib/inbound';
-import { postManagerMessage } from '@/lib/threads';
+import { isIntroduced, postManagerMessage } from '@/lib/threads';
 import { DECLINE_REASONS, MIN_DECLINE_NOTE } from '@/lib/declineReasons';
 import { gstModeOf, gstSuffix } from '@/lib/gst';
+import { contactDetailsError, findContactDetails } from '@/lib/contactGuard';
 
 async function origin() {
   const h = await headers();
@@ -23,6 +24,9 @@ export async function sendQuote(_: unknown, form: FormData): Promise<{ error?: s
   if (['accepted', 'declined', 'withdrawn'].includes(thread.status)) return { error: 'This request is closed, so the quote can’t be changed.' };
   const q = parseQuote(form);
   if ('error' in q) return q;
+  // Contact details are shared by the introduction email once the owner accepts, never in the quote.
+  const inNote = findContactDetails([q.note, ...q.included].filter(Boolean).join('\n'));
+  if (inNote.length) return { error: contactDetailsError(inNote, 'note') };
   const db = adminClient();
   const first = !thread.quote;
   const { error } = await db.from('quote_request_managers').update({ quote: q, status: 'quoted', quoted_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', thread.id);
@@ -48,6 +52,10 @@ export async function sendManagerMessage(_: unknown, form: FormData): Promise<{ 
   const body = String(form.get('body') || '').trim();
   if (!body) return { error: 'Write a message first.' };
   if (body.length > 4000) return { error: 'Keep messages under 4,000 characters.' };
+  if (!(await isIntroduced(thread.id, thread.status))) {
+    const found = findContactDetails(body);
+    if (found.length) return { error: contactDetailsError(found, 'message') };
+  }
   if (!(await postManagerMessage(thread.id, body))) return { error: "Your message didn't send. Try again." };
   revalidatePath(`/dashboard/requests/${thread.id}`);
   return { ok: true };

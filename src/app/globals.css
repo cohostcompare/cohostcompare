@@ -909,3 +909,25 @@ a.chip, button.chip { min-height: 32px; display: inline-flex; align-items: cente
 @media (min-width: 881px) { .hero-right { display: contents; } }
 .dir-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 18px; }
 .dir-list li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+
+/* Simpler phone homepage (Oct 2026): one clear search, ticks, popular places; steps, map and photo are desktop only */
+.desk-only-inline { display: inline; }
+.hero-ticks { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 14px; font-weight: 700; color: var(--brand); }
+.hero-ticks li { display: inline-flex; align-items: center; gap: 6px; }
+.hero-ticks li::before { content: '✓'; font-weight: 800; }
+.hero-popular { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.hero-popular .chip { text-decoration: none; font-size: 14px; padding: 5px 11px; background: var(--panel); }
+.sticky-search { display: none; }
+@media (max-width: 880px) {
+  .desk-only, .desk-only-inline { display: none !important; }
+  .hero-h1 { font-size: clamp(30px, 8.4vw, 38px); }
+  .hero-left .lede { font-size: 16px; }
+  .hero-search .search > .hint:not([role="alert"]) { display: none; } /* the long coverage hint: the ticks and popular places say it on phones */
+  .hero-ticks { justify-content: center; font-size: 13px; }
+  .hero-popular { justify-content: center; }
+  .hero-popular .hint { flex-basis: 100%; text-align: center; }
+  .btn-earn { min-height: 42px; font-size: 15px; background: transparent; box-shadow: none; text-decoration: underline; padding: 0; }
+  .sticky-search { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); border-top: 1px solid var(--line); }
+  .sticky-search .btn { width: 100%; }
+  main:has(.sticky-search) { padding-bottom: 72px; }
+}

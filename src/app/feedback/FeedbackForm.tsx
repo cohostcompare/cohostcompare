@@ -1,19 +1,22 @@
 'use client';
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { sendFeedback } from './actions';
 
 const EASE = ['Very hard', 'Hard', 'OK', 'Easy', 'Very easy'];
 const HEARD = ['Google search', 'Google ad', 'LinkedIn', 'Facebook or Instagram', 'A friend or colleague', 'A manager sent me', 'News or a blog', 'Other'];
 
-export default function FeedbackForm({ role, signedIn, page, minGenuine, reward }: { role: 'owner' | 'manager' | 'visitor'; signedIn: boolean; page?: string; minGenuine: number; reward: string | null }) {
+export default function FeedbackForm({ role, signedIn, page, minGenuine, reward, token }: { role: 'owner' | 'manager' | 'visitor'; signedIn: boolean; page?: string; minGenuine: number; reward: string | null; token: string }) {
   const [state, act, pending] = useActionState(sendFeedback, {});
   const [ease, setEase] = useState<number | null>(null);
   const [nps, setNps] = useState<number | null>(null);
   const [improve, setImprove] = useState('');
   const short = reward && improve.trim().length < minGenuine;
+  const [js, setJs] = useState('');
+  useEffect(() => setJs('1'), []);
   return (
     <form action={act} className="panel feedback-form" style={{ display: 'grid', gap: 20 }}>
       <input type="text" name="website_url" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: -9999 }} />
+      <input type="hidden" name="ft" value={token} /><input type="hidden" name="js" value={js} />
       {page && <input type="hidden" name="page" value={page} />}
       <input type="hidden" name="ease" value={ease ?? ''} /><input type="hidden" name="nps" value={nps ?? ''} />
 

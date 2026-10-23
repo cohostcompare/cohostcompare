@@ -110,7 +110,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
               <span className="contact"><a href={`mailto:${req.owner_email}`}>{req.owner_email}</a>{req.owner_phone ? <> · <a href={`tel:${String(req.owner_phone).replace(/\s/g, '')}`}>{req.owner_phone}</a></> : null}</span>
               <span className="hint">Arrange the visit and your management agreement with {first} there. This chat stays here as a record.</span>
             </div>
-            <details className="chat-later"><summary>Still want to send a message here?</summary><ManagerComposer thread={t.id} name={first} /></details>
+            <details className="chat-later"><summary>Still want to send a message here?</summary><ManagerComposer thread={t.id} name={first} accepted /></details>
           </>
         ) : <ManagerComposer thread={t.id} name={first} />}
       </section>
