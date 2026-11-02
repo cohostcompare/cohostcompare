@@ -1,7 +1,7 @@
 // Plain-English summary of short-term rental rules by state. General information, not legal advice.
 // Every point is backed by an official government source (state, territory or council). No blogs or industry sites. Review and update regularly (last checked below).
-export const RULES_CHECKED = '1 October 2026';
-export const RULES_CHECKED_ISO = '2026-10-01'; // keep in step with RULES_CHECKED
+export const RULES_CHECKED = '1 November 2026';
+export const RULES_CHECKED_ISO = '2026-11-01'; // keep in step with RULES_CHECKED
 /** Days since the rules were last checked against official sources. Over 45 = overdue for review. */
 export const rulesAgeDays = () => Math.floor((Date.now() - new Date(`${RULES_CHECKED_ISO}T00:00:00+10:00`).getTime()) / 86400e3);
 export const RULES_STALE_DAYS = 45;
@@ -22,62 +22,74 @@ export const RULES: StateRules[] = [
     code: 'nsw', name: 'New South Wales',
     summary: 'Every short-term rental must be registered, meet a fire safety standard and follow a mandatory code of conduct. Unhosted stays are capped at 180 nights a year in Greater Sydney and some regional areas, and 60 nights in most of Byron Shire.',
     points: [
-      'Register the property on the NSW Planning Portal short-term rental accommodation (STRA) register before you advertise it. Registration costs $65, with a $25 renewal each year.',
-      'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney, and in parts of Ballina, Clarence Valley and Muswellbrook. Hosted stays aren’t capped.',
+      'Register the property on the NSW Planning Portal short-term rental accommodation (STRA) register before you advertise it. Registration costs $65, with a $25 renewal each year. Show your STRA property ID on online listings.',
+      'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney, in the Ballina area, and in parts of Clarence Valley and Muswellbrook. Hosted stays aren’t capped.',
       'Bookings of 21 or more consecutive nights don’t count toward the cap.',
-      'In most of Byron Shire, unhosted stays are capped at 60 nights a year, from 23 September 2024 or your first renewal after that. Mapped precincts in Byron Bay town centre and Brunswick Heads have no cap.',
+      'In most of Byron Shire, unhosted stays are capped at 60 nights a year, from 23 September 2024 or your first renewal after that. Mapped precincts in and around Byron Bay town centre and Brunswick Heads allow unhosted stays all year.',
       'The property must meet the STRA fire safety standard, including interconnected smoke alarms and an evacuation plan.',
       'Hosts must follow the Fair Trading code of conduct: give guests contact and emergency details, tell direct neighbours how to reach you, hold insurance for third-party injury or death that covers each stay, and be contactable from 8 am to 5 pm every day and for emergencies after hours. Serious breaches can put a host or guest on the exclusion register.',
       'Strata schemes can pass a by-law banning short-term rentals in lots that aren’t the owner’s or occupier’s home. Hosted stays can’t be banned this way.',
     ],
-    watch: ['The NSW Government is reviewing the STRA rules. No changes have been announced as law yet.'],
+    watch: [
+      'The NSW Government is reviewing the STRA rules. No changes have been announced as law yet.',
+      'In April 2026, City of Sydney council resolved to look into limits on short-term rentals of homes that aren’t someone’s main residence. Nothing has changed yet.',
+    ],
     faqs: [
       ['Do I need to register my Airbnb in NSW?', 'Yes. Every short-term rental in NSW must be registered on the NSW Planning Portal’s short-term rental accommodation register before you advertise it.'],
       ['How many nights can I rent out my property in Sydney?', 'Unhosted stays (you don’t live there during the stay) are capped at 180 nights a year in Greater Sydney. Hosted stays aren’t capped, and bookings of 21 or more consecutive nights don’t count toward the cap.'],
-      ['What is the night cap in Byron Bay?', 'In most of Byron Shire, unhosted stays are capped at 60 nights a year. Mapped precincts in Byron Bay town centre and Brunswick Heads have no cap.'],
+      ['What is the night cap in Byron Bay?', 'In most of Byron Shire, unhosted stays are capped at 60 nights a year. Mapped precincts in and around Byron Bay town centre and Brunswick Heads allow unhosted stays all year.'],
       ['Can my strata ban short-term rentals?', 'A strata scheme can pass a by-law banning short-term rentals in lots that aren’t the owner’s or occupier’s home. Hosted stays can’t be banned this way.'],
     ],
     sources: [
-      { label: 'NSW Department of Planning, Housing and Infrastructure: short-term rental accommodation', url: 'https://www.planning.nsw.gov.au/the-planning-system/housing/short-term-rental-accommodation' },
+      { label: 'NSW Department of Planning, Housing and Infrastructure: short-term rental accommodation', url: 'https://www.planning.nsw.gov.au/policy-and-legislation/housing/short-term-rental-accommodation' },
       { label: 'NSW Department of Planning, Housing and Infrastructure: Byron Shire', url: 'https://www.planning.nsw.gov.au/policy-and-legislation/housing/short-term-rental-accommodation/byron-shire' },
       { label: 'NSW Government: host obligations for short-term rental accommodation', url: 'https://www.nsw.gov.au/housing-and-construction/short-term-rental-accommodation/host-obligations' },
+      { label: 'NSW Planning Portal: short-term rental accommodation register', url: 'https://www.planningportal.nsw.gov.au/stra' },
+      { label: 'City of Sydney: council decision on short-term rental accommodation (April 2026)', url: 'https://meetings.cityofsydney.nsw.gov.au/ieDecisionDetails.aspx?ID=6600' },
     ],
   },
   {
     code: 'vic', name: 'Victoria',
-    summary: 'A 7.5% short stay levy applies to stays of less than 28 consecutive days. There is no statewide night cap, but apartment and townhouse owners corporations can vote to ban short stays.',
+    summary: 'A 7.5% short stay levy applies to stays of less than 28 consecutive days. There is no statewide night cap, but some councils require yearly registration, and apartment and townhouse owners corporations can vote to ban short stays.',
     points: [
       'Since 1 January 2025, a 7.5% levy applies to short stays of less than 28 consecutive days.',
       'If you only take bookings through platforms such as Airbnb or Stayz, the platform registers for and pays the levy. If you take direct bookings, you must register with the State Revenue Office and lodge returns yourself.',
       'The levy doesn’t apply to a stay in someone’s principal place of residence (owned or rented), or to commercial residential premises such as hotels and motels. Owners can give booking platforms a declaration that their premises are excluded.',
       'If you’re unsure whether the levy applies, check the State Revenue Office’s guidance or ask it for a private ruling.',
       'An owners corporation can ban short stays in its building by special resolution (75% of lot owners). The ban can’t apply to a lot that is the owner’s or occupier’s principal place of residence.',
-      'There is no statewide cap on nights. Check your council for any local planning rules.',
+      'There is no statewide cap on nights.',
+      'Some councils make you register a short stay with them each year. Bass Coast charges $600 a year for 1 to 4 bedrooms and $900 for 5 or more (2026–27). Mornington Peninsula also requires yearly registration. Check your council’s local laws and planning rules.',
     ],
     sources: [
       { label: 'State Revenue Office Victoria: short stay levy', url: 'https://www.sro.vic.gov.au/owning-property/short-stay-levy' },
       { label: 'State Revenue Office Victoria: short stay levy registration', url: 'https://www.sro.vic.gov.au/news/short-stay-levy-registration-now-open' },
       { label: 'State Revenue Office Victoria: short stay levy applies from 1 January 2025', url: 'https://www.sro.vic.gov.au/about-us/news-and-events/news/short-stay-levy-applies-1-january-2025' },
-      { label: 'State Revenue Office Victoria: declaration that premises are not short stay accommodation', url: 'https://www.sro.vic.gov.au/owning-property/short-stay-levy/complete-declaration-premises-are-not-short-stay-accommodation' },
+      { label: 'State Revenue Office Victoria: notify that premises are not short stay accommodation', url: 'https://www.sro.vic.gov.au/owning-property/short-stay-levy/notify-premises-are-not-short-stay-accommodation' },
       { label: 'Alpine Resorts Victoria: short stay levy update', url: 'https://www.alpineresorts.vic.gov.au/news/short-stay-levy-update' },
       { label: 'Consumer Affairs Victoria: making rules to ban short stay accommodation', url: 'https://www.consumer.vic.gov.au/housing/owners-corporations/rules/making-rules-to-ban-short-stay-accommodation' },
+      { label: 'Bass Coast Shire Council: short stay rental accommodation', url: 'https://www.basscoast.vic.gov.au/community-support-services/local-laws/short-stay-rental-accommodation-ssra' },
+      { label: 'Mornington Peninsula Shire: short stay rental accommodation', url: 'https://www.mornpen.vic.gov.au/Online-Forms-and-Services/Short-Stay-Rental-Accommodation' },
     ],
   },
   {
     code: 'qld', name: 'Queensland',
     summary: 'There is no statewide registration or night cap. Each council sets its own rules, and they vary a lot, so check yours before you list.',
     points: [
-      'The Queensland Government has left short-term rentals to local councils rather than setting statewide restrictions.',
-      'Brisbane City Council decided not to go ahead with its proposed Short Stay Accommodation Local Law 2025. Existing local laws still apply.',
+      'There are no statewide restrictions or register. A 2023 Queensland Government review found statewide limits wouldn’t suit every area. Councils set their own rules.',
+      'Brisbane City Council is not going ahead with its proposed Short Stay Accommodation Local Law 2025 at this time. Existing local laws still apply.',
+      'In Brisbane, homes and units let to paying guests are rated as transitory accommodation, which is charged at a higher rate than a standard home.',
       'Noosa requires a local law approval for short stay letting, renewed every year. For a house it costs $1,748 to apply and $800 a year to renew (2026–27 fees). You also need a contact person within 20 km who responds to complaints within 30 minutes, 24/7.',
+      'In the Whitsundays, short-term accommodation needs council planning approval in all zones (small home-based stays excepted), plus a local law licence renewed every year.',
       'Other councils, including the Gold Coast and Sunshine Coast, have their own planning rules and may rate short-stay homes differently. Check with your council.',
       'In apartments and townhouses, check your body corporate by-laws before listing.',
     ],
     sources: [
       { label: 'Queensland Department of Planning: short-term rental accommodation review', url: 'https://www.planning.qld.gov.au/planning-issues-and-interests/short-term-rental-accommodation-review' },
       { label: 'Brisbane City Council: proposed Short Stay Accommodation Local Law 2025', url: 'https://www.brisbane.qld.gov.au/laws-and-permits/local-laws/community-consultation-and-new-local-laws/proposed-short-stay-accommodation-local-law-2025' },
+      { label: 'Brisbane City Council: how rates are calculated', url: 'https://www.brisbane.qld.gov.au/about-council/rates-and-payments/how-rates-are-calculated' },
       { label: 'Noosa Council: short stay letting', url: 'https://www.noosa.qld.gov.au/Planning-and-Development/Short-stay-letting-and-home-hosted-accommodation-local-law/Short-stay-letting' },
       { label: 'Noosa Council: short stay applications, fees and renewals', url: 'https://www.noosa.qld.gov.au/Planning-and-Development/Short-stay-letting-and-home-hosted-accommodation-local-law/Applications-fees-and-renewals' },
+      { label: 'Whitsunday Regional Council: short-term accommodation', url: 'https://www.whitsundayrc.qld.gov.au/Economic-Development-Business-and-Planning/Building-and-Development/Short-Term-Accommodation' },
     ],
   },
   {
@@ -93,7 +105,8 @@ export const RULES: StateRules[] = [
     sources: [
       { label: 'WA Government: short-term rental accommodation register', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/short-term-rental-accommodation-register' },
       { label: 'WA Government: STRA register frequently asked questions', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/short-term-rental-accommodation-register-frequently-asked-questions' },
-      { label: 'WA Government: STRA registration and fees', url: 'https://www.wa.gov.au/organisation/department-of-energy-mines-industry-regulation-and-safety/registration-and-fees' },
+      { label: 'WA Government: STRA registration and fees', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/registration-and-fees' },
+      { label: 'WA Government: STRA advertising requirements', url: 'https://www.wa.gov.au/organisation/department-of-local-government-industry-regulation-and-safety/stra-advertising-requirements' },
       { label: 'Consumer Protection WA: managing short-term rental accommodation', url: 'https://www.consumerprotection.wa.gov.au/managing-short-term-rental-accommodation' },
       { label: 'WA Department of Planning: STRA planning reforms', url: 'https://www.planning.wa.gov.au/planning-reform/short-term-rental-accommodation-planning-reforms' },
     ],
@@ -106,13 +119,15 @@ export const RULES: StateRules[] = [
       'Otherwise, you generally need a planning permit before operating a short stay in residential and similar zones.',
       'Under the Short Stay Accommodation Act 2019, you must give booking platforms your permit number or exemption status, the full address, the number of guest bedrooms and whether it’s your main residence.',
       'In Hobart, check your body corporate rules if the property is in a strata scheme. The council charges a different rate for homes with a planning permit for visitor accommodation.',
-      'There is no Tasmanian short stay levy. A proposed 5% levy (the Short Stay Levy Bill 2026) was defeated in the Legislative Council on 9 September 2026.',
+      'There is no Tasmanian short stay levy. A proposed 5% levy (the Short Stay Levy Bill 2026) was voted down in Parliament in September 2026.',
     ],
-    watch: ['In August 2026, Hobart City Council voted to seek a planning scheme change that would stop new whole-home short stays in most residential zones. Existing permits wouldn’t be affected. It needs Tasmanian Planning Commission approval before it applies.'],
+    watch: ['In August 2026, Hobart City Council voted to seek a planning scheme change that would stop new whole-home short stays in the General Residential, Inner Residential and Low Density Residential zones. Existing permits, hosting in your own home and secondary dwellings where you live on site wouldn’t be affected. It needs Tasmanian Planning Commission approval before it applies, and no hearing date has been published.'],
     sources: [
       { label: 'Tasmanian State Planning Office: short stay accommodation fact sheet (September 2025)', url: 'https://www.stateplanning.tas.gov.au/__data/assets/pdf_file/0009/605718/Short-Stay-Accommodation-fact-sheet-September-2025.PDF' },
       { label: 'Consumer, Building and Occupational Services Tasmania: short and medium term visitor accommodation', url: 'https://cbos.tas.gov.au/topics/housing/short-and-medium-term-visitor-accommodation' },
       { label: 'Tasmanian Department of Treasury and Finance: Short Stay Levy Bill', url: 'https://www.treasury.tas.gov.au/economy/short-stay-levy-bill-2025-consultation' },
+      { label: 'Premier of Tasmania: media release on the short stay levy vote (9 September 2026)', url: 'https://www.premier.tas.gov.au/latest-news/2026/september/labor-budget-hypocrisy-on-full-display' },
+      { label: 'City of Hobart: report on the visitor accommodation planning scheme amendment (April 2026)', url: 'https://www.hobartcity.com.au/files/assets/public2/v/1/development-and-business/recent-development-activity/current-planning-scheme-amendments/era-advisory_report-on-visitor-accommodation-amendment_final-1-april-2026.pdf' },
       { label: 'City of Hobart: visitor accommodation (Airbnb)', url: 'https://www.hobartcity.com.au/Development/Planning/Planning-guidelines-and-help/Visitor-accommodation-Airbnb' },
     ],
   },
@@ -120,12 +135,12 @@ export const RULES: StateRules[] = [
     code: 'sa', name: 'South Australia',
     summary: 'There is currently no statewide short-term rental register or night cap. Check your council and any strata or community corporation rules.',
     points: [
-      'Rules are mostly set locally, so check with your council whether you need development approval.',
+      'Rules are mostly set locally. Some councils, such as the Barossa, need development approval to use a home for short stays, whatever the number of guests. Check with your council.',
       'For apartments and townhouses, check your strata or community corporation’s rules.',
     ],
-    watch: ['The SA Government plans a statewide short-stay accommodation register with a code of conduct. Consumer and Business Services is consulting until 5 pm on 30 October 2026. It isn’t law yet, and no start date has been set.'],
+    watch: ['The SA Government plans a statewide short-stay accommodation register. Public consultation closed on 30 October 2026. It isn’t law yet. No bill has been introduced and no start date has been set.'],
     sources: [
-      { label: 'YourSAy: short stay accommodation register consultation', url: 'https://yoursay.sa.gov.au/short-stay-accommodation-register' },
+      { label: 'Barossa Council: short-term accommodation', url: 'https://www.barossa.sa.gov.au/development-business/short-term-accommodation' },
       { label: 'Parliament of South Australia: Select Committee on the Short Stay Accommodation Sector', url: 'https://www.parliament.sa.gov.au/en/News/2025/03/05/02/13/SUBMISSIONS-OPEN-Select-Committee-on-Short-Stay-Accommodation-Sector' },
     ],
   },
@@ -141,18 +156,20 @@ export const RULES: StateRules[] = [
       { label: 'ACT Revenue Office: short-term rental accommodation levy', url: 'https://www.revenue.act.gov.au/business-taxes-and-levies/short-term-rental-accommodation-levy' },
       { label: 'ACT Revenue Office: ACT Budget 2026–27 updates', url: 'https://www.revenue.act.gov.au/about-the-act-revenue-office/news/act-budget-2026-27-updates' },
       { label: 'ACT Government: short-term rental accommodation levy announcement', url: 'https://www.cmtedd.act.gov.au/open_government/inform/act_government_media_releases/chris-steel-mla-media-releases/2025/short-term-rental-accommodation-levy-to-be-introduced-in-the-act' },
-      { label: 'ACT Revenue Office: land tax', url: 'https://www.revenue.act.gov.au/land-tax' },
+      { label: 'ACT Revenue Office: land tax', url: 'https://www.revenue.act.gov.au/rates-and-property-charges/land-tax' },
     ],
   },
   {
     code: 'nt', name: 'Northern Territory',
     summary: 'There is no specific short-term rental registration scheme or night cap. Larger operations may need to register as a commercial accommodation business.',
     points: [
-      'If you accommodate seven or more paying visitors, you may need to register as a commercial visitor accommodation business. Small bed and breakfasts are excluded. Registration or renewal costs $372.',
+      'If you accommodate seven or more paying visitors, you may need to register as a commercial visitor accommodation business. Small bed and breakfasts are excluded. Registration or renewal costs $372.50 in 2026–27, paid online when you apply, and lasts five years. Register at least 30 days before you open.',
       'Check the NT Planning Scheme for whether your use needs a development permit, and your body corporate rules for units.',
     ],
     sources: [
       { label: 'NT Government: register a commercial visitor accommodation', url: 'https://nt.gov.au/industry/hospitality/accommodation-and-food-businesses/register-accommodation-business' },
+      { label: 'NT Government: register a commercial visitor accommodation (online service)', url: 'https://service.nt.gov.au/services/business-industry/food-hospitality/register-commercial-visitor-accommodation' },
+      { label: 'Territory Revenue Office: revenue units', url: 'https://nt.gov.au/employ/money-and-taxes/taxes,-royalties-and-grants/territory-revenue-office/revenue-units' },
       { label: 'NT Government: NT Planning Scheme 2020', url: 'https://nt.gov.au/property/land-planning-and-development/our-planning-system/nt-planning-scheme' },
     ],
   },
