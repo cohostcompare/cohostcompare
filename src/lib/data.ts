@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import 'server-only';
 import { adminClient } from './supabase/server';
 import type { GatedDetails, NearbyManager, PublicManager } from './types';
@@ -86,7 +87,9 @@ export async function withTestForAdmin(list: NearbyManager[]): Promise<NearbyMan
 }
 
 /** Managers with homes within COVER_KM of a point, busiest nearby first. */
-export async function managersNear(lat: number, lng: number): Promise<NearbyManager[]> {
+/** Deduped within one render (a page and its metadata share the lookup). */
+export const managersNear = cache(managersNearUncached);
+async function managersNearUncached(lat: number, lng: number): Promise<NearbyManager[]> {
   const db = adminClient();
   const { data: near, error } = await db.rpc('managers_near', { p_lat: lat, p_lng: lng, p_km: COVER_KM });
   if (error) { console.error(error); return []; }
