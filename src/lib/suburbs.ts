@@ -16,6 +16,8 @@ export type SuburbDef = { name: string; state: 'NSW' | 'VIC'; postcode: string; 
 export type Suburb = SuburbDef & { slug: string; area: Area | null; dupOf: string | null };
 
 export const MIN_MANAGERS = 3;
+/** Pages with fewer managers than this still work (ads, links) but are noindex and out of the sitemap, so search engines only see substantial pages. */
+export const MIN_INDEX = 5;
 const DUP_KM = 1.5;
 
 // Centres are approximate suburb centres; coverage uses a 4 km radius so a few hundred metres doesn't matter.
@@ -151,6 +153,13 @@ export async function liveSuburbs() {
   const [all, n] = await Promise.all([suburbs(), counts()]);
   return all.filter((s) => s.dupOf || (n[s.slug] ?? 0) >= MIN_MANAGERS);
 }
+
+/** Own suburb pages with enough managers to be indexed (sitemap, IndexNow). */
+export async function indexableSuburbs() {
+  const [all, n] = await Promise.all([suburbPages(), counts()]);
+  return all.filter((s) => (n[s.slug] ?? 0) >= MIN_INDEX);
+}
+export async function suburbManagerCount(slug: string) { return (await counts())[slug] ?? 0; }
 
 /** Where a suburb lives on the site: its own page, or the area page it duplicates. */
 export const suburbHref = (s: Pick<Suburb, 'slug' | 'dupOf'>) => (s.dupOf ? `/areas/${s.dupOf}` : `/airbnb-management/${s.slug}`);

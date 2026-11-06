@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import AreaView, { placeManagers } from '@/components/AreaView';
 import { metaDescription } from '@/lib/seo';
-import { kmBetween, liveSuburbs, MIN_MANAGERS, suburb, suburbHref, suburbPages } from '@/lib/suburbs';
+import { kmBetween, liveSuburbs, MIN_INDEX, MIN_MANAGERS, suburb, suburbHref, suburbManagerCount, suburbPages } from '@/lib/suburbs';
 
 // Suburb landing pages for search and ads. See src/lib/suburbs.ts.
 export const revalidate = 1800;
@@ -20,6 +20,8 @@ export async function generateMetadata({ params }: { params: P }): Promise<Metad
     title: long.length <= 44 ? long : `Airbnb managers in ${s.name}, ${s.state}`,
     description: metaDescription(`Compare Airbnb and short-term rental managers in ${s.name} ${s.postcode}: fees, guest ratings and homes they run nearby, side by side. Request up to five quotes free. No manager can pay to rank higher.`),
     alternates: { canonical: `/airbnb-management/${s.slug}` },
+    // Fewer than MIN_INDEX managers: the page still works for visitors and ads, but isn't offered to search engines.
+    ...((await suburbManagerCount(s.slug).catch(() => MIN_INDEX)) < MIN_INDEX ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
