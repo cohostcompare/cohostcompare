@@ -14,17 +14,17 @@ export const dynamic = 'force-dynamic';
  *   ?action=search&path=radius&body=<json>&store=1 → one call, returns pagination (+ stores rows if store=1)
  *   ?action=pull&path=polygon&body=<json, no pagination>&max=60 → pages through one area, stores rows
  */
-const CAP_CALLS = 200; // US$0.50 each = US$100
+// US$0.50 each. 93 test calls (US$46.50) + full Sydney/Melbourne pull capped at US$950 (1,900 calls).
+const CAP_CALLS = 1993;
 const KEY = 'airroi:test-2026-11';
 const PATHS: Record<string, string> = { radius: '/listings/search/radius', market: '/listings/search/market', polygon: '/listings/search/polygon' };
 
 async function takeCall() {
-  const db = adminClient();
-  const { data } = await db.from('market_cache').select('data').eq('key', KEY).maybeSingle();
-  const used = Number((data?.data as { calls?: number } | null)?.calls || 0);
-  if (used >= CAP_CALLS) throw new Error(`Cap reached: ${used} calls (US$${(used * 0.5).toFixed(2)}).`);
-  await db.from('market_cache').upsert({ key: KEY, data: { calls: used + 1, updatedAt: new Date().toISOString() } });
-  return used + 1;
+  // Atomic, so parallel batches can't overshoot the cap.
+  const { data, error } = await adminClient().rpc('airroi_take_call', { p_key: KEY, p_cap: CAP_CALLS });
+  if (error) throw new Error(error.message);
+  if (data === -1) throw new Error(`Cap reached: ${CAP_CALLS} calls (US$${(CAP_CALLS * 0.5).toFixed(2)}).`);
+  return data as number;
 }
 
 async function search(path: string, body: unknown) {
