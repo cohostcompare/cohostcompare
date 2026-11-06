@@ -149,6 +149,15 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 <ul className="ticks">{checks.map(([label, ok]) => <li key={label} className={ok ? 'done' : ''}><span className="sr-only">{ok ? 'Done: ' : 'To do: '}</span>{label}</li>)}</ul>
               </div>
             )}
+            <details className="panel" style={{ display: 'grid', gap: 10 }}>
+              <summary style={{ cursor: 'pointer' }}><b>Add a &ldquo;Compare us&rdquo; badge to your website</b> <span className="hint">Owners who click it land on your profile and can request a quote.</span></summary>
+              <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
+                <img src="/badge.svg" alt="Compare us on CoHostCompare" width={220} height={44} />
+                <label style={{ display: 'grid', gap: 6, fontSize: 14 }}>Copy this into your website (footer or contact page works well):
+                  <textarea className="field" readOnly rows={3} style={{ fontFamily: 'monospace', fontSize: 13 }} value={`<a href="https://www.cohostcompare.com/managers/${m.slug}?utm_source=badge&utm_medium=referral"><img src="https://www.cohostcompare.com/badge.svg" alt="Compare us on CoHostCompare" width="220" height="44"></a>`} />
+                </label>
+              </div>
+            </details>
             {(() => {
               const p = pro.get(m.id);
               const plan = planOf(p);
