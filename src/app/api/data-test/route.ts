@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { listingRow } from '@/lib/jobs/data';
+import { businessLike, cluster, listingRow, loadListings } from '@/lib/jobs/data';
 import { adminClient } from '@/lib/supabase/server';
 
 export const maxDuration = 300;
@@ -86,7 +86,40 @@ export async function GET(req: NextRequest) {
       }
       return NextResponse.json({ calls, stored, nextOffset: offset, total, done });
     }
-    return NextResponse.json({ error: 'action=spend|search|pull' }, { status: 400 });
+    if (action === 'candidates') {
+      // No AirROI calls. Groups accounts the same way as newBusinesses(), then splits into:
+      // new = groups with no known account; extra = unlinked accounts grouped with a known manager.
+      const min = Number(p.get('min') || 5);
+      const rows = await loadListings();
+      const { data: mgrs } = await adminClient().from('managers').select('slug, name, published, airbnb_host_ids');
+      const owner = new Map<string, { slug: string; name: string; published: boolean }>();
+      for (const m of mgrs || []) for (const h of m.airbnb_host_ids || []) owner.set(h, { slug: m.slug, name: m.name, published: m.published });
+      const byId = new Map(rows.map((l) => [l.listing_id, l]));
+      const fresh = (g: { listings: Set<string> }) => [...g.listings].map((id) => byId.get(id)).filter(Boolean);
+      const groups = cluster(rows);
+      const out = { fresh: [] as unknown[], extra: [] as unknown[] };
+      for (const g of groups) {
+        const knownAcc = g.accounts.filter((a) => owner.has(a.id));
+        const ls = fresh(g);
+        const rated = ls.filter((l) => l.num_reviews > 0 && Number(l.rating_overall) > 0);
+        const rating = rated.length ? +(rated.reduce((s, l) => s + Number(l.rating_overall), 0) / rated.length).toFixed(2) : null;
+        const accounts = g.accounts.sort((a, b) => b.listings.size - a.listings.size);
+        if (!knownAcc.length) {
+          if (g.listings.size < min) continue;
+          const names = accounts.map((a) => a.name);
+          out.fresh.push({ name: names.find(businessLike) || names[0], business: Boolean(names.find(businessLike)), accounts: accounts.map((a) => `${a.name} (${a.id}, ${a.listings.size})`),
+            homes: g.listings.size, rating, places: [...new Set(ls.map((l) => l.locality).filter(Boolean))].slice(0, 5) });
+        } else {
+          const mgrSet = [...new Set(knownAcc.map((a) => owner.get(a.id)!.slug))];
+          const unknown = accounts.filter((a) => !owner.has(a.id) && a.listings.size >= 3);
+          if (!unknown.length) continue;
+          out.extra.push({ managers: mgrSet, unlinked: unknown.map((a) => `${a.name} (${a.id}, ${a.listings.size})`), groupHomes: g.listings.size });
+        }
+      }
+      (out.fresh as { homes: number }[]).sort((a, b) => b.homes - a.homes);
+      return NextResponse.json({ freshCount: out.fresh.length, extraCount: out.extra.length, ...out });
+    }
+    return NextResponse.json({ error: 'action=spend|search|pull|candidates' }, { status: 400 });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
