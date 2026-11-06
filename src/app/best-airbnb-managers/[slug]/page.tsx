@@ -8,8 +8,8 @@ import { MIN_HOMES_HERE, MIN_REVIEWS, RANK_CITIES, TOP_N, ranking } from '@/lib/
 import { article, breadcrumbs, faqPage, itemList, metaDescription } from '@/lib/seo';
 
 export const revalidate = 21600; // figures are cached 6 hours
-export const dynamicParams = false;
-export function generateStaticParams() { return RANK_CITIES.map((c) => ({ slug: c.slug })); }
+// Built on first visit, not at build time: each list reads every area in the city, which is heavy alongside the rest of the build.
+export function generateStaticParams() { return [] as { slug: string }[]; }
 
 type P = { params: Promise<{ slug: string }> };
 const year = () => new Date().getFullYear();
@@ -31,7 +31,8 @@ const fee = (a: number | null, b: number | null) => (a == null ? 'On request' : 
 
 export default async function BestIn({ params }: P) {
   const { slug } = await params;
-  const r = await ranking(slug).catch(() => null);
+  if (!RANK_CITIES.some((c) => c.slug === slug)) notFound();
+  const r = await ranking(slug); // a failed read throws, so an error is never cached as an empty or missing page
   if (!r) notFound();
   const { city } = r;
   const date = fmtDate(r.asOf);
