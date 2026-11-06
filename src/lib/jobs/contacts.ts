@@ -188,4 +188,7 @@ export const RESEARCHED_CONTACTS: { slug: string; email: string; source: string 
   {"slug": "dijones-holidays", "email": "holidays@dijones.com.au", "source": "https://dijonesholidays.com.au/list-your-property/"},
   {"slug": "homes-for-holidays", "email": "info@homesforholidays.com.au", "source": "https://homesforholidays.com.au/privacy-policy/"},
   {"slug": "your-luxury-escape", "email": "manager@yourluxuryescape.com.au", "source": "https://bookings-yourluxuryescape.escapia.com/"},
+  {"slug": "masterpiece-holiday-stay", "email": "eric.y@mhstay.com.au", "source": "https://masterpieceholiday.com/"},
+  {"slug": "x-hospitality", "email": "bookings@xhospitality.com.au", "source": "https://www.sydney.com/destinations/sydney/sydney-east/bondi/accommodation/bondi-pacific"},
+  {"slug": "maxwell-property-group", "email": "sm@maxwellproperty.com.au", "source": "https://maxwellproperty.com.au/"},
 ];
