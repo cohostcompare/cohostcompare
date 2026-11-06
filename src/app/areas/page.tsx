@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { RANK_CITIES } from '@/lib/rankings';
 import CoverageMap from '@/components/CoverageMap';
 import JsonLd from '@/components/JsonLd';
 import { breadcrumbs, itemList } from '@/lib/seo';
@@ -27,6 +28,7 @@ export default async function Areas() {
       {cities.map((c) => (
         <section key={c} style={{ display: 'grid', gap: 10 }}>
           <h2 style={{ fontSize: 24, margin: 0 }}>{c}</h2>
+          {RANK_CITIES.find((r) => r.city === c) && <Link href={`/best-airbnb-managers/${RANK_CITIES.find((r) => r.city === c)!.slug}`}>Top-rated managers in {RANK_CITIES.find((r) => r.city === c)!.label} →</Link>}
           <div className="chips">{all.filter((a) => a.city === c).map((a) => <Link key={a.slug} className="chip" href={`/areas/${a.slug}`} style={{ textDecoration: 'none', fontSize: 15, padding: '6px 12px' }}>{a.label}</Link>)}</div>
         </section>
       ))}

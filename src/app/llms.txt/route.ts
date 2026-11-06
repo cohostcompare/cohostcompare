@@ -1,4 +1,5 @@
 import { GUIDES } from '@/lib/guides';
+import { RANK_CITIES } from '@/lib/rankings';
 import { feeRange, fmtDate, market } from '@/lib/market';
 import { RULES, RULES_CHECKED } from '@/lib/rules';
 import { POSITIONING, SITE } from '@/lib/seo';
@@ -36,6 +37,7 @@ ${m.cities.map((c) => `- ${c.city}: ${c.managers} managers${c.fee.mid != null ? 
 - [Home and search](${SITE}/): compare managers for an address
 - [Areas](${SITE}/areas): managers by area in Sydney, Melbourne and NSW and Victorian holiday areas
 - [Market facts](${SITE}/facts): live, dated figures, free to quote with a link
+${RANK_CITIES.map((c) => `- [Best Airbnb managers in ${c.label}](${SITE}/best-airbnb-managers/${c.slug}): ranked by guest rating adjusted for review count; no paid placement`).join('\n')}
 - [Earnings estimate](${SITE}/earnings): free estimate of yearly booking income for an address
 - [How it works](${SITE}/how-it-works)
 - [Why use us](${SITE}/why-us): neutrality and how profiles are built

@@ -4,6 +4,7 @@ import { GUIDES } from '@/lib/guides';
 import { RULES } from '@/lib/rules';
 import { adminClient } from '@/lib/supabase/server';
 import { liveSuburbs } from '@/lib/suburbs';
+import { RANK_CITIES } from '@/lib/rankings';
 
 export const dynamic = 'force-dynamic';
 const BASE = 'https://www.cohostcompare.com';
@@ -13,6 +14,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [ar, subs, { data: mgrs }] = await Promise.all([areas(), liveSuburbs(), adminClient().from('managers').select('slug, updated_at').eq('published', true)]);
   return [
     ...pages,
+    { url: `${BASE}/best-airbnb-managers`, changeFrequency: 'weekly' as const, priority: 0.8 },
+    ...RANK_CITIES.map((c) => ({ url: `${BASE}/best-airbnb-managers/${c.slug}`, changeFrequency: 'weekly' as const, priority: 0.9 })),
     ...GUIDES.map((g) => ({ url: `${BASE}/guides/${g.slug}`, changeFrequency: 'weekly' as const, priority: 0.8 })),
     ...RULES.map((r) => ({ url: `${BASE}/rules/${r.code}`, changeFrequency: 'weekly' as const, priority: 0.7 })),
     ...ar.map((a) => ({ url: `${BASE}/areas/${a.slug}`, changeFrequency: 'weekly' as const, priority: 0.8 })),
