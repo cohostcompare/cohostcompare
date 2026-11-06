@@ -1,0 +1,92 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { listingRow } from '@/lib/jobs/data';
+import { adminClient } from '@/lib/supabase/server';
+
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
+
+/*
+ * Nov 2026 AirROI data test (Ben approved, hard cap US$100).
+ * Preview deployments only (they sit behind Vercel login). 404 everywhere else.
+ * Every call is counted in market_cache before it's made, so the cap holds across runs.
+ *
+ *   ?action=spend                                  → calls used so far
+ *   ?action=search&path=radius&body=<json>&store=1 → one call, returns pagination (+ stores rows if store=1)
+ *   ?action=pull&lat&lng&radius&size=10&max=60     → pages through one circle (entire homes, no other filter), stores rows
+ */
+const CAP_CALLS = 200; // US$0.50 each = US$100
+const KEY = 'airroi:test-2026-11';
+const PATHS: Record<string, string> = { radius: '/listings/search/radius', market: '/listings/search/market', polygon: '/listings/search/polygon' };
+
+async function takeCall() {
+  const db = adminClient();
+  const { data } = await db.from('market_cache').select('data').eq('key', KEY).maybeSingle();
+  const used = Number((data?.data as { calls?: number } | null)?.calls || 0);
+  if (used >= CAP_CALLS) throw new Error(`Cap reached: ${used} calls (US$${(used * 0.5).toFixed(2)}).`);
+  await db.from('market_cache').upsert({ key: KEY, data: { calls: used + 1, updatedAt: new Date().toISOString() } });
+  return used + 1;
+}
+
+async function search(path: string, body: unknown) {
+  const used = await takeCall();
+  const r = await fetch(`https://api.airroi.com${PATHS[path] || PATHS.radius}`, {
+    method: 'POST',
+    headers: { 'x-api-key': (process.env.AIRROI_API_KEY || '').trim(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, data, used };
+}
+
+async function store(results: unknown[]) {
+  const rows = (results || []).map(listingRow).filter((x) => x.listing_id);
+  if (!rows.length) return 0;
+  const { error } = await adminClient().from('str_listings').upsert(rows, { onConflict: 'listing_id' });
+  if (error) throw new Error(error.message);
+  return rows.length;
+}
+
+export async function GET(req: NextRequest) {
+  if (process.env.VERCEL_ENV !== 'preview') return new NextResponse('Not found', { status: 404 });
+  const p = req.nextUrl.searchParams;
+  try {
+    const action = p.get('action');
+    if (action === 'spend') {
+      const { data } = await adminClient().from('market_cache').select('data').eq('key', KEY).maybeSingle();
+      const calls = Number((data?.data as { calls?: number } | null)?.calls || 0);
+      return NextResponse.json({ calls, usd: calls * 0.5, cap: CAP_CALLS });
+    }
+    if (action === 'search') {
+      const body = JSON.parse(p.get('body') || '{}');
+      const r = await search(p.get('path') || 'radius', body);
+      const results = (r.data?.results || []) as Record<string, Record<string, unknown>>[];
+      const stored = r.ok && p.get('store') === '1' ? await store(results) : 0;
+      return NextResponse.json({
+        ok: r.ok, status: r.status, callsUsed: r.used, pagination: r.data?.pagination ?? null, returned: results.length, stored,
+        error: r.ok ? undefined : JSON.stringify(r.data).slice(0, 500),
+        sample: results.slice(0, 3).map((l) => ({ id: l.listing_info?.listing_id, host: l.host_info?.host_id, cohosts: l.host_info?.cohost_ids, locality: l.location_info?.locality })),
+      });
+    }
+    if (action === 'pull') {
+      const lat = Number(p.get('lat')), lng = Number(p.get('lng')), radius = Number(p.get('radius') || 1);
+      const size = Number(p.get('size') || 10), max = Math.min(Number(p.get('max') || 60), CAP_CALLS);
+      let offset = Number(p.get('offset') || 0), calls = 0, stored = 0, total: number | null = null, done = false;
+      const started = Date.now();
+      while (!done && calls < max && Date.now() - started < 270000) {
+        const r = await search('radius', { latitude: lat, longitude: lng, radius_miles: radius, currency: 'native',
+          filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: size, offset } });
+        calls++;
+        if (!r.ok) return NextResponse.json({ error: JSON.stringify(r.data).slice(0, 500), calls, stored, offset, total });
+        total = r.data?.pagination?.total_count ?? total;
+        const results = r.data?.results || [];
+        stored += await store(results);
+        offset += size;
+        if (results.length < size || (total != null && offset >= total)) done = true;
+      }
+      return NextResponse.json({ calls, stored, nextOffset: offset, total, done });
+    }
+    return NextResponse.json({ error: 'action=spend|search|pull' }, { status: 400 });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}
