@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { TEST_SLUG } from '@/lib/data';
 import { adminClient } from '@/lib/supabase/server';
-import { DEVICES, SOURCES, sourceLabel, type Device, type Source } from '@/lib/traffic';
+import { DEVICES, SOURCES, STEPS, sourceLabel, stepLabel, type Device, type Source, type Step } from '@/lib/traffic';
 
 export const metadata: Metadata = { title: 'Ad results', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -40,7 +40,16 @@ export default async function AdResults({ searchParams }: { searchParams: SP }) 
   const dev = new Map<Source, Record<DevCol, { visits: number; quoted: number }>>(SOURCES.map((s) => [s, Object.fromEntries(DEV_COLS.map((d) => [d, { visits: 0, quoted: 0 }])) as Record<DevCol, { visits: number; quoted: number }>]));
   const sidDevice = new Map<string, DevCol>();
   for (const e of ev || []) if (e.kind === 'visit' && !sidDevice.has(e.sid)) sidDevice.set(e.sid, (DEVICES.includes(e.device as Device) ? e.device : 'unknown') as DevCol);
+  // Quote flow (SQL 034): sessions reaching each step, per source. Visits key the session's source, so later steps line up.
+  const flow = new Map<Source, Record<Step, number>>(SOURCES.map((s) => [s, Object.fromEntries(STEPS.map((k) => [k, 0])) as Record<Step, number>]));
   for (const e of ev || []) {
+    const src = (SOURCES.includes(e.source as Source) ? e.source : 'direct') as Source;
+    if (STEPS.includes(e.kind as Step) && once(`flow:${src}:${e.kind}`, e.sid)) flow.get(src)![e.kind as Step]++;
+  }
+  const flowTotal = Object.fromEntries(STEPS.map((k) => [k, SOURCES.reduce((n, s) => n + flow.get(s)![k], 0)])) as Record<Step, number>;
+  const flowSources = SOURCES.filter((s) => STEPS.some((k) => flow.get(s)![k]));
+  for (const e of ev || []) {
+    if (e.kind !== 'visit' && e.kind !== 'search' && e.kind !== 'quote') continue; // the other steps are in the quote flow table
     const src = (SOURCES.includes(e.source as Source) ? e.source : 'direct') as Source;
     const f = e.kind === 'visit' ? 'visits' : e.kind === 'search' ? 'searched' : 'quoted';
     if (once(`${src}:${f}`, e.sid)) by.get(src)![f]++;
@@ -108,6 +117,24 @@ export default async function AdResults({ searchParams }: { searchParams: SP }) 
         <b>All sources</b>
         {table([...SOURCES.map((s) => [sourceLabel[s], by.get(s)!] as [string, Row]).filter(([, r]) => r.visits || r.requests), ['Total', total]], 'Source')}
         <span className="hint">Visitors are browser sessions. Quote requests count each request once, by where that owner first came from in the 30 days before. Accepted counts requests where the owner has accepted at least one quote so far, so recent weeks fill in over time.</span>
+      </section>
+
+      <section className="panel" style={{ display: 'grid', gap: 10 }}>
+        <b>Quote flow: where owners drop out</b>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="qt" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <thead><tr style={{ textAlign: 'left' }}>{['Step', ...flowSources.map((s) => sourceLabel[s]), 'All', '% of visitors'].map((h) => <th key={h} style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>{h}</th>)}</tr></thead>
+            <tbody>{STEPS.map((k) => (
+              <tr key={k}>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)', fontWeight: 600 }}>{stepLabel[k]}</td>
+                {flowSources.map((s) => <td key={s} style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>{flow.get(s)![k]}</td>)}
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)', fontWeight: 600 }}>{flowTotal[k]}</td>
+                <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--line)' }}>{pct(flowTotal[k], flowTotal.visit)}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+        <span className="hint">Browser sessions reaching each step. Steps between searching and sending started on 7 Nov 2026 (update 034), so earlier sessions only show visit, search and sent. Signed-out owners who open the email link on another device count as a new session for the last two steps. &ldquo;AI assistants&rdquo; is visitors arriving from ChatGPT, Perplexity, Copilot, Gemini or Claude.</span>
       </section>
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>

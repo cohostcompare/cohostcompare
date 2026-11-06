@@ -34,6 +34,7 @@ export default async function SendPending({ params }: { params: Promise<{ id: st
     return <Problem title="Signed in with a different email" body={`This request was started with ${p.email}, but you're signed in as ${user.email}. Sign out and open the link again, or start a new request.`} />;
   }
   if (Date.now() - new Date(p.created_at).getTime() > 14 * 86400e3) return <Problem title="That request has expired" body="It was started more than two weeks ago. Start a new search and request quotes again; it only takes a minute." />;
+  { const { logFunnel } = await import('@/lib/traffic'); await logFunnel('link', true); }
   // Claim it first so a link opened twice (or prefetched) sends once.
   const { data: claimed } = await db.from('pending_requests').update({ sent_at: new Date().toISOString() }).eq('id', id).is('sent_at', null).select('id');
   if (!claimed?.length) redirect('/account');

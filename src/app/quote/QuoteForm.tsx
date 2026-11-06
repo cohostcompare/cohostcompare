@@ -9,6 +9,7 @@ import { checkCoverage } from './coverage';
 import { AVAILABILITY, PROPERTY_TYPES, SITUATIONS, mismatches, type PropertyDetails, type Requirements } from '@/lib/requirements';
 import { loadProperty, saveProperty } from '@/lib/client/property';
 import { removePick } from '@/lib/client/picks';
+import { track } from '@/lib/client/track';
 
 const SERVICES = ['Full management', 'Listing setup and photos', 'Pricing and guest messaging only', 'Cleaning and linen', 'Help registering the property'];
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
@@ -53,7 +54,7 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   const details: PropertyDetails = { type: ptype || null, beds: beds < 0 ? null : beds, availability: avail || null, services, situation };
   // Keep the search results' "Your property" bar in step with changes made here.
   const [loaded, setLoaded] = useState(false);
-  useEffect(() => { setLoaded(true); }, []);
+  useEffect(() => { setLoaded(true); track('form'); }, []);
   useEffect(() => {
     if (!loaded || !avail) return; // only once the owner has filled it in
     saveProperty(fresh, { type: ptype || null, beds: beds < 0 ? null : beds, availability: avail || null, services: services.length ? (services.includes(SERVICES[0]) ? [SERVICES[0]] : ['Some services']) : null });

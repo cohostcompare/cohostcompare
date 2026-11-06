@@ -20,6 +20,8 @@ export async function submitQuoteRequest(_: unknown, form: FormData): Promise<Su
     if (!(await allow('pending-quote', await callerKey(), 6, 3600e3))) return { error: 'Too many requests from this connection in the last hour. Please try again later.' };
     const { data, error } = await adminClient().from('pending_requests').insert({ email: fields.email, fields }).select('id').single();
     if (error || !data) { console.error(error); return { error: "We couldn't save your request. Please try again in a minute." }; }
+    const { logFunnel } = await import('@/lib/traffic');
+    await logFunnel('held');
     return { pending: { id: data.id, email: fields.email, count: fields.managers.length } };
   }
   const id = await sendRequest({ id: user.id, email: user.email }, fields);

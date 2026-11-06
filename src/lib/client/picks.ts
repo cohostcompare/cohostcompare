@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { track } from '@/lib/client/track';
 
 /**
  * The owner's "managers to request quotes from" list, kept for this browser tab so it survives moving between
@@ -33,6 +34,7 @@ export function usePicks(area: string) {
   }, [area]);
   const toggle = useCallback((p: Pick) => {
     const base = picks;
+    if (!base.some((x) => x.slug === p.slug) && base.length < MAX_PICKS) track('pick');
     save(base.some((x) => x.slug === p.slug) ? base.filter((x) => x.slug !== p.slug) : base.length >= MAX_PICKS ? base : [...base, p]);
   }, [area, picks, save]);
   return { picks, toggle, has: (slug: string) => picks.some((x) => x.slug === slug), full: picks.length >= MAX_PICKS };

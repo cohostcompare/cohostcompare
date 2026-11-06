@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useMe } from '@/lib/client/me';
 import { PROPERTY_KEY, type PropertyDetails } from '@/lib/requirements';
+import { track } from '@/lib/client/track';
 
 /*
  The owner's property details, shared by search results, profiles and the quote form.
@@ -34,7 +35,9 @@ export function useProperty(freshProp?: boolean) {
     return () => window.removeEventListener(EVT, sync);
   }, [fresh]);
   const update = useCallback((k: keyof PropertyDetails, v: unknown) => {
-    const next = { ...loadProperty(fresh), [k]: v === '' ? null : v } as PropertyDetails;
+    const before = loadProperty(fresh);
+    const next = { ...before, [k]: v === '' ? null : v } as PropertyDetails;
+    if (isComplete(next) && !isComplete(before)) track('details');
     setProp(next);
     saveProperty(fresh, next);
   }, [fresh]);

@@ -10,9 +10,27 @@ import { adminClient } from '@/lib/supabase/server';
  Events go in funnel_events (SQL 017): one 'visit' per session, plus 'search' and 'quote'.
 */
 
-export type Source = 'ads' | 'google' | 'social' | 'referral' | 'email' | 'direct';
-export const SOURCES: Source[] = ['ads', 'google', 'social', 'referral', 'email', 'direct'];
-export const sourceLabel: Record<Source, string> = { ads: 'Google Ads', google: 'Google search (free)', social: 'Social media', referral: 'Other websites', email: 'Email', direct: 'Direct or unknown' };
+export type Source = 'ads' | 'google' | 'ai' | 'social' | 'referral' | 'email' | 'direct';
+export const SOURCES: Source[] = ['ads', 'google', 'ai', 'social', 'referral', 'email', 'direct'];
+export const sourceLabel: Record<Source, string> = { ads: 'Google Ads', google: 'Search engines (free)', ai: 'AI assistants', social: 'Social media', referral: 'Other websites', email: 'Email', direct: 'Direct or unknown' };
+
+/*
+ Quote-flow steps (SQL 034), in order. Each counts once per session.
+ visit → search (address searched) → details (property bar complete) → pick (a manager added)
+ → form (quote form opened) → held (signed out: request held, email link sent) → link (email link opened) → quote (request sent).
+*/
+export type Step = 'visit' | 'search' | 'details' | 'pick' | 'form' | 'held' | 'link' | 'quote';
+export const STEPS: Step[] = ['visit', 'search', 'details', 'pick', 'form', 'held', 'link', 'quote'];
+export const stepLabel: Record<Step, string> = {
+  visit: 'Visited', search: 'Searched an address', details: 'Filled in property details', pick: 'Added a manager',
+  form: 'Opened the quote form', held: 'Submitted, signed out (email link sent)', link: 'Opened the email link', quote: 'Request sent',
+};
+/** Steps the browser may report through /api/step; the rest are logged by the server. */
+export const CLIENT_STEPS: Step[] = ['details', 'pick', 'form'];
+
+// AI assistants: ChatGPT adds utm_source=chatgpt.com to links it cites; the others show up as referrers.
+const AI_SRC = /chatgpt|openai|perplexity|copilot|gemini|claude|anthropic|deepseek|mistral|grok/i;
+const AI_HOST = /(^|\.)(chatgpt\.com|openai\.com|perplexity\.ai|copilot\.microsoft\.com|gemini\.google\.com|bard\.google\.com|claude\.ai|chat\.deepseek\.com|chat\.mistral\.ai|grok\.com|you\.com|phind\.com)$/i;
 
 export const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|quora|pinterest|vercel-screenshot|headless|lighthouse|adsbot|mediapartners/i;
 
@@ -33,11 +51,13 @@ export function classify(p: { gclid?: string | null; utm_source?: string | null;
   if (p.gclid || /cpc|ppc|paid/.test(med)) return 'ads';
   if (med === 'email' || src === 'email') return 'email';
   if (/social/.test(med) || /linkedin|facebook|instagram/.test(src)) return 'social';
+  if (AI_SRC.test(src)) return 'ai';
   if (src) return 'referral';
   let host = '';
   try { host = p.ref ? new URL(p.ref).hostname : ''; } catch { /* bad referrer */ }
   if (!host || OWN.test(host)) return null; // nothing new to say
   // Webmail: a link clicked in Gmail arrives with a mail.google.com referrer, which is email, not a Google search.
+  if (AI_HOST.test(host)) return 'ai'; // before Google: gemini.google.com is an assistant, not a search
   if (/^mail\.|outlook\.(live|office)\.com|mail\.yahoo|protonmail|proton\.me|fastmail/i.test(host)) return 'email';
   if (/(^|\.)google\./i.test(host) || /(^|\.)bing\.com$|duckduckgo|ecosia|yahoo/i.test(host)) return 'google';
   if (SOCIAL.test(host + '.')) return 'social';
@@ -53,8 +73,8 @@ export async function currentSource(): Promise<{ source: Source; campaign: strin
   } catch { return { source: 'direct', campaign: null }; }
 }
 
-/** Records a search or quote request against this session. Never throws, skips bots and admins. */
-export async function logFunnel(kind: 'search' | 'quote') {
+/** Records a funnel step against this session. Never throws, skips bots and admins. once: skip if this session already has it. */
+export async function logFunnel(kind: Exclude<Step, 'visit'>, once = false) {
   try {
     const ua = (await headers()).get('user-agent') || '';
     if (!ua || BOT.test(ua)) return;
@@ -63,7 +83,12 @@ export async function logFunnel(kind: 'search' | 'quote') {
     const { currentUser } = await import('@/lib/supabase/server');
     const { isAdminEmail } = await import('@/lib/admin');
     if (isAdminEmail((await currentUser().catch(() => null))?.email)) return;
+    const db = adminClient();
+    if (once) {
+      const { count } = await db.from('funnel_events').select('id', { count: 'exact', head: true }).eq('sid', sid.slice(0, 40)).eq('kind', kind);
+      if (count) return;
+    }
     const { source, campaign } = await currentSource();
-    await adminClient().from('funnel_events').insert({ sid: sid.slice(0, 40), kind, source, campaign, device: deviceOf(ua) });
+    await db.from('funnel_events').insert({ sid: sid.slice(0, 40), kind, source, campaign, device: deviceOf(ua) });
   } catch { /* best-effort */ }
 }
