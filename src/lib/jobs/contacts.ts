@@ -181,4 +181,11 @@ export const RESEARCHED_CONTACTS: { slug: string; email: string; source: string 
   {"slug": "staypilot", "email": "gerry@staypilot.com.au", "source": "https://au.trustpilot.com/review/staypilot.com.au"},
   {"slug": "warrnambool-district-holiday-rentals", "email": "holidays@wilsonswarrnambool.com.au", "source": "https://www.onlinebooking.direct/property/wilsons-warrnambool/about"},
   {"slug": "weekenda", "email": "bookings@weekenda.com.au", "source": "https://www.winecountry.com.au/weekenda-by-allogio"},
+  // Nov 2026 new managers (researched 6 Nov 2026).
+  {"slug": "five-star-stays", "email": "admin@fivestarpropertymanagement.com.au", "source": "https://www.fivestarstays.com.au/list-with-us"},
+  {"slug": "lanestay", "email": "team@lanestay.com.au", "source": "https://lanestay.com.au/about/"},
+  {"slug": "gibbor-escapes", "email": "admin@gibbor.com.au", "source": "https://gibbor.com.au/"},
+  {"slug": "dijones-holidays", "email": "holidays@dijones.com.au", "source": "https://dijonesholidays.com.au/list-your-property/"},
+  {"slug": "homes-for-holidays", "email": "info@homesforholidays.com.au", "source": "https://homesforholidays.com.au/privacy-policy/"},
+  {"slug": "your-luxury-escape", "email": "manager@yourluxuryescape.com.au", "source": "https://bookings-yourluxuryescape.escapia.com/"},
 ];
