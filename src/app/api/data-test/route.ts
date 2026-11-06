@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  *
  *   ?action=spend                                  → calls used so far
  *   ?action=search&path=radius&body=<json>&store=1 → one call, returns pagination (+ stores rows if store=1)
- *   ?action=pull&lat&lng&radius&size=10&max=60     → pages through one circle (entire homes, no other filter), stores rows
+ *   ?action=pull&path=polygon&body=<json, no pagination>&max=60 → pages through one area, stores rows
  */
 const CAP_CALLS = 200; // US$0.50 each = US$100
 const KEY = 'airroi:test-2026-11';
@@ -68,13 +68,14 @@ export async function GET(req: NextRequest) {
       });
     }
     if (action === 'pull') {
-      const lat = Number(p.get('lat')), lng = Number(p.get('lng')), radius = Number(p.get('radius') || 1);
-      const size = Number(p.get('size') || 10), max = Math.min(Number(p.get('max') || 60), CAP_CALLS);
+      // body = search body without pagination (radius or polygon); path picks the endpoint.
+      const body = JSON.parse(p.get('body') || '{}');
+      const path = p.get('path') || 'radius';
+      const size = 10, max = Math.min(Number(p.get('max') || 60), CAP_CALLS);
       let offset = Number(p.get('offset') || 0), calls = 0, stored = 0, total: number | null = null, done = false;
       const started = Date.now();
       while (!done && calls < max && Date.now() - started < 270000) {
-        const r = await search('radius', { latitude: lat, longitude: lng, radius_miles: radius, currency: 'native',
-          filter: { room_type: { eq: 'entire_home' } }, sort: { ttm_revenue: 'desc' }, pagination: { page_size: size, offset } });
+        const r = await search(path, { ...body, pagination: { page_size: size, offset } });
         calls++;
         if (!r.ok) return NextResponse.json({ error: JSON.stringify(r.data).slice(0, 500), calls, stored, offset, total });
         total = r.data?.pagination?.total_count ?? total;
