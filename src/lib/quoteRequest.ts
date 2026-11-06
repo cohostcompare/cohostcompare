@@ -46,7 +46,7 @@ If they're genuine (e.g. several properties), reply to them and send the request
 export type RequestFields = {
   managers: string[]; name: string; email: string; phone: string | null; situation: string | null;
   street: string; suburb: string; state: string; postcode: string; lat: number; lng: number;
-  property_type: string; bedrooms: number; availability: string; currently_listed: string; start_timing: string;
+  property_type: string; bedrooms: number; availability: string; currently_listed: string | null; start_timing: string | null;
   services: string[]; notes: string | null;
 };
 
@@ -91,7 +91,7 @@ export async function parseRequest(form: FormData): Promise<{ error: string } | 
     managers: managers.map((m) => m.slug), name, email, phone: String(form.get('phone') || '').trim().slice(0, 30) || null, situation,
     street, suburb, state: stateCode, postcode, lat, lng,
     property_type: String(form.get('property_type') || '').slice(0, 40), bedrooms, availability,
-    currently_listed: String(form.get('currently_listed') || '').slice(0, 60), start_timing: String(form.get('start_timing') || '').slice(0, 40),
+    currently_listed: String(form.get('currently_listed') || '').slice(0, 60) || null, start_timing: String(form.get('start_timing') || '').slice(0, 40) || null,
     services, notes: String(form.get('notes') || '').trim().slice(0, 2000) || null,
   } };
 }
@@ -150,11 +150,11 @@ export async function sendRequest(user: { id: string; email: string }, f: Reques
   const summary = [
     `Property: ${row.address}`,
     `Type: ${row.property_type}, ${bedrooms} bedroom${bedrooms === 1 ? '' : 's'}`,
-    `Listed now: ${row.currently_listed}`,
+    row.currently_listed ? `Listed now: ${row.currently_listed}` : '',
     `Available for guests: ${availabilityLabel(availability)}`,
     `Wants: ${services.join(', ')}`,
     situation ? `Your situation: ${situation}` : '',
-    `Start: ${row.start_timing}`,
+    row.start_timing ? `Start: ${row.start_timing}` : '',
     row.notes ? `Notes: ${row.notes}` : '',
   ].filter(Boolean).join('\n');
 
@@ -181,7 +181,7 @@ export async function sendRequest(user: { id: string; email: string }, f: Reques
     await sendEmail({
       to,
       subject: `New quote request: ${suburb} ${stateCode} ${postcode}`,
-      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}\nListed now: ${row.currently_listed}\nAvailable for guests: ${availabilityLabel(availability)}\nWants: ${services.join(', ')}\nStart: ${row.start_timing}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
+      text: `An owner in ${suburb} ${stateCode} ${postcode} has asked you for a quote.\n\n${row.property_type}, ${bedrooms === 0 ? 'studio' : `${bedrooms} bedrooms`}${situation ? `\n${situation.replace(/^I own/, 'Owner owns').replace(/^I’m buying it now|^I'm buying it now/, 'Owner is buying it now').replace(/^I’m planning to buy|^I'm planning to buy/, 'Owner is planning to buy')}` : ''}${row.currently_listed ? `\nListed now: ${row.currently_listed}` : ''}\nAvailable for guests: ${availabilityLabel(availability)}\nWants: ${services.join(', ')}${row.start_timing ? `\nStart: ${row.start_timing}` : ''}${row.notes ? `\nNotes: ${row.notes}` : ''}\n\nSend your quote in the standard format from your dashboard.${inboundOn() ? ' Questions for the owner first? Just reply to this email.' : ''}`,
       cta: { label: 'Send your quote', url: `${origin}/dashboard/requests/${t.id}` },
       replyTo: threadReplyTo(t.id, 'm'),
     });

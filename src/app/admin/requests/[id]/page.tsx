@@ -80,8 +80,8 @@ export default async function AdminRequest({ params }: { params: Promise<{ id: s
             <Row k="Type" v={[r.property_type, beds].filter(Boolean).join(', ')} />
             <Row k="Availability" v={r.availability} />
             <Row k="Situation" v={r.situation} />
-            <Row k="Currently listed" v={r.currently_listed} />
-            <Row k="Start" v={r.start_timing} />
+            <Row k="Currently listed" v={r.currently_listed || 'Not given'} />
+            <Row k="Start" v={r.start_timing || 'Not given'} />
             <Row k="Services wanted" v={(r.services || []).length ? (r.services as string[]).join(', ') : 'Not specified'} />
             <Row k="Notes" v={r.notes ? <span style={{ whiteSpace: 'pre-wrap' }}>{r.notes}</span> : null} />
           </dl>

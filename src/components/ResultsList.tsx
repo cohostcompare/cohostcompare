@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import QuoteBar from '@/components/QuoteBar';
 import TrustBadges from '@/components/TrustBadges';
@@ -13,11 +14,12 @@ import { earningsHref, mismatches } from '@/lib/requirements';
 const feeText = (m: NearbyManager) => (m.feeMin == null ? null : m.feeMin === m.feeMax || m.feeMax == null ? `${m.feeMin}%` : `${m.feeMin}–${m.feeMax}%`);
 
 export default function ResultsList({ managers, query, fresh }: { managers: NearbyManager[]; query: string; fresh?: boolean }) {
-  const { picks, toggle, has, full } = usePicks(areaKey(query));
+  const { picks, toggle, setAll, has, full } = usePicks(areaKey(query));
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
   // The owner's property (src/lib/client/property.ts): remembered for owners, per tab for admins.
   const { prop, update } = useProperty(fresh);
-  // All four property details are needed before any manager can be added to a quote.
+  // Property details are optional here: once complete, managers who don't take that property move down. The quote form asks for them anyway.
   const complete = isComplete(prop);
   const barRef = useRef<HTMLElement>(null);
   const [nudge, setNudge] = useState(false);
@@ -87,9 +89,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
                 <div className="fee">
                   {fee ? <><span className="n">{fee}</span><span className="s">of booking income{m.claimed ? '' : ', from their website, GST not stated'}</span></> : <><span className="n" style={{ fontSize: 17 }}>Fee on request</span><span className="s">included in your quote</span></>}
                 </div>
-                {!complete ? (
-                  <button type="button" className="btn secondary add above has-tip" onClick={askForDetails} data-tip="Add your property details at the top first, so we can check this manager takes on a property like yours" aria-describedby="prop-step">+ Add to quote</button>
-                ) : why.get(m.slug)!.length ? (
+                {why.get(m.slug)!.length ? (
                   <span className="btn secondary add above" aria-disabled="true" style={{ opacity: 0.6, pointerEvents: 'none' }}>Doesn&apos;t take this property</span>
                 ) : (
                 <button type="button" className={`btn ${on ? 'primary' : 'secondary'} add above`} aria-pressed={on}
@@ -128,11 +128,11 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
     <>
       <section ref={barRef} id="your-property" className={`prop-bar${complete ? ' done' : ''}${nudge ? ' nudge' : ''}`} aria-label="Your property">
         <div>
-          <b id="prop-step">{complete ? 'Your property' : 'Step 1: tell us about your property'}</b>
-          <span className="hint">{complete ? 'Change anything here and the list updates straight away.' : 'Some managers only take on certain properties. Add these four details to see who can quote, then add up to 5 managers to your quote.'}</span>
+          <b id="prop-step">{complete ? 'Your property' : 'Your property (optional for now)'}</b>
+          <span className="hint">{complete ? 'Change anything here and the list updates straight away.' : 'Some managers only take on certain properties. Add these to see who fits, or skip it and add managers now. We’ll ask on the quote form.'}</span>
         </div>
         <PropertyFields prop={prop} update={update} />
-        {nudge && <p role="alert" className="prop-nudge">{complete ? 'Change any detail here and the list updates straight away.' : 'Add your property details here first, then you can add managers to your quote.'}</p>}
+        {nudge && <p role="alert" className="prop-nudge">Change any detail here and the list updates straight away.</p>}
       </section>
       <div className="sort-row">
         <label>Sort by
@@ -150,6 +150,17 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
         <div className="fit-banner" role="status">
           <span><b>{fits.length} manager{fits.length === 1 ? '' : 's'}</b> {fits.length === 1 ? 'takes' : 'take'} on a property like yours and can quote.</span>
           {others.length > 0 && <a href="#not-matching">{others.length} {others.length === 1 ? 'doesn’t' : 'don’t'} match your property. See why ↓</a>}
+        </div>
+      )}
+      {picks.length === 0 && fits.length > 1 && (
+        <div className="top-pick" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', margin: '4px 0 12px' }}>
+          <button type="button" className="btn primary" onClick={() => {
+            const top = fits.slice(0, 3).map((m) => ({ slug: m.slug, name: m.name }));
+            setAll(top);
+            const q = new URLSearchParams(query); q.set('managers', top.map((p) => p.slug).join(','));
+            router.push(`/quote?${q.toString()}`);
+          }}>Get quotes from the top {Math.min(3, fits.length)} →</button>
+          <span className="hint">The first {Math.min(3, fits.length)} in the order you&apos;ve sorted by. You can remove or add managers on the next page. Or pick your own with “+ Add to quote”.</span>
         </div>
       )}
       <div className="results" style={others.length ? { paddingBottom: 8 } : undefined}>
@@ -173,7 +184,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
           <a className="earn-pill" href={earnLink} onClick={closeEarn}>See what it could earn →</a>
         </aside>
       )}
-      <QuoteBar picks={complete ? picks.filter((p) => !why.get(p.slug)?.length) : []} query={query} />
+      <QuoteBar picks={picks.filter((p) => !why.get(p.slug)?.length)} query={query} />
     </>
   );
 }

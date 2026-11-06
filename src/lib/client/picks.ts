@@ -37,7 +37,9 @@ export function usePicks(area: string) {
     if (!base.some((x) => x.slug === p.slug) && base.length < MAX_PICKS) track('pick');
     save(base.some((x) => x.slug === p.slug) ? base.filter((x) => x.slug !== p.slug) : base.length >= MAX_PICKS ? base : [...base, p]);
   }, [area, picks, save]);
-  return { picks, toggle, has: (slug: string) => picks.some((x) => x.slug === slug), full: picks.length >= MAX_PICKS };
+  /** Replaces the list in one go (the "Get quotes from the top 3" button). */
+  const setAll = useCallback((next: Pick[]) => { if (next.length) track('pick'); save(next.slice(0, MAX_PICKS)); }, [save]);
+  return { picks, toggle, setAll, has: (slug: string) => picks.some((x) => x.slug === slug), full: picks.length >= MAX_PICKS };
 }
 
 /** Area key from the search query: the searched point, else the postcode. */

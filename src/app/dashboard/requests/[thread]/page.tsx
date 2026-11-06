@@ -51,10 +51,10 @@ export default async function ManagerThread({ params, searchParams }: { params: 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>
         <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '10px 20px', margin: 0 }}>
           <div><dt className="label">Property</dt><dd style={{ margin: 0 }}>{req.property_type}, {Number(req.bedrooms) === 0 ? 'studio' : `${req.bedrooms} bedrooms`}</dd></div>
-          <div><dt className="label">Listed now</dt><dd style={{ margin: 0 }}>{req.currently_listed}</dd></div>
+          <div><dt className="label">Listed now</dt><dd style={{ margin: 0 }}>{req.currently_listed || 'Not given'}</dd></div>
           {req.availability && <div><dt className="label">Available for guests</dt><dd style={{ margin: 0 }}>{availabilityLabel(req.availability)}</dd></div>}
           <div><dt className="label">Wants help with</dt><dd style={{ margin: 0 }}>{(req.services || []).join(', ')}</dd></div>
-          <div><dt className="label">Timing</dt><dd style={{ margin: 0 }}>{req.start_timing}</dd></div>
+          <div><dt className="label">Timing</dt><dd style={{ margin: 0 }}>{req.start_timing || 'Not given'}</dd></div>
           {req.situation && <div><dt className="label">Owner</dt><dd style={{ margin: 0 }}>{String(req.situation).replace(/^I own the property/, 'Owns the property').replace(/^I’m buying it now|^I'm buying it now/, 'Buying it now').replace(/^I’m planning to buy a property|^I'm planning to buy a property/, 'Planning to buy')}</dd></div>}
           <div><dt className="label">Received</dt><dd style={{ margin: 0 }}>{new Date(t.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</dd></div>
         </dl>

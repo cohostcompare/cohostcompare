@@ -41,7 +41,7 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
   const [beds, setBeds] = useState<number>(-1);
   const [avail, setAvail] = useState<string>('');
   const [services, setServices] = useState<string[]>([SERVICES[0]]);
-  const [situation, setSituation] = useState<string>(SITUATIONS[0]);
+  const [situation, setSituation] = useState<string>('');
   useEffect(() => {
     try {
       const p = loadProperty(fresh); // admins: this tab only
@@ -119,17 +119,6 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
           </div>
         )}
       </div>
-      <div style={grid(200)}>
-        <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
-        <label style={L}>Email<input className="field" name="email" type="email" autoComplete="email" defaultValue={email} required /></label>
-        <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
-      </div>
-      <label style={L}>Which best describes you?
-        <select className="field" name="situation" value={situation} onChange={(e) => setSituation(e.target.value)}>
-          {SITUATIONS.map((x) => <option key={x}>{x}</option>)}
-        </select>
-      </label>
-
       {!editing ? (
         <div style={{ display: 'grid', gap: 4 }}>
           <span style={{ fontWeight: 600, fontSize: 14 }}>Property</span>
@@ -190,14 +179,6 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
           <select className="field" name="availability" value={avail} onChange={(e) => setAvail(e.target.value)} required><option value="" disabled>Choose one</option>{AVAILABILITY.map((a) => <option key={a.v} value={a.v}>{a.label}</option>)}</select>
         </label>
       </div>
-      <div style={grid(200)}>
-        <label style={L}>Is it listed now?
-          <select className="field" name="currently_listed"><option>Not yet listed</option><option>Listed, I manage it myself</option><option>Listed with another manager</option></select>
-        </label>
-        <label style={L}>When do you want to start?
-          <select className="field" name="start_timing" defaultValue="In 1 to 3 months"><option>Within a month</option><option>In 1 to 3 months</option><option>In 3 to 12 months</option><option>Not sure yet</option></select>
-        </label>
-      </div>
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 8 }}>
         <legend style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>What do you want help with?</legend>
         {SERVICES.map((s) => (
@@ -217,9 +198,35 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
           </div>
         </div>
       )}
-      <label style={L}>Anything else managers should know? (optional)
-        <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
-      </label>
+      <div style={grid(200)}>
+        <label style={L}>Your name<input className="field" name="name" autoComplete="name" required /></label>
+        <label style={L}>Email<input className="field" name="email" type="email" autoComplete="email" defaultValue={email} required /></label>
+      </div>
+      <details className="more-detail" style={{ border: '1px solid var(--line)', borderRadius: 10, padding: '10px 14px' }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Add more detail (optional, helps managers quote)</summary>
+        <div style={{ display: 'grid', gap: 14, marginTop: 12 }}>
+          <div style={grid(200)}>
+            <label style={L}>Phone (optional)<input className="field" name="phone" type="tel" autoComplete="tel" /></label>
+            <label style={L}>Which best describes you?
+              <select className="field" name="situation" value={situation} onChange={(e) => setSituation(e.target.value)}>
+                <option value="">Choose (optional)</option>
+                {SITUATIONS.map((x) => <option key={x}>{x}</option>)}
+              </select>
+            </label>
+          </div>
+          <div style={grid(200)}>
+            <label style={L}>Is it listed now?
+              <select className="field" name="currently_listed" defaultValue=""><option value="">Choose (optional)</option><option>Not yet listed</option><option>Listed, I manage it myself</option><option>Listed with another manager</option></select>
+            </label>
+            <label style={L}>When do you want to start?
+              <select className="field" name="start_timing" defaultValue=""><option value="">Choose (optional)</option><option>Within a month</option><option>In 1 to 3 months</option><option>In 3 to 12 months</option><option>Not sure yet</option></select>
+            </label>
+          </div>
+          <label style={L}>Anything else managers should know?
+            <textarea className="field" name="notes" rows={3} maxLength={2000} placeholder="For example: I use the place myself over Christmas." />
+          </label>
+        </div>
+      </details>
       <button className="btn primary" type="submit" disabled={pending || checking || !located || uncovered.length > 0 || unfit.length > 0 || covered.length === 0 || !avail || !ptype || beds < 0 || services.length === 0}>
         {pending ? 'Sending…' : checking ? 'Checking coverage…' : !ptype || beds < 0 ? 'Choose the property type and bedrooms' : !avail ? 'Choose how much of the year it’s available' : services.length === 0 ? 'Tick at least one service' : `Send quote request${covered.length ? ` to ${covered.length} manager${covered.length === 1 ? '' : 's'}` : ''}`}
       </button>
