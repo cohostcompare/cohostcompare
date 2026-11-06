@@ -58,7 +58,7 @@ async function build(slug: string): Promise<Ranking | null> {
     };
   }).sort((x, y) => y.score - x.score || y.homesHere - x.homesHere || x.name.localeCompare(y.name));
   return {
-    asOf: new Date().toISOString().slice(0, 10), city, covering: rows.length, eligible: list.length,
+    asOf: new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(new Date()), city, covering: rows.length, eligible: list.length,
     meanRating: mean == null ? null : Math.round(mean * 100) / 100, list: list.slice(0, TOP_N),
     areas: all.map((a) => ({ slug: a.slug, label: a.label })),
   };
