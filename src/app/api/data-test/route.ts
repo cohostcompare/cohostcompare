@@ -14,8 +14,9 @@ export const dynamic = 'force-dynamic';
  *   ?action=search&path=radius&body=<json>&store=1 → one call, returns pagination (+ stores rows if store=1)
  *   ?action=pull&path=polygon&body=<json, no pagination>&max=60 → pages through one area, stores rows
  */
-// US$0.50 each. 93 test calls (US$46.50) + full Sydney/Melbourne pull capped at US$950 (1,900 calls).
-const CAP_CALLS = 1993;
+// US$0.50 each. 93 test calls (US$46.50) + full Sydney/Melbourne pull (to 1,850 calls)
+// + up to US$200 on 6 Nov 2026 for account pulls and regional counts (400 calls).
+const CAP_CALLS = 2250;
 const KEY = 'airroi:test-2026-11';
 const PATHS: Record<string, string> = { radius: '/listings/search/radius', market: '/listings/search/market', polygon: '/listings/search/polygon' };
 
@@ -85,6 +86,35 @@ export async function GET(req: NextRequest) {
         if (results.length < size || (total != null && offset >= total)) done = true;
       }
       return NextResponse.json({ calls, stored, nextOffset: offset, total, done });
+    }
+    if (action === 'accounts') {
+      // Every entire home booked in the last 12 months on these Airbnb accounts (as host, then as co-host), anywhere in eastern Australia.
+      const ids = (p.get('ids') || '').split(',').map((x) => x.trim()).filter(Boolean).slice(0, 20);
+      const EAST = [{ latitude: -10, longitude: 129 }, { latitude: -10, longitude: 154 }, { latitude: -44, longitude: 154 }, { latitude: -44, longitude: 129 }];
+      const max = Math.min(Number(p.get('max') || 100), 300);
+      const started = Date.now();
+      let calls = 0;
+      const out: Record<string, { host: number | null; cohost: number | null; stored: number }> = {};
+      for (const id of ids) {
+        out[id] = { host: null, cohost: null, stored: 0 };
+        for (const kind of ['host', 'cohost'] as const) {
+          const f = kind === 'host' ? { host_id: { eq: Number(id) } } : { cohost_ids: { any: [Number(id)] } };
+          let offset = 0, total: number | null = null;
+          while (calls < max && Date.now() - started < 270000) {
+            const r = await search('polygon', { polygon: EAST, currency: 'native', filter: { room_type: { eq: 'entire_home' }, ttm_days_booked: { gte: 1 }, ...f },
+              sort: { ttm_revenue: 'desc', rating_overall: 'desc' }, pagination: { page_size: 10, offset } });
+            calls++;
+            if (!r.ok) return NextResponse.json({ error: JSON.stringify(r.data).slice(0, 300), calls, out });
+            total = r.data?.pagination?.total_count ?? total;
+            const results = r.data?.results || [];
+            out[id].stored += await store(results);
+            offset += 10;
+            if (results.length < 10 || (total != null && offset >= total)) break;
+          }
+          out[id][kind] = total;
+        }
+      }
+      return NextResponse.json({ calls, out });
     }
     if (action === 'candidates') {
       // No AirROI calls. Groups accounts the same way as newBusinesses(), then splits into:
