@@ -7,12 +7,14 @@ import type { NearbyManager } from '@/lib/types';
 /*
  City ranking pages (/best-airbnb-managers/[slug]). Neutral and repeatable:
  - Who's in: published managers who run at least one home within 4 km of an area we cover in that city,
-   with a guest rating from at least MIN_REVIEWS public reviews.
+   with at least MIN_HOMES_HERE homes near one of its areas and a guest rating from at least MIN_REVIEWS public reviews.
  - Order: guest rating adjusted for how many reviews it rests on (a Bayesian average toward the city mean, PRIOR reviews' worth),
    so 3 perfect reviews don't outrank 2,000 near-perfect ones. Ties: more homes in the city first.
  - Nothing a manager pays for is used, and nothing is hand-edited.
 */
 export const MIN_REVIEWS = 20;
+/** A real presence in the city: at least this many homes near one of its areas. */
+export const MIN_HOMES_HERE = 3;
 const PRIOR = 100;
 export const TOP_N = 20;
 
@@ -46,7 +48,7 @@ async function build(slug: string): Promise<Ranking | null> {
     r.homes = Math.max(r.homes, m.nearby || 0); r.areas.add(a.label); by.set(m.id, r);
   }
   const rows = [...by.values()];
-  const rated = rows.filter((r) => r.m.avgRating != null && (r.m.reviewCount || 0) >= MIN_REVIEWS);
+  const rated = rows.filter((r) => r.m.avgRating != null && (r.m.reviewCount || 0) >= MIN_REVIEWS && r.homes >= MIN_HOMES_HERE);
   const mean = rated.length ? rated.reduce((s, r) => s + Number(r.m.avgRating) * Number(r.m.reviewCount), 0) / rated.reduce((s, r) => s + Number(r.m.reviewCount), 0) : null;
   const list = rated.map((r) => {
     const v = Number(r.m.reviewCount), R = Number(r.m.avgRating);
@@ -64,5 +66,5 @@ async function build(slug: string): Promise<Ranking | null> {
   };
 }
 
-const cached = unstable_cache(build, ['ranking-v1'], { revalidate: 6 * 3600 });
+const cached = unstable_cache(build, ['ranking-v2'], { revalidate: 6 * 3600 });
 export async function ranking(slug: string) { return cached(slug); }

@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import DataSource from '@/components/DataSource';
 import JsonLd from '@/components/JsonLd';
 import { fmtDate } from '@/lib/market';
-import { MIN_REVIEWS, RANK_CITIES, TOP_N, ranking } from '@/lib/rankings';
+import { MIN_HOMES_HERE, MIN_REVIEWS, RANK_CITIES, TOP_N, ranking } from '@/lib/rankings';
 import { article, breadcrumbs, faqPage, itemList, metaDescription } from '@/lib/seo';
 
 export const revalidate = 21600; // figures are cached 6 hours
@@ -42,7 +42,7 @@ export default async function BestIn({ params }: P) {
     : `We don't have enough rated managers in ${city.label} to rank yet.`;
   const faqs: [string, string][] = [
     [`Who are the best Airbnb managers in ${city.label}?`, answer],
-    [`How is this list ranked?`, `By guest rating from public reviews, adjusted for the number of reviews (a manager needs at least ${MIN_REVIEWS}). Ties go to the manager running more homes in ${city.label}. No manager can pay to appear or move up, and we don't edit the order by hand.`],
+    [`How is this list ranked?`, `By guest rating from public reviews, adjusted for the number of reviews (a manager needs at least ${MIN_REVIEWS}, and at least ${MIN_HOMES_HERE} homes near one area here). Ties go to the manager running more homes in ${city.label}. No manager can pay to appear or move up, and we don't edit the order by hand.`],
     [`How many Airbnb managers operate in ${city.label}?`, `${r.covering} managers run at least one short-term rental within 4 km of the ${r.areas.length} areas we cover in ${city.label}. ${r.eligible} have enough guest reviews to be ranked.`],
     [`Is the best-rated manager the right one for me?`, `Not always. Guest ratings show how guests feel about the stays. Fees, contract terms, owner communication and how many homes they run near your street matter too. Search your address to see who covers it, then request quotes from up to five in one standard format.`],
   ];
@@ -99,7 +99,7 @@ export default async function BestIn({ params }: P) {
       <section className="panel" style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>How this list is made</h2>
         <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
-          <li>Included: every published manager running at least one short-term rental within 4 km of an area we cover in {city.label} ({r.covering} managers), with at least {MIN_REVIEWS} public guest reviews ({r.eligible} managers).</li>
+          <li>Included: every published manager running at least one short-term rental within 4 km of an area we cover in {city.label} ({r.covering} managers), with at least {MIN_HOMES_HERE} homes near one of those areas and at least {MIN_REVIEWS} public guest reviews ({r.eligible} managers).</li>
           <li>Order: guest rating adjusted for the number of reviews. Each rating is pulled toward the {city.label} average{r.meanRating ? ` (${r.meanRating.toFixed(2)} ★)` : ''} as if it had 100 more average reviews, so a handful of perfect scores can&apos;t outrank thousands of near-perfect ones. Ties go to the manager with more homes nearby.</li>
           <li>Nothing a manager pays for is used, and we never reorder by hand. A manager can&apos;t ask to be moved up or removed for a better spot.</li>
           <li>The list rebuilds automatically from the latest data. Last worked out on {date}. <Link href="/facts">More market figures</Link>.</li>
