@@ -84,7 +84,7 @@ async function build(): Promise<Market> {
     return { city, areas: rows.length, managers: ms.length, fee: feeStats(ms), nightly: (() => { const n = median(rows.map((r) => snapshot(r.a, r.ms).nightly).filter((x): x is number => x != null)); return n == null ? null : Math.round(n); })() };
   });
   return {
-    asOf: new Date().toISOString().slice(0, 10),
+    asOf: new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(new Date()),
     dataAsOf: (st?.[0]?.data_as_of as string | undefined)?.slice(0, 10) || null,
     managers: list.length,
     publishFees: list.filter((m) => m.fee_min != null).length,
@@ -103,7 +103,7 @@ const EMPTY_FEE: FeeStats = { mid: null, low: null, high: null, count: 0 };
 export async function market(): Promise<Market> {
   try { return await cachedMarket(); } catch (e) {
     console.error('market figures failed', e);
-    return { asOf: new Date().toISOString().slice(0, 10), dataAsOf: null, managers: 0, publishFees: 0, claimed: 0, areas: 0, fee: EMPTY_FEE, cities: [], areaList: [] };
+    return { asOf: new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(new Date()), dataAsOf: null, managers: 0, publishFees: 0, claimed: 0, areas: 0, fee: EMPTY_FEE, cities: [], areaList: [] };
   }
 }
 
