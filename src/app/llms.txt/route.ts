@@ -38,7 +38,7 @@ ${m.cities.map((c) => `- ${c.city}: ${c.managers} managers${c.fee.mid != null ? 
 - [Areas](${SITE}/areas): managers by area in Sydney, Melbourne and NSW and Victorian holiday areas
 - [Market facts](${SITE}/facts): live, dated figures, free to quote with a link
 - [Airbnb management fees in Australia](${SITE}/airbnb-management-fees): typical published fee, range, spread and by city
-${RANK_CITIES.map((c) => `- [Best Airbnb managers in ${c.label}](${SITE}/best-airbnb-managers/${c.slug}): ranked by guest rating adjusted for review count; no paid placement`).join('\n')}
+${RANK_CITIES.map((c) => `- [Best Airbnb managers in ${c.label}](${SITE}/best-airbnb-managers/${c.slug}): ranked on guest rating (adjusted for review count), local homes and responsiveness; no paid placement`).join('\n')}
 - [Earnings estimate](${SITE}/earnings): free estimate of yearly booking income for an address
 - [How it works](${SITE}/how-it-works)
 - [Why use us](${SITE}/why-us): neutrality and how profiles are built

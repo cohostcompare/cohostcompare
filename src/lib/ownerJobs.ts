@@ -1,3 +1,4 @@
+import { recommended } from '@/lib/recommend';
 import 'server-only';
 import { TEST_SLUG, managersForArea } from '@/lib/data';
 import { sendEmail } from '@/lib/email';
@@ -128,8 +129,7 @@ export async function noReplyFollowUps(limit = 40) {
       const reqs = await requirementsFor(area.map((m) => m.slug));
       const details = { type: r.property_type, beds: r.bedrooms, availability: r.availability, services: r.services, situation: r.situation };
       const fit = area.filter((m) => !mismatches(reqs.get(m.slug), details).length);
-      const score = (m: (typeof fit)[number]) => m.nearbyRating ?? m.avgRating ?? -1;
-      others = await withReach(fit.sort((a, b) => score(b) - score(a)));
+      others = await withReach(recommended(fit));
     }
 
     const place = r.address || [r.street, r.suburb].filter(Boolean).join(', ') || `postcode ${r.postcode}`;

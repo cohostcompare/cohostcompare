@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
   const title = titleFor(c.short);
   return {
     title,
-    description: metaDescription(`The highest guest-rated short-term rental and Airbnb management companies in ${c.label}, ranked from public review data, with homes managed, published fees and nightly rates. No paid placements. Updated automatically.`),
+    description: metaDescription(`The top Airbnb and short-term rental management companies in ${c.label}, ranked on guest ratings, local homes and responsiveness, with published fees and nightly rates. No paid placements. Updated automatically.`),
     alternates: { canonical: `/best-airbnb-managers/${c.slug}` },
   };
 }
@@ -39,11 +39,11 @@ export default async function BestIn({ params }: P) {
   const Label = `${city.label[0].toUpperCase()}${city.label.slice(1)}`;
   const top3 = r.list.slice(0, 3).map((m) => m.name);
   const answer = r.list.length
-    ? `As of ${date}, the highest guest-rated Airbnb managers in ${city.label} are ${top3.slice(0, -1).join(', ')}${top3.length > 1 ? ' and ' : ''}${top3[top3.length - 1]}, based on public guest reviews across the homes they run, adjusted for how many reviews each rating rests on.`
+    ? `As of ${date}, the top-ranked Airbnb managers in ${city.label} are ${top3.slice(0, -1).join(', ')}${top3.length > 1 ? ' and ' : ''}${top3[top3.length - 1]}, on a blend of public guest ratings, homes they run in the area and whether they reply to owners on CoHostCompare.`
     : `We don't have enough rated managers in ${city.label} to rank yet.`;
   const faqs: [string, string][] = [
     [`Who are the best Airbnb managers in ${city.label}?`, answer],
-    [`How is this list ranked?`, `By guest rating from public reviews, adjusted for the number of reviews (a manager needs at least ${MIN_REVIEWS}, and at least ${MIN_HOMES_HERE} homes near one area here). Ties go to the manager running more homes in ${city.label}. No manager can pay to appear or move up, and we don't edit the order by hand.`],
+    [`How is this list ranked?`, `On a blend: guest rating from public reviews, adjusted for how many reviews it rests on (50%); homes they run near one area here (30%); being on CoHostCompare to reply to owners, which is free (10%); and owner reviews on CoHostCompare (10%). A manager needs at least ${MIN_REVIEWS} reviews and ${MIN_HOMES_HERE} homes near one area here. Hotels, resorts and serviced-apartment operators aren't ranked. No manager can pay to appear or move up, and we don't edit the order by hand.`],
     [`How many Airbnb managers operate in ${city.label}?`, `${r.covering} managers run at least one short-term rental within 4 km of the ${r.areas.length} areas we cover in ${city.label}. ${r.eligible} have enough guest reviews to be ranked.`],
     [`Is the best-rated manager the right one for me?`, `Not always. Guest ratings show how guests feel about the stays. Fees, contract terms, owner communication and how many homes they run near your street matter too. Search your address to see who covers it, then request quotes from up to five in one standard format.`],
   ];
@@ -64,7 +64,7 @@ export default async function BestIn({ params }: P) {
 
       {r.list.length > 0 && (
         <section style={{ display: 'grid', gap: 10 }} aria-labelledby="top">
-          <h2 id="top" style={{ fontSize: 22, margin: 0 }}>Top {Math.min(TOP_N, r.list.length)} by guest rating</h2>
+          <h2 id="top" style={{ fontSize: 22, margin: 0 }}>Top {Math.min(TOP_N, r.list.length)} Airbnb managers in {city.label}</h2>
           <div className="table-wrap" tabIndex={0} role="region" aria-label={`Top-rated managers in ${city.label}`}>
             <table className="data-table">
               <thead><tr><th scope="col">#</th><th scope="col">Manager</th><th scope="col">Guest rating</th><th scope="col">Reviews</th><th scope="col">Most homes near one {city.label.includes('holiday') ? 'area' : 'suburb'}</th><th scope="col">Homes in total</th><th scope="col">Published fee</th><th scope="col">Typical nightly rate</th></tr></thead>
@@ -101,7 +101,8 @@ export default async function BestIn({ params }: P) {
         <h2 style={{ fontSize: 20, margin: 0 }}>How this list is made</h2>
         <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
           <li>Included: every published manager running at least one short-term rental within 4 km of an area we cover in {city.label} ({r.covering} managers), with at least {MIN_HOMES_HERE} homes near one of those areas and at least {MIN_REVIEWS} public guest reviews ({r.eligible} managers).</li>
-          <li>Order: guest rating adjusted for the number of reviews. Each rating is pulled toward the {city.label} average{r.meanRating ? ` (${r.meanRating.toFixed(2)} ★)` : ''} as if it had 100 more average reviews, so a handful of perfect scores can&apos;t outrank thousands of near-perfect ones. Ties go to the manager with more homes nearby.</li>
+          <li>Order: a blend of guest rating (50%, each rating pulled toward the {city.label} average{r.meanRating ? ` of ${r.meanRating.toFixed(2)} ★` : ''} as if it had 50 more average reviews, so a handful of perfect scores can&apos;t beat thousands of near-perfect ones), homes they run near one area here (30%, on a log scale), being on CoHostCompare to reply to owners (10%, free to every manager) and owner reviews here (10%). Ties go to the manager with more homes nearby.</li>
+          <li>Left out: hotels, resorts, motels and serviced-apartment operators, which take bookings rather than manage homes for owners. Their profiles stay on the site.</li>
           <li>Nothing a manager pays for is used, and we never reorder by hand. A manager can&apos;t ask to be moved up or removed for a better spot.</li>
           <li>The list rebuilds automatically from the latest data. Last worked out on {date}. <Link href="/facts">More market figures</Link>.</li>
         </ul>

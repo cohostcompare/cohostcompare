@@ -1,8 +1,9 @@
+import { FLAG_WORDS } from '@/lib/recommend';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { adminClient } from '@/lib/supabase/server';
-import { setVisibility } from '../actions';
+import { setRankFlag, setVisibility } from '../actions';
 
 export const metadata: Metadata = { title: 'Manager audit', robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ const OWNER = /property management|holiday (rental|letting|home) management|shor
 const HOTEL = /\bhotels?\b|\bresort\b|serviced apartments?|book (now|your stay|direct)|check availability|best rate guarantee|our rooms/i;
 const BATCH = 25;
 
-type Row = { id: string; slug: string; name: string; website: string | null; claimed: boolean };
+type Row = { id: string; slug: string; name: string; website: string | null; claimed: boolean; rank_flag: string | null };
 type Verdict = { kind: 'ok' | 'check' | 'nosite' | 'error'; note: string };
 
 async function check(m: Row): Promise<Verdict> {
@@ -41,7 +42,7 @@ export default async function Audit({ searchParams }: { searchParams: Promise<{ 
   const from = Math.max(0, Number((await searchParams).from) || 0);
   const db = adminClient();
   const { count } = await db.from('managers').select('id', { count: 'exact', head: true }).eq('published', true);
-  const { data } = await db.from('managers').select('id, slug, name, website, claimed').eq('published', true).order('name').range(from, from + BATCH - 1);
+  const { data } = await db.from('managers').select('id, slug, name, website, claimed, rank_flag').eq('published', true).order('name').range(from, from + BATCH - 1);
   const rows = (data || []) as Row[];
   const verdicts = await Promise.all(rows.map(check));
   const order = { check: 0, error: 1, nosite: 2, ok: 3 } as const;
@@ -69,6 +70,17 @@ export default async function Audit({ searchParams }: { searchParams: Promise<{ 
             </span>
           </div>
           <span className="hint">{v.note}</span>
+          <form action={setRankFlag} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input type="hidden" name="id" value={m.id} /><input type="hidden" name="back" value={here} />
+            {m.rank_flag || FLAG_WORDS.test(m.name) ? (
+              <>
+                <span className="hint">Kept out of the top 3 and ranking pages: {m.rank_flag || `name says “${m.name.match(FLAG_WORDS)![0].toLowerCase()}”`}.</span>
+                {m.rank_flag && <><input type="hidden" name="clear" value="1" /><button className="btn secondary small" type="submit">Allow in top 3 again</button></>}
+              </>
+            ) : (
+              <><input className="field" name="reason" placeholder="Reason, e.g. hotel" style={{ minHeight: 34, maxWidth: 220 }} /><button className="btn secondary small" type="submit">Keep out of top 3 and rankings</button></>
+            )}
+          </form>
           {v.kind !== 'ok' && (
             <form action={setVisibility} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <input type="hidden" name="id" value={m.id} /><input type="hidden" name="q" value="" /><input type="hidden" name="back" value={here} />

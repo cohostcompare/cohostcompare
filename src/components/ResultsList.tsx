@@ -1,5 +1,6 @@
 'use client';
 
+import { rankFlag, recommended } from '@/lib/recommend';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -30,12 +31,12 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
     setTimeout(() => setNudge(false), 5000);
   };
   const why = new Map(managers.map((m) => [m.slug, complete ? mismatches(m.requirements, prop) : []]));
-  // Sorting is the owner's choice; it never uses anything a manager pays for. Default: highest guest rating near you.
+  // Sorting is the owner's choice; it never uses anything a manager pays for. Default: recommended (src/lib/recommend.ts).
   const hasOwnerReviews = managers.some((m) => m.ownerReviews);
-  const [sort, setSort] = useState<'rating' | 'overall' | 'homes' | 'nightly' | 'owner'>('rating');
+  const [sort, setSort] = useState<'recommended' | 'rating' | 'overall' | 'homes' | 'nightly' | 'owner'>('recommended');
   const val = (m: NearbyManager): number | null => sort === 'rating' ? (m.nearbyRating ?? m.avgRating ?? null) : sort === 'overall' ? (m.avgRating ?? null)
     : sort === 'homes' ? (m.nearby || null) : sort === 'nightly' ? (m.avgNightlyRate ?? null) : (m.ownerReviews?.avg ?? null);
-  const sorted = managers.map((m, i) => ({ m, i })).sort((a, b) => {
+  const sorted = sort === 'recommended' ? recommended(managers) : managers.map((m, i) => ({ m, i })).sort((a, b) => {
     const x = val(a.m), y = val(b.m);
     if (x == null && y == null) return a.i - b.i;
     if (x == null) return 1;
@@ -137,6 +138,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
       <div className="sort-row">
         <label>Sort by
           <select className="field" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
+            <option value="recommended">Recommended</option>
             <option value="rating">Highest guest rating near you</option>
             <option value="overall">Highest guest rating overall</option>
             <option value="homes">Most homes they run near you</option>
@@ -144,7 +146,7 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
             {hasOwnerReviews && <option value="owner">Highest owner reviews</option>}
           </select>
         </label>
-        <span className="hint">{sort === 'rating' ? 'Based on the homes each manager runs near this address (highlighted on each card).' : sort === 'overall' ? 'Based on all of each manager’s homes.' : sort === 'homes' ? 'Counts only the homes within 4 km of this address, not their whole portfolio (highlighted on each card).' : 'Highlighted on each card. Managers without this figure go last.'}</span>
+        <span className="hint">{sort === 'recommended' ? 'A blend of guest rating (50%), homes they run near you (30%), being on CoHostCompare to reply (10%) and owner reviews (10%). Hotels and serviced apartments are never in the top 3. No one can pay to rank higher.' : sort === 'rating' ? 'Based on the homes each manager runs near this address (highlighted on each card).' : sort === 'overall' ? 'Based on all of each manager’s homes.' : sort === 'homes' ? 'Counts only the homes within 4 km of this address, not their whole portfolio (highlighted on each card).' : 'Highlighted on each card. Managers without this figure go last.'}</span>
       </div>
       {complete && (
         <div className="fit-banner" role="status">
@@ -152,15 +154,15 @@ export default function ResultsList({ managers, query, fresh }: { managers: Near
           {others.length > 0 && <a href="#not-matching">{others.length} {others.length === 1 ? 'doesn’t' : 'don’t'} match your property. See why ↓</a>}
         </div>
       )}
-      {picks.length === 0 && fits.length > 1 && (
+      {picks.length === 0 && fits.filter((m) => !rankFlag(m)).length > 1 && (
         <div className="top-pick" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', margin: '4px 0 12px' }}>
           <button type="button" className="btn primary" onClick={() => {
-            const top = fits.slice(0, 3).map((m) => ({ slug: m.slug, name: m.name }));
+            const top = fits.filter((m) => !rankFlag(m)).slice(0, 3).map((m) => ({ slug: m.slug, name: m.name }));
             setAll(top);
             const q = new URLSearchParams(query); q.set('managers', top.map((p) => p.slug).join(','));
             router.push(`/quote?${q.toString()}`);
-          }}>Get quotes from the top {Math.min(3, fits.length)} →</button>
-          <span className="hint">The first {Math.min(3, fits.length)} in the order you&apos;ve sorted by. You can remove or add managers on the next page. Or pick your own with “+ Add to quote”.</span>
+          }}>Get quotes from the top {Math.min(3, fits.filter((m) => !rankFlag(m)).length)} →</button>
+          <span className="hint">The first {Math.min(3, fits.filter((m) => !rankFlag(m)).length)} in the order you&apos;ve sorted by, skipping hotels and serviced apartments. You can remove or add managers on the next page. Or pick your own with “+ Add to quote”.</span>
         </div>
       )}
       <div className="results" style={others.length ? { paddingBottom: 8 } : undefined}>

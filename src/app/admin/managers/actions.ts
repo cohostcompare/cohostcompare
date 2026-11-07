@@ -54,3 +54,18 @@ export async function setPlan(form: FormData) {
   revalidatePath('/admin/managers');
   redirect(`/admin/managers?q=${encodeURIComponent(q)}&done=${encodeURIComponent(`set to ${plan}`)}`);
 }
+
+/** Keeps a manager out of the top 3 and the ranking pages (e.g. a hotel) without hiding their profile, or clears it. */
+export async function setRankFlag(form: FormData) {
+  const admin = await requireAdmin('/admin/managers/audit');
+  const id = String(form.get('id') || '');
+  const reason = form.get('clear') === '1' ? null : (String(form.get('reason') || '').trim().slice(0, 200) || 'Hotel-style operator');
+  const db = adminClient();
+  const { error } = await db.from('managers').update({ rank_flag: reason }).eq('id', id);
+  const back = String(form.get('back') || '/admin/managers/audit');
+  const to = back.startsWith('/admin/') ? back : '/admin/managers/audit';
+  if (error) redirect(`${to}${to.includes('?') ? '&' : '?'}error=${encodeURIComponent(error.message)}`);
+  await db.from('manager_edits').insert({ manager_id: id, user_id: admin.id, changes: { rank_flag: reason, by: 'admin' } });
+  revalidatePath('/admin/managers/audit');
+  redirect(to);
+}
