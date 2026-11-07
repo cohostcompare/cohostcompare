@@ -3,14 +3,16 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import AreaView, { placeManagers } from '@/components/AreaView';
 import { managersNear } from '@/lib/data';
 import { metaDescription } from '@/lib/seo';
-import { kmBetween, liveSuburbs, MIN_INDEX, MIN_MANAGERS, suburb, suburbHref, suburbPages } from '@/lib/suburbs';
+import { kmBetween, liveSuburbs, MIN_INDEX, MIN_MANAGERS, suburb, suburbHref } from '@/lib/suburbs';
 
 // Suburb landing pages for search and ads. See src/lib/suburbs.ts.
 export const revalidate = 1800;
 type P = Promise<{ slug: string }>;
 
+// Rendered on first visit, then cached (revalidate): building ~50 of these at once, each reading coverage for every suburb,
+// overloaded the database connection pool and timed builds out (Nov 2026).
 export async function generateStaticParams() {
-  return (await suburbPages()).map((s) => ({ slug: s.slug }));
+  return [] as { slug: string }[];
 }
 
 export async function generateMetadata({ params }: { params: P }): Promise<Metadata> {
