@@ -2,6 +2,7 @@ import 'server-only';
 import { TEST_SLUG } from '@/lib/data';
 import { PRO_CENTS } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
+import { SOURCES, sourceLabel } from '@/lib/traffic';
 
 /*
  Numbers for the admin dashboard: this week vs last week, and 12 weekly buckets for the charts.
@@ -45,6 +46,8 @@ export const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DOW_COLORS = ['#0F5E57', '#2B8A7E', '#4FB3A6', '#8ED1C8', '#BFE3DD', '#E3A24A', '#B7791F']; // weekdays teal, weekend amber
 const DEVICES = ['phone', 'desktop', 'tablet', ''], DEVICE_COLORS = ['#0F5E57', '#2B6CB0', '#9DB2AE', '#DCE5E2']; // '' = before device tracking (4 Oct 2026)
 const SRC = ['ads', 'google', 'email', 'direct'], SRC_LABELS = ['Google Ads', 'Google search', 'Email', 'Direct or other'], SRC_COLORS = ['#B7791F', '#2B6CB0', '#7A5AA5', '#8FA6A1'];
+// All visitors by source (Ben, Nov 2026): every traffic source, in SOURCES order, stacked bottom-up.
+const VISIT_COLORS: Record<string, string> = { ads: '#B7791F', google: '#2B6CB0', ai: '#0F5E57', social: '#C05680', referral: '#4FB3A6', email: '#7A5AA5', direct: '#8FA6A1' };
 const dowFmt = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short' });
 export const sydneyDow = (iso: string) => DOW.indexOf(dowFmt.format(new Date(iso)));
 const grid = (n: number, k: number) => Array.from({ length: n }, () => Array.from({ length: k }, () => 0));
@@ -95,8 +98,10 @@ export async function adminStats() {
 
   const ads = zero(), google = zero(), other = zero();
   const adsDev = grid(WEEKS, 4), googleDev = grid(WEEKS, 4), otherDev = grid(WEEKS, 4);
+  const bySource = grid(WEEKS, SOURCES.length);
   for (const v of visits.data || []) {
     const i = bucket(v.created_at, now); if (i < 0) continue;
+    const s = SOURCES.indexOf(v.source); bySource[i][s >= 0 ? s : SOURCES.indexOf('direct')]++;
     const d = Math.max(0, DEVICES.indexOf((v as { device?: string }).device || ''));
     if (v.source === 'ads') { ads[i]++; adsDev[i][d]++; } else if (v.source === 'google') { google[i]++; googleDev[i][d]++; } else { other[i]++; otherDev[i][d]++; }
   }
@@ -130,7 +135,7 @@ export async function adminStats() {
   return {
     labels,
     series: { ads, google, other, visitors, requests, contacted, accepted, claims: claimSeries },
-    parts: { ads: device(adsDev), google: device(googleDev), other: device(otherDev), requests: byDow(requestsDow), accepted: byDow(acceptedDow), claims: byDow(claimsDow) },
+    parts: { visitors: { labels: SOURCES.map((x) => sourceLabel[x]), colors: SOURCES.map((x) => VISIT_COLORS[x]), values: bySource } as Parts, ads: device(adsDev), google: device(googleDev), other: device(otherDev), requests: byDow(requestsDow), accepted: byDow(acceptedDow), claims: byDow(claimsDow) },
     week: {
       visitors: [last(visitors), prev(visitors)], ads: [last(ads), prev(ads)], google: [last(google), prev(google)],
       requests: [last(requests), prev(requests)], contacted: [last(contacted), prev(contacted)], accepted: [last(accepted), prev(accepted)], claims: [last(claimSeries), prev(claimSeries)],

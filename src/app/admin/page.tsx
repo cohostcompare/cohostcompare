@@ -143,6 +143,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
         <p className="hint" style={{ margin: '-6px 0 0' }}>Each bar is one calendar week, Monday to Sunday, Sydney time, labelled by its Monday. The last bar is this week so far ({st.weekFrom} to now). Hover a bar for the number.</p>
         {!st.trackingReady && <p className="hint" style={{ margin: 0 }}>Visitor charts fill in once traffic tracking (update 017) has data.</p>}
         <div className="wb-grid" style={{ gridTemplateColumns: '1fr' }}>
+          <WeekBars title="All visitors per week" values={st.series.visitors} labels={st.labels} parts={st.parts.visitors} href="/admin/ads" note="Total visitors each week (one per visit session), coloured by where they came from. Hover a week for the split by source." />
           <WeekBars title="Owner searches per day" values={daily.values} labels={daily.labels} parts={daily.parts} unit="day" href="/admin/ads" note={`Searches by owners over the last ${DAYS} days (your own and other admins' searches aren't counted). Where they searched is on the traffic page.`} />
         </div>
         <div className="wb-grid">
