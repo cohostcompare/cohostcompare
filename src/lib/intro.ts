@@ -1,15 +1,16 @@
 import 'server-only';
 import { sendEmail } from '@/lib/email';
 import { memberEmails } from '@/lib/managers';
-import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
+import { feeText, freePlanText, launchPricing, LEGACY_FREE_PER_MONTH, planOf, plansFor, PRO_PRICE, successFee, UNLOCK_HOURS } from '@/lib/pro';
 import { smsManager } from '@/lib/sms';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
  What happens when an owner accepts a quote:
  - Pro, Enterprise or founding trial: we introduce owner and manager straight away, in one email to both.
- - Free plan (claimed): the first FREE_ACCEPTS_PER_MONTH accepted clients each month are introduced straight away.
-   After that, the manager is asked to unlock the client (A$99 + GST by card, or start Pro). Once paid,
+ - Free plan (claimed): the manager's first accepted client ever is introduced straight away (managers who claimed before
+   8 Nov 2026 keep 4 free a month until the launch price ends). After that, the manager is asked to unlock the client
+   (successFee() + GST by card: A$99 launch price until 30 Apr 2027, then A$400; or start Pro). The fee is fixed when the owner accepts. Once paid,
    the same introduction goes out. If they haven't unlocked within 48 hours, the owner is told they can accept
    another quote (the manager can still unlock later).
  - Unclaimed profile: hello@ passes the details on by hand, as before.
@@ -23,7 +24,7 @@ async function load(threadId: string) {
   const { data: t } = await db.from('quote_request_managers').select('id, manager_slug, manager_name, request_id').eq('id', threadId).single();
   if (!t) return null;
   const { data: req } = await db.from('quote_requests').select('owner_name, owner_email, owner_phone, street, suburb, state, postcode').eq('id', t.request_id).single();
-  const { data: m } = await db.from('managers').select('id, name, website, contact_phone, claimed').eq('slug', t.manager_slug).single();
+  const { data: m } = await db.from('managers').select('id, name, website, contact_phone, claimed, legacy_free').eq('slug', t.manager_slug).single();
   return { t, req, m, emails: await memberEmails(t.manager_slug) };
 }
 
@@ -59,31 +60,40 @@ export async function onAccepted(threadId: string) {
   const { t, req, m, emails } = x;
   const db = adminClient();
   const free = m.claimed && emails.length > 0 && planOf((await plansFor([m.id])).get(m.id)) === 'free';
-  let used = 0;
+  // Legacy (claimed before the 8 Nov 2026 change): 4 free a month until the launch price ends. Everyone else: the first client ever is free.
+  const legacy = Boolean(m.legacy_free) && launchPricing();
+  let used = 0, allowance = 1;
   if (free) {
-    const monthStart = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-    monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-    const { count } = await db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', t.manager_slug).eq('status', 'accepted').gte('accepted_at', new Date(monthStart.getTime() - 11 * 3600e3).toISOString());
-    used = count ?? 0; // includes this one
+    let q = db.from('quote_request_managers').select('id', { count: 'exact', head: true }).eq('manager_slug', t.manager_slug).eq('status', 'accepted');
+    if (legacy) {
+      const monthStart = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+      q = q.gte('accepted_at', new Date(monthStart.getTime() - 11 * 3600e3).toISOString());
+      allowance = LEGACY_FREE_PER_MONTH;
+    }
+    used = (await q).count ?? 0; // includes this one
   }
-  if (!free || used <= FREE_ACCEPTS_PER_MONTH) {
+  const fee = successFee();
+  if (!free || used <= allowance) {
     await db.from('messages').insert({ thread_id: t.id, sender: 'system', read_by_owner: true, body: `You accepted ${t.manager_name}'s quote.` });
     await introduce(t.id);
     if (free && emails.length) {
       await sendEmail({
-        to: emails, subject: `Free clients this month: ${Math.min(used, FREE_ACCEPTS_PER_MONTH)} of ${FREE_ACCEPTS_PER_MONTH} used`,
-        text: `${first(req.owner_name)} accepted your quote, and we've sent you both an introduction.\n\nThat's ${Math.min(used, FREE_ACCEPTS_PER_MONTH)} of the ${FREE_ACCEPTS_PER_MONTH} clients the Free plan includes this month. After that, each new client costs ${SUCCESS_FEE_TEXT} to confirm. Pro (${PRO_PRICE}) includes unlimited clients, plus SMS alerts, regional reports and insights.`,
+        to: emails, subject: legacy ? `Free clients this month: ${Math.min(used, allowance)} of ${allowance} used` : 'Your first client on CoHostCompare is free',
+        text: legacy
+          ? `${first(req.owner_name)} accepted your quote, and we've sent you both an introduction.\n\nThat's ${Math.min(used, allowance)} of the ${allowance} free clients a month you keep until ${'30 April 2027'}, because you joined before our pricing changed. After that, each new client costs ${feeText(fee)} to confirm. Pro (${PRO_PRICE}) includes unlimited clients, plus SMS alerts, regional reports and insights.`
+          : `${first(req.owner_name)} accepted your quote, and we've sent you both an introduction. This one is on us.\n\nOn the Free plan: ${freePlanText()}. Pro (${PRO_PRICE}) includes unlimited clients, plus SMS alerts, regional reports and insights.`,
         cta: { label: 'See Pro', url: `${SITE}/dashboard` },
       });
     }
     return;
   }
-  const { error } = await db.from('success_fees').insert({ manager_id: m.id, thread_id: t.id, amount: SUCCESS_FEE, status: 'awaiting_unlock', expires_at: new Date(Date.now() + UNLOCK_HOURS * 3600e3).toISOString() });
+  const { error } = await db.from('success_fees').insert({ manager_id: m.id, thread_id: t.id, amount: fee, status: 'awaiting_unlock', expires_at: new Date(Date.now() + UNLOCK_HOURS * 3600e3).toISOString() });
   if (error) { console.error('unlock fee', error); await introduce(t.id); return; } // never leave an owner stuck
   await db.from('messages').insert({ thread_id: t.id, sender: 'system', read_by_owner: true, body: `You accepted ${t.manager_name}'s quote. We've asked them to confirm, and we'll introduce you by email as soon as they do.` });
   await sendEmail({
     to: emails, subject: `${first(req.owner_name)} accepted your quote: confirm to get their details`,
-    text: `Good news: ${first(req.owner_name)} accepted your quote for ${req.suburb || ''} ${req.state || ''} ${req.postcode}.\n\nYou've used the ${FREE_ACCEPTS_PER_MONTH} free clients the Free plan includes this month, so confirm this one for ${SUCCESS_FEE_TEXT} to get the owner's full name, email, phone and address, and an introduction by email. Or start Pro and every client you win is unlocked at no extra cost.\n\nPlease confirm within ${UNLOCK_HOURS} hours. After that we'll let the owner know they can choose another manager.`,
+    text: `Good news: ${first(req.owner_name)} accepted your quote for ${req.suburb || ''} ${req.state || ''} ${req.postcode}.\n\n${legacy ? `You've used the ${allowance} free clients you have this month` : 'Your first client was free'}, so confirm this one for ${feeText(fee)} to get the owner's full name, email, phone and address, and an introduction by email. Or start Pro and every client you win is unlocked at no extra cost.\n\nPlease confirm within ${UNLOCK_HOURS} hours. After that we'll let the owner know they can choose another manager.`,
     cta: { label: 'Confirm this client', url: `${SITE}/dashboard/requests/${t.id}` },
   });
   await smsManager(t.manager_slug, 'accepted', `CoHostCompare: ${first(req.owner_name)} accepted your quote for ${req.suburb || req.postcode}. Confirm within ${UNLOCK_HOURS}h to get their details: ${SITE}/dashboard/requests/${t.id}`);
@@ -121,5 +131,34 @@ export async function expireUnlocks() {
     await db.from('success_fees').update({ status: 'expired', owner_notified_at: new Date().toISOString() }).eq('id', f.id);
     n++;
   }
+  return n;
+}
+
+/**
+ Daily: 30 days' notice for managers who claimed before the 8 Nov 2026 pricing change (managers.legacy_free).
+ They keep 4 free clients a month until the launch price ends on 30 Apr 2027. On or after 31 Mar 2027 each gets one email
+ saying what changes on 1 May. Sent once (site_settings 'legacy_notice_sent' lists who has had it).
+*/
+export async function legacyPriceNotice(): Promise<number> {
+  if (Date.now() < new Date('2027-03-31T00:00:00+11:00').getTime() || !launchPricing()) return 0;
+  const db = adminClient();
+  const { data: s } = await db.from('site_settings').select('value').eq('key', 'legacy_notice_sent').maybeSingle();
+  const done = new Set<string>(Array.isArray(s?.value) ? (s!.value as string[]) : []);
+  const { data: ms } = await db.from('managers').select('id, slug, name').eq('legacy_free', true).eq('claimed', true);
+  let n = 0;
+  for (const m of ms || []) {
+    if (done.has(m.id)) continue;
+    const emails = await memberEmails(m.slug);
+    if (emails.length) {
+      await sendEmail({
+        to: emails, subject: 'Your CoHostCompare free clients from 1 May',
+        text: `Hi ${m.name} team,\n\nWhen you joined CoHostCompare, the Free plan included 4 accepted clients a month at no cost. We kept that for you through our launch period, which ends on 30 April 2027.\n\nFrom 1 May 2027, on the Free plan each new client you win costs ${feeText(400)} to confirm. Your profile, quote requests and replies stay free, and Pro (${PRO_PRICE}) still includes unlimited clients.\n\nNothing changes before 1 May. Any client who accepts your quote before then is covered as now.\n\nThe CoHostCompare team`,
+        cta: { label: 'See plans', url: `${SITE}/managers#pricing` },
+      });
+      n++;
+    }
+    done.add(m.id);
+  }
+  await db.from('site_settings').upsert({ key: 'legacy_notice_sent', value: [...done], updated_at: new Date().toISOString() });
   return n;
 }

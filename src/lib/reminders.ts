@@ -153,6 +153,7 @@ export async function runDaily() {
   const onboard = await step('manager onboarding', async () => (await import('@/lib/onboarding')).runOnboarding(), 0);
   const partnerReports = await step('partner click reports', async () => (await import('@/lib/partners')).monthlyPartnerReports(), 0);
   const invites = await step('review invites', async () => (await import('@/lib/reviewInvites')).sendReviewInvites(), 0);
+  const legacyNotices = await step('legacy price notice', async () => (await import('@/lib/intro')).legacyPriceNotice(), 0);
   const indexed = await step('IndexNow', async () => (await import('@/lib/indexnow')).dailyIndexNow(), 0);
   const claims = await step('claim lines', claimLines, [] as string[]);
   const managers = await step('manager reminders', managerReminders, [] as string[]);
@@ -192,7 +193,7 @@ export async function runDaily() {
       cta: { label: 'Open admin', url: `${siteBase()}/admin` },
     }), false);
   }
-  const summary = `owner reminders ${owners}; no-reply ${noReply}; outreach ${outreach.sent}; reports ${reports.made}; review invites ${invites}; onboarding ${onboard}; guide tips ${guideTips}; catch-up ${missed}; IndexNow ${indexed}; digest ${lines.length ? 'sent' : 'nothing to send'}`;
+  const summary = `owner reminders ${owners}; no-reply ${noReply}; outreach ${outreach.sent}; reports ${reports.made}; review invites ${invites}; onboarding ${onboard}; guide tips ${guideTips}; catch-up ${missed}; IndexNow ${indexed}; legacy price notices ${legacyNotices}; digest ${lines.length ? 'sent' : 'nothing to send'}`;
   if (runId != null) await db.from('cron_runs').update({ finished_at: new Date().toISOString(), ok: problems.length === 0, summary, error: problems.length ? problems.join('\n').slice(0, 4000) : null }).eq('id', runId).then(() => {}, () => {});
   return { ownerReminders: owners, outreach, reports, reviewInvites: invites, adminDigest: lines.length > 0, problems };
 }

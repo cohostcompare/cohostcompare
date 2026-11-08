@@ -5,7 +5,7 @@ import { myManagers } from '@/lib/managers';
 import { eventTotals, searchDemand } from '@/lib/events';
 import RequestList from '@/components/RequestList';
 import { managerThreads, todoLabel } from '@/lib/todo';
-import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, SUCCESS_FEE_TEXT } from '@/lib/pro';
+import { planName, planOf, plansFor, PRO_FEATURES, PRO_PRICE, freePlanText } from '@/lib/pro';
 import { adminClient, currentUser } from '@/lib/supabase/server';
 import ProInterest from './ProInterest';
 import { manageBilling, startPro } from './billing/actions';
@@ -195,7 +195,7 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 {card}
                 <div className="panel" style={{ display: 'grid', gap: 8 }}>
                   <b>CoHostCompare Pro (optional)</b>
-                  <span className="hint">Your profile, quote requests and replies stay free, including 4 accepted clients a month, then {SUCCESS_FEE_TEXT} each. Pro ({PRO_PRICE}) includes unlimited clients and adds {PRO_FEATURES.filter((f) => f.title !== 'Unlimited clients').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
+                  <span className="hint">Your profile, quote requests and replies stay free. {freePlanText()}. Pro ({PRO_PRICE}) includes unlimited clients and adds {PRO_FEATURES.filter((f) => f.title !== 'Unlimited clients').map((f) => f.title.toLowerCase()).join(', ')}. It never changes where you appear or what owners see.</span>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>{billing ? <form action={startPro}><input type="hidden" name="slug" value={m.slug} /><button className="btn primary small">Start Pro</button></form> : <ProInterest managerId={m.id} />}<Link href="/managers#pricing">See plans</Link></div>
                 </div>
                 </>

@@ -1,6 +1,6 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { GST, PRO_CENTS, SUCCESS_FEE } from '@/lib/pro';
+import { GST, PRO_CENTS } from '@/lib/pro';
 
 /*
  Stripe billing, called over its REST API (no SDK).
@@ -48,12 +48,12 @@ async function gstRate() {
 }
 
 /** Checkout for unlocking one accepted owner (Free plan). */
-export async function unlockCheckout(o: { feeId: string; threadId: string; managerId: string; customerId?: string | null; email: string; where: string }) {
+export async function unlockCheckout(o: { feeId: string; amount: number; threadId: string; managerId: string; customerId?: string | null; email: string; where: string }) {
   const tax = await gstRate();
   const s = await stripe<{ id: string; url: string }>('/checkout/sessions', {
     mode: 'payment',
     ...(o.customerId ? { customer: o.customerId } : { customer_email: o.email, customer_creation: 'always' }),
-    line_items: [{ quantity: 1, price_data: { currency: 'aud', unit_amount: SUCCESS_FEE * 100, product_data: { name: `Client introduction: ${o.where}`.slice(0, 120) } }, ...(tax ? { tax_rates: [tax] } : {}) }],
+    line_items: [{ quantity: 1, price_data: { currency: 'aud', unit_amount: Math.round(o.amount * 100), product_data: { name: `Client introduction: ${o.where}`.slice(0, 120) } }, ...(tax ? { tax_rates: [tax] } : {}) }],
     invoice_creation: { enabled: true },
     metadata: { kind: 'unlock', fee_id: o.feeId, thread_id: o.threadId, manager_id: o.managerId },
     success_url: `${SITE}/dashboard/requests/${o.threadId}?unlocked=1`,

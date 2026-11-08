@@ -38,14 +38,14 @@ export async function unlockClient(form: FormData) {
   const db = adminClient();
   const mine = (await myManagers(user.id)).find((x) => x.slug === thread.manager_slug)!;
   if (planOf((await plansFor([mine.id])).get(mine.id)) !== 'free') redirect(`/dashboard/requests/${thread.id}`);
-  const { data: fee } = await db.from('success_fees').select('id, status').eq('thread_id', thread.id).maybeSingle();
+  const { data: fee } = await db.from('success_fees').select('id, status, amount').eq('thread_id', thread.id).maybeSingle();
   if (!fee || !['awaiting_unlock', 'expired'].includes(fee.status)) redirect(`/dashboard/requests/${thread.id}`);
   // Nothing to unlock if the owner has since chosen another manager, or the request (and owner) no longer exists.
   if (!req || await otherAcceptedFor(thread.request_id, thread.manager_slug)) redirect(`/dashboard/requests/${thread.id}`);
   if (!stripeOn()) redirect(`/dashboard/requests/${thread.id}?billing=soon`);
   const b = await billingRow(mine.id);
   const u = await currentUser();
-  const s = await unlockCheckout({ feeId: fee.id, threadId: thread.id, managerId: mine.id, customerId: b?.stripe_customer_id, email: u!.email!, where: `${req.suburb || ''} ${req.state || ''} ${req.postcode}`.trim() });
+  const s = await unlockCheckout({ feeId: fee.id, amount: Number(fee.amount) || 99, threadId: thread.id, managerId: mine.id, customerId: b?.stripe_customer_id, email: u!.email!, where: `${req.suburb || ''} ${req.state || ''} ${req.postcode}`.trim() });
   await db.from('success_fees').update({ stripe_session_id: s.id }).eq('id', fee.id);
   redirect(s.url);
 }

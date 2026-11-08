@@ -7,7 +7,7 @@ export default function Terms() {
   return (
     <main className="legal">
       <h1>Terms of use</h1>
-      <p className="hint">Last updated 1 October 2026</p>
+      <p className="hint">Last updated 8 November 2026</p>
 
       <p>These terms apply when you use cohostcompare.com. CoHostCompare (ABN 52 679 120 059) is a business based in Sydney (&ldquo;we&rdquo;, &ldquo;us&rdquo;). By using the site you agree to these terms. Our <Link href="/privacy">privacy policy</Link> explains how we handle personal information.</p>
 
@@ -48,7 +48,7 @@ export default function Terms() {
 
       <h2 id="paid-plans">6. Paid plans for managers (Pro and Enterprise)</h2>
       <ul>
-        <li><b>Accepted clients (Free plan).</b> The Free plan includes 4 accepted clients each calendar month (Sydney time), introduced at no cost. After that, when an owner accepts your quote, you can confirm them for A$99 (plus GST if we&apos;re registered for GST), paid by card. When you confirm, we share the owner&apos;s contact details and introduce you by email. If you don&apos;t confirm within 48 hours, we tell the owner they can choose another manager, and you can still confirm later. On Pro and Enterprise, including during the founding offer, clients are confirmed at no extra cost. The fee is per owner and property, and isn&apos;t refundable once the introduction is sent, unless the Australian Consumer Law requires it.</li>
+        <li><b>Accepted clients (Free plan).</b> On the Free plan, your first accepted client is introduced at no cost. After that, when an owner accepts your quote, you can confirm them for a fee per client, plus GST if we&apos;re registered for GST, paid by card: A$99 until 30 April 2027 (our launch price), then A$400. The fee is set when the owner accepts, so a client accepted at the launch price stays at that price. Managers who claimed their profile before 8 November 2026 keep 4 free accepted clients each calendar month (Sydney time) until 30 April 2027. We&apos;ll give at least 30 days&apos; notice by email before any other change to these fees. When you confirm, we share the owner&apos;s contact details and introduce you by email. If you don&apos;t confirm within 48 hours, we tell the owner they can choose another manager, and you can still confirm later. On Pro and Enterprise, including during the founding offer, clients are confirmed at no extra cost. The fee is per owner and property, and isn&apos;t refundable once the introduction is sent, unless the Australian Consumer Law requires it.</li>
         <li><b>Logins.</b> Free includes 1 login, Pro up to 3 and Enterprise unlimited.</li>
         <li><b>Optional.</b> Pro and Enterprise add tools for your business, such as benchmarks, owner demand, extra photos, regional reports, text alerts and integrations. The free features stay free if you don&apos;t subscribe.</li>
         <li><b>Neutral.</b> A paid plan never changes where you appear in results, your ratings or badges, or how quotes are compared, and owners can&apos;t see who has one.</li>

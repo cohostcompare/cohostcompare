@@ -2,7 +2,7 @@ import 'server-only';
 import { sign } from '@/lib/claims';
 import { sendEmail } from '@/lib/email';
 import { outreachReplyTo } from '@/lib/inbound';
-import { FREE_ACCEPTS_PER_MONTH, SUCCESS_FEE_TEXT } from '@/lib/pro';
+import { feeText as priceText, LAUNCH_FEE } from '@/lib/pro';
 import { adminClient } from '@/lib/supabase/server';
 
 /*
@@ -47,7 +47,7 @@ function unsubscribedFooter(c: Ctx) {
 export const SEQUENCE: { subject: (c: Ctx) => string; body: (c: Ctx) => string; cta: (c: Ctx) => { label: string; url: string } }[] = [
   {
     subject: (c) => `${c.manager}'s profile on CoHostCompare`,
-    body: (c) => `Hi ${c.first || 'there'},\n\nCoHostCompare is a new free site where property owners across NSW and Victoria compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls, and no fees for your first ${FREE_ACCEPTS_PER_MONTH} new clients each month, then ${SUCCESS_FEE_TEXT} per client you win, or Pro. Claim by 31 January and you get Pro free for three months.`,
+    body: (c) => `Hi ${c.first || 'there'},\n\nCoHostCompare is a new free site where property owners across NSW and Victoria compare short-term rental managers and request quotes.\n\n${c.manager} already has a profile${c.homes ? `, because you run ${c.homes} homes we track${c.rating ? ` with a ${c.rating.toFixed(2)} ★ average guest rating` : ''}` : ''}. Owners near your homes can see it and ask you for a quote.\n\nClaiming it is free and takes about two minutes. You can add your fees, services, logo and photos, and reply to owners directly. No sales calls. Your first client is free, then it's ${priceText(LAUNCH_FEE)} per client you win at our launch price, or Pro. Claim by 31 January and you get Pro free for three months.`,
     cta: (c) => ({ label: 'See your profile', url: `${BASE}/managers/${c.slug}` }),
   },
   {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { myManagers, requireThread } from '@/lib/managers';
-import { FREE_ACCEPTS_PER_MONTH, planOf, plansFor, PRO_PRICE, SUCCESS_FEE_TEXT, UNLOCK_HOURS } from '@/lib/pro';
+import { feeText, freePlanText, planOf, plansFor, PRO_PRICE, successFee, UNLOCK_HOURS } from '@/lib/pro';
 import { startPro, unlockClient } from '@/app/dashboard/billing/actions';
 import { adminClient } from '@/lib/supabase/server';
 import { DeclineForm, ManagerComposer, QuoteForm } from './Forms';
@@ -28,7 +28,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
   const defaults = { feePct: m.fee_min ?? undefined, gst: String(m.fee_note || '').includes('GST'), setupFee: g.setupFee ?? undefined, minTermMonths: g.minTermMonths ?? undefined, noticeDays: g.noticeDays ?? undefined, cleaning: g.cleaningPassedOn === true ? 'guests' : g.cleaningPassedOn === false ? 'owner' : undefined, linenIncluded: g.linenIncluded, included: g.inclusions || [] };
   const plan = planOf((await plansFor([m.id])).get(m.id));
   const { data: tpl } = await db.from('managers').select('quote_templates').eq('id', m.id).maybeSingle(); // needs 015
-  const { data: fee } = await db.from('success_fees').select('status, expires_at').eq('thread_id', t.id).maybeSingle(); // needs 015/016
+  const { data: fee } = await db.from('success_fees').select('status, expires_at, amount').eq('thread_id', t.id).maybeSingle(); // needs 015/016
   const accepted = t.status === 'accepted';
   const awaiting = accepted && Boolean(fee && ['awaiting_unlock', 'expired'].includes(fee.status));
   // The owner may have chosen another manager after the confirmation window, or deleted their account: then there's nothing to unlock.
@@ -66,10 +66,10 @@ export default async function ManagerThread({ params, searchParams }: { params: 
         ) : locked ? (
           <div style={{ background: 'var(--tint)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 10 }}>
             <b>{first} accepted your quote. Confirm this client to get their details.</b>
-            <span>You&apos;ve used the {FREE_ACCEPTS_PER_MONTH} free clients included in the Free plan this month. Confirm this one for {SUCCESS_FEE_TEXT} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>
+            <span>You&apos;ve used the free clients included in the Free plan. Confirm this one for {feeText(Number(fee?.amount) || successFee())} and we&apos;ll send you and {first} an introduction by email with their full name, email, phone and address. Or start Pro ({PRO_PRICE}) and every client you win is confirmed at no extra cost, including this one.</span>
             {fee?.status === 'expired' ? <span className="hint">The {UNLOCK_HOURS}-hour window has passed, so {first} has been told they can choose another manager. You can still confirm, and we&apos;ll introduce you.</span> : fee?.expires_at ? <span className="hint">Please confirm by {new Date(fee.expires_at).toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' })}.</span> : null}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <form action={unlockClient}><input type="hidden" name="thread" value={t.id} /><button className="btn primary">Confirm for {SUCCESS_FEE_TEXT}</button></form>
+              <form action={unlockClient}><input type="hidden" name="thread" value={t.id} /><button className="btn primary">Confirm for {feeText(Number(fee?.amount) || successFee())}</button></form>
               <form action={startPro}><input type="hidden" name="slug" value={t.manager_slug} /><button className="btn secondary">Start Pro instead</button></form>
             </div>
           </div>
@@ -85,7 +85,7 @@ export default async function ManagerThread({ params, searchParams }: { params: 
       <section className="panel" style={{ display: 'grid', gap: 12 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>{t.quote ? 'Your quote' : 'Send your quote'}</h2>
         {closed && !accepted && <p className="hint" style={{ margin: 0 }}>This request is closed.</p>}
-        <QuoteForm thread={t.id} q={t.quote} defaults={defaults} locked={closed} plan={plan} templates={(tpl?.quote_templates as { name: string; q: unknown }[]) || []} feeText={SUCCESS_FEE_TEXT} />
+        <QuoteForm thread={t.id} q={t.quote} defaults={defaults} locked={closed} plan={plan} templates={(tpl?.quote_templates as { name: string; q: unknown }[]) || []} feeText={freePlanText()} />
       </section>
 
       <section id="chat" className="panel chat" aria-label={`Chat with ${first}`}>

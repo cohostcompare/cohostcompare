@@ -110,7 +110,7 @@ export default async function AdResults({ searchParams }: { searchParams: SP }) 
             <div className="stat"><div className="n">{ads.accepted ? money(spend / ads.accepted) : '–'}</div><div className="t">per accepted quote</div></div>
           </div>
         )}
-        <span className="hint">Each accepted quote is worth up to A$99 (a client confirmation on the Free plan), and a manager who upgrades to Pro is worth A$99 a month.</span>
+        <span className="hint">Each accepted quote is worth up to A$99 until 30 April 2027, then A$400 (a client confirmation on the Free plan, after the manager's first free client), and a manager who upgrades to Pro is worth A$99 a month.</span>
       </form>
 
       <section className="panel" style={{ display: 'grid', gap: 10 }}>

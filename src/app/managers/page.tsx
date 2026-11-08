@@ -4,7 +4,7 @@ import { faqPage } from '@/lib/seo';
 import ManagerSignup from '@/components/ManagerSignup';
 import Photo from '@/components/Photo';
 import InterestForm from '@/app/interest/InterestForm';
-import { SUCCESS_FEE_TEXT, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, GST, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
+import { freePlanText, ENTERPRISE_FEATURES, ENTERPRISE_PRICE_SHORT, foundingDeadlineText, GST, PRO_FEATURES, PRO_PRICE_SHORT } from '@/lib/pro';
 
 export const metadata: Metadata = {
   title: 'For short-term rental managers',
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 const faqs: [string, string][] = [
-  ['What does it cost?', `Your profile, owner quote requests and replies are free, with no lock-in. The Free plan includes 4 accepted clients a month, introduced to you straight away, then ${SUCCESS_FEE_TEXT} each. Pro and Enterprise include unlimited clients, and founding managers get Pro free for three months.`],
+  ['What does it cost?', `Your profile, owner quote requests and replies are free, with no lock-in. On the Free plan, ${freePlanText().replace(/^Your/, 'your')}. Pro and Enterprise include unlimited clients, and founding managers get Pro free for three months.`],
   ['Why do you show my fees?', 'Owners compare on fees first. We show a fee band publicly and the full breakdown only to signed-in owners, in the same format for every manager, so you are compared fairly.'],
   ['Where do the ratings come from?', 'From the public guest ratings on the listings you manage, combined across your portfolio and labelled as estimates. See “How we build manager profiles” above.'],
   ['How did you get my business’s details?', 'From public sources only: public short-term rental listing data (via AirROI) and your own website. We don’t buy contact lists. If we emailed you, it’s because that address is published publicly for the business, on its own website or in a listing it controls (such as its claimed review-site profile or an official tourism listing).'],
@@ -58,7 +58,7 @@ export default function ForManagers() {
               <li className="done">Your profile, fees, services, logo and 12 photos</li>
               <li className="done">Unlimited quote requests and replies</li>
               <li className="done">1 login</li>
-              <li className="done">4 accepted clients a month, then {SUCCESS_FEE_TEXT} each</li>
+              <li className="done">{freePlanText()}</li>
               <li className="done">Verified business badge when your ABN checks out</li>
               <li className="done">Search appearances, profile views and requests on your dashboard</li>
             </ul>

@@ -134,7 +134,7 @@ export default async function Admin({ searchParams }: { searchParams: SP }) {
         <div className="kpi k-purple"><span>Visitor to request</span><b>{conv}</b><small>quote requests per visitor this week</small></div>
         <Link href="/admin/claims" className={`kpi ${openClaims ? 'k-alert' : 'k-teal'}`}><span>Claims to review</span><b>{openClaims}</b><small>{st.claimed} claimed of {st.published} published profiles</small></Link>
         <Link href="/admin/managers?plan=pro" className="kpi k-teal"><span>Pro managers</span><b>{st.payingPro + st.freePro}</b><small>{st.payingPro} paying (A${st.mrr.toLocaleString('en-AU')} a month) · {st.freePro} on free Pro</small></Link>
-        <a href="#fees" className="kpi k-green"><span>Client confirmation fees</span><b>A${st.unlocks30.toLocaleString('en-AU')}</b><small>last 30 days: A$99 unlocks paid by Free-plan managers for clients beyond their 4 free a month</small></a>
+        <a href="#fees" className="kpi k-green"><span>Client confirmation fees</span><b>A${st.unlocks30.toLocaleString('en-AU')}</b><small>last 30 days: unlocks paid by Free-plan managers for clients beyond their free one</small></a>
         <Link href="/admin/feedback" className="kpi k-rose"><span>Recommend score</span><b>{st.nps ?? '–'}</b><small>{st.npsCount ? `from ${st.npsCount} feedback replies` : 'no feedback yet'}</small></Link>
       </section>
 

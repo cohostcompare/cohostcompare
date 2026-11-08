@@ -21,12 +21,27 @@ export const PRO_CENTS = 9900;
 export const ENTERPRISE_PRICE_SHORT = 'A$400';
 /** Launch pricing: managers who subscribe during launch keep their price for this long. */
 export const PRICE_LOCK_MONTHS = 12;
-/** Free plan: when an owner accepts, the manager pays this to unlock the owner's details and introduction. Free on Pro and Enterprise. */
-export const SUCCESS_FEE = 99;
-export const SUCCESS_FEE_TEXT = `A$99${plusGst}`;
+/*
+ Free plan pricing (Ben, 8 Nov 2026): a manager's first accepted client is free. After that, each accepted client costs
+ LAUNCH_FEE until LAUNCH_FEE_END (announced from day one, so the rise is never a surprise), then STANDARD_FEE.
+ Free on Pro and Enterprise (including the founding trial). Managers who had claimed before the change (managers.legacy_free,
+ SQL 036) keep LEGACY_FREE_PER_MONTH free clients a month until LAUNCH_FEE_END.
+*/
+export const LAUNCH_FEE = 99;
+export const STANDARD_FEE = 400;
+export const LAUNCH_FEE_END = '2027-04-30';
+export const LAUNCH_FEE_END_TEXT = '30 April 2027';
+export const LEGACY_FREE_PER_MONTH = 4;
+export const launchPricing = (at: Date = new Date()) => at.getTime() <= new Date(`${LAUNCH_FEE_END}T23:59:59+10:00`).getTime();
+/** The fee per accepted client at a given time (whole A$, before GST). */
+export const successFee = (at: Date = new Date()) => (launchPricing(at) ? LAUNCH_FEE : STANDARD_FEE);
+export const feeText = (n: number) => `A$${n}${plusGst}`;
+export const successFeeText = (at?: Date) => feeText(successFee(at));
+/** One line for pricing copy. */
+export const freePlanText = (at?: Date) => launchPricing(at)
+  ? `Your first accepted client is free. After that, ${feeText(LAUNCH_FEE)} per client until ${LAUNCH_FEE_END_TEXT} (launch price), then ${feeText(STANDARD_FEE)}`
+  : `Your first accepted client is free, then ${feeText(STANDARD_FEE)} per client`;
 export const UNLOCK_HOURS = 48;
-/** Free plan: this many accepted clients a month are introduced at no cost; after that, A$99 (+ GST) each or Pro. */
-export const FREE_ACCEPTS_PER_MONTH = 4;
 /** Logins per plan. */
 export const SEATS: Record<'free' | 'pro' | 'enterprise', number> = { free: 1, pro: 3, enterprise: 1000 };
 export const PRO_FOLLOW_LIMIT = 2; // extra report regions a Pro manager can follow
@@ -41,7 +56,7 @@ export const PRO_FEATURES: Feature[] = [
   { title: 'More photos', body: 'Up to 24 photos on your profile instead of 12.', live: true },
   { title: 'Market reports', body: 'Quarterly short-stay market reports for your regions, plus 2 more you choose, broken down by suburb: seasonality, nightly rates and revenue by bedrooms, demand and how fees compare. Every past report is kept.', live: true },
   { title: 'SMS alerts', body: 'A text message the moment an owner asks you for a quote or accepts yours.', live: true },
-  { title: 'Unlimited clients', body: `Every owner who accepts your quote is introduced straight away. Free includes 4 a month, then ${`A$99${plusGst}`} each.`, live: true },
+  { title: 'Unlimited clients', body: `Every owner who accepts your quote is introduced straight away. On Free, your first client is free, then ${feeText(LAUNCH_FEE)} each until ${LAUNCH_FEE_END_TEXT}, then ${feeText(STANDARD_FEE)}.`, live: true },
   { title: 'Team logins', body: 'Up to 3 people from your business, each with their own login.', live: true },
   { title: 'Quote templates', body: 'Save your standard fees, terms and inclusions and fill in a quote in one click.', live: true },
 ];

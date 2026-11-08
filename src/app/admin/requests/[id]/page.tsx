@@ -22,7 +22,7 @@ type Fee = { id: string; thread_id: string; amount: number; status: string; note
 const STATUS: Record<string, [string, string]> = {
   sent: ['Waiting', 'st-wait'], viewed: ['Viewed, no quote', 'st-wait'], quoted: ['Quoted', 'st-quoted'], accepted: ['Accepted', 'st-won'], declined: ['Declined', 'st-lost'], withdrawn: ['Withdrawn', 'st-lost'],
 };
-const FEE: Record<string, string> = { awaiting_unlock: 'Waiting for the manager to confirm (A$99 + GST)', paid: 'Paid', waived: 'Waived by admin', expired: 'Expired after 48 hours (owner told they can choose another)', owed: 'Owed', invoiced: 'Invoiced' };
+const FEE: Record<string, string> = { awaiting_unlock: 'Waiting for the manager to confirm (client fee + GST)', paid: 'Paid', waived: 'Waived by admin', expired: 'Expired after 48 hours (owner told they can choose another)', owed: 'Owed', invoiced: 'Invoiced' };
 const SOURCE: Record<string, string> = { ads: 'Google Ads', google: 'Google search (free)', social: 'Social media', referral: 'Other website', email: 'Email', direct: 'Direct or unknown' };
 const when = (d: string) => new Date(d).toLocaleString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Australia/Sydney' });
 
