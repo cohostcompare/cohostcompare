@@ -85,7 +85,8 @@ export function htmlToText(html: string) {
 }
 
 export async function fetchReceived(emailId: string): Promise<{ from?: string; subject?: string; text?: string | null; html?: string | null } | null> {
-  const key = (process.env.RESEND_API_KEY || '').trim();
+  // Reading received mail needs a full-access key; the sending key (RESEND_API_KEY) is usually send-only and gets a 401 here.
+  const key = (process.env.RESEND_INBOUND_KEY || process.env.RESEND_API_KEY || '').trim();
   const r = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}`, { headers: { Authorization: `Bearer ${key}` }, cache: 'no-store' });
   if (!r.ok) { console.error('Resend receiving', r.status, await r.text()); return null; }
   return r.json();

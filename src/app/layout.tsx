@@ -56,9 +56,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="wrap">
           {children}
           <footer className="site">
-            <span>© 2026 CoHostCompare · ABN 52 679 120 059</span>
-            <span><Link href="/how-it-works">How it works</Link> · <Link href="/why-us">Why use us</Link> · <Link href="/setup">Setting up your rental</Link> · <Link href="/rules">Rules in my area</Link> · <Link href="/guides">Guides</Link> · <Link href="/earnings">What could I earn?</Link> · <Link href="/areas">Areas</Link> · <Link href="/directory">All managers</Link> · <Link href="/best-airbnb-managers">Best managers by city</Link> · <Link href="/airbnb-management-fees">Fee report</Link> · <Link href="/managers">For managers</Link> · <Link href="/partners">Partner with us</Link> · <Link href="/about">About</Link> · <Link href="/facts">Market facts</Link> · <Link href="/feedback">Feedback</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link></span>
-            <span>Made in Sydney · hello@cohostcompare.com{SOCIAL.map((x) => <span key={x.url}> · <a href={x.url} rel="me noopener">{x.name}</a></span>)}</span>
+            <div className="foot-cols">
+              <nav aria-label="For owners"><b>For owners</b><Link href="/">Compare managers</Link><Link href="/earnings">What could I earn?</Link><Link href="/how-it-works">How it works</Link><Link href="/why-us">Why use us</Link><Link href="/setup">Setting up your rental</Link></nav>
+              <nav aria-label="Research"><b>Research</b><Link href="/rules">Rules in my area</Link><Link href="/guides">Guides</Link><Link href="/airbnb-management-fees">Fee report</Link><Link href="/best-airbnb-managers">Best managers by city</Link><Link href="/facts">Market facts</Link></nav>
+              <nav aria-label="Browse"><b>Browse</b><Link href="/areas">Areas</Link><Link href="/directory">All managers</Link></nav>
+              <nav aria-label="Business"><b>For business</b><Link href="/managers">For managers</Link><Link href="/partners">Partner with us</Link></nav>
+              <nav aria-label="Company"><b>CoHostCompare</b><Link href="/about">About</Link><Link href="/feedback">Feedback</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></nav>
+            </div>
+            <div className="foot-base">
+              <span>© 2026 CoHostCompare · ABN 52 679 120 059</span>
+              <span>Made in Sydney · hello@cohostcompare.com{SOCIAL.map((x) => <span key={x.url}> · <a href={x.url} rel="me noopener">{x.name}</a></span>)}</span>
+            </div>
           </footer>
         </div>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }} />

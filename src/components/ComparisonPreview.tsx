@@ -1,12 +1,11 @@
 'use client';
 
-/** Homepage picture of the results page: made-up managers (never real businesses), shown as an app window with what you can do next. */
+/** Homepage picture of the results page: made-up managers (never real businesses), laid out like the real rows. One has no published fee, as most don't. */
 const EXAMPLES = [
-  { name: 'Tidewell Stays', initials: 'TS', fee: '18%', rating: '4.92', homes: 24, platforms: 'Airbnb · Stayz · Booking.com', tag: 'Highest rating nearby', picked: true },
-  { name: 'Kelpie Coast Hosting', initials: 'KC', fee: '15%', rating: '4.81', homes: 11, platforms: 'Airbnb · Stayz', tag: 'Lowest fee', picked: true },
-  { name: 'Harbourline Stays', initials: 'HS', fee: '20%', rating: '4.88', homes: 37, platforms: 'Airbnb · Booking.com', tag: 'Most homes nearby', picked: false },
+  { name: 'Tidewell Stays', initials: 'TS', fee: '18%', rating: '4.92', homes: 24, tag: 'Highest guest rating near you', picked: true },
+  { name: 'Kelpie Coast Hosting', initials: 'KC', fee: null, rating: '4.81', homes: 11, tag: 'Replies on CoHostCompare', picked: true },
+  { name: 'Harbourline Stays', initials: 'HS', fee: '20%', rating: '4.88', homes: 37, tag: 'Most homes near you', picked: false },
 ];
-const TILE = ['#0F5E57', '#9A5A06', '#3D4E8A'];
 
 /** Clicking the picture points people to the real search: the address box pulses and its placeholder goes bold. */
 function nudgeSearch() {
@@ -24,27 +23,25 @@ export default function ComparisonPreview() {
     <figure className="rp" aria-label="Picture of a results page, with made-up managers" onClick={nudgeSearch}>
       <span className="rp-label">What your results look like</span>
       <div className="rp-window" aria-hidden="true">
-        <div className="rp-chrome"><i /><i /><i /><span>cohostcompare.com/search</span></div>
         <div className="rp-body">
-          <div className="rp-head"><b>3 managers near you</b><span>Sort: guest rating near you ▾</span></div>
-          {EXAMPLES.map((m, i) => (
+          <div className="rp-head"><b>Top 3 of 24 for this address</b><span>Sort: Recommended ▾</span></div>
+          {EXAMPLES.map((m) => (
             <div key={m.name} className={`rp-card${m.picked ? ' on' : ''}`}>
-              <span className="rp-av" style={{ background: TILE[i] }}>{m.initials}</span>
-              <div className="rp-main">
-                <b>{m.name}</b>
-                <span className="rp-meta"><b>{m.homes}</b> homes · <b>{m.rating} ★</b> guest rating nearby</span>
-                <span className="rp-meta">{m.platforms}</span>
-                <span className="rp-tag">{m.tag}</span>
+              <div className="rp-top">
+                <span className="rp-av">{m.initials}</span>
+                <div className="rp-main"><b>{m.name}</b><span className="rp-tag">{m.tag}</span></div>
+                <span className={`rp-btn${m.picked ? ' done' : ''}`}>{m.picked ? '✓ Added' : '+ Add'}</span>
               </div>
-              <div className="rp-side">
-                <span className="rp-fee">{m.fee}<small>fee</small></span>
-                <span className={`rp-btn${m.picked ? ' done' : ''}`}>{m.picked ? '✓ Added' : '+ Add to quote'}</span>
+              <div className="rp-stats">
+                <span><b>{m.homes}</b>Homes near you</span>
+                <span><b>{m.rating}<small> ★</small></b>Guest rating</span>
+                <span>{m.fee ? <b>{m.fee}</b> : <b className="req">On request</b>}Fee</span>
               </div>
             </div>
           ))}
           <div className="rp-bar">
             <span><b>2 of 5 picked</b></span>
-            <span className="rp-actions"><span className="rp-link">Compare side by side</span><span className="rp-btn primary">Request 2 quotes →</span></span>
+            <span className="rp-btn primary">Request 2 quotes →</span>
           </div>
         </div>
       </div>

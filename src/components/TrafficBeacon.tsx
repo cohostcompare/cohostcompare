@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 export default function TrafficBeacon() {
   useEffect(() => {
     try {
+      if (navigator.webdriver) return; // automated browsers (crawlers that run scripts) aren't visitors
       const q = location.search;
       const ad = /[?&](gclid|gbraid|wbraid|utm_source)=/.test(q);
       let seen = false;

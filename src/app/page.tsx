@@ -5,16 +5,16 @@ import { POSITIONING, faqPage } from '@/lib/seo';
 import AddressSearch from '@/components/AddressSearch';
 import ComparisonPreview from '@/components/ComparisonPreview';
 import CoverageMap from '@/components/CoverageMap';
-import HeroBackdrop from '@/components/HeroBackdrop';
 import Photo from '@/components/Photo';
 import { areas } from '@/lib/areas';
+import { market } from '@/lib/market';
 import { liveSuburbs, suburbHref } from '@/lib/suburbs';
 import RulesTrust from '@/components/RulesTrust';
 import StickySearch from '@/components/StickySearch';
 
 export const metadata: Metadata = {
   title: { absolute: 'CoHostCompare: compare Airbnb and short-term rental managers in Australia' },
-  description: 'Compare the Airbnb and short-term rental managers who cover your address: fees, guest ratings and homes they run nearby, side by side. Request up to five quotes free. Unbiased, with no paid rankings.',
+  description: 'Compare the Airbnb and short-term rental managers who cover your address: homes they run nearby, guest ratings and fees. Get fees in writing from up to five, free. Unbiased, with no paid rankings.',
   alternates: { canonical: '/' },
 };
 
@@ -34,7 +34,7 @@ export const revalidate = 1800;
 const POPULAR = ['Bondi Beach', 'Bronte', 'Coogee', 'Potts Point', 'South Yarra', 'St Kilda', 'Fitzroy', 'Byron Bay', 'Hyams Beach', 'Sorrento'];
 
 export default async function Home() {
-  const [all, subs] = await Promise.all([areas().catch(() => []), liveSuburbs().catch(() => [])]);
+  const [all, subs, mk] = await Promise.all([areas().catch(() => []), liveSuburbs().catch(() => []), market()]);
   const popular = POPULAR.map((name) => {
     const sub = subs.find((x) => x.name === name);
     if (sub) return { href: suburbHref(sub), label: name };
@@ -44,11 +44,10 @@ export default async function Home() {
   return (
     <main>
       <section className="home-hero">
-        <HeroBackdrop />
       <div className="split">
         <div className="hero-left">
           <h1 className="hero-h1"><span>Compare short-term</span> <span>rental managers</span> <span>near you</span></h1>
-          <p className="lede">Fees, guest ratings and homes they run nearby, side by side. Free for owners and unbiased.</p>
+          <p className="lede">See who runs homes near yours and how guests rate them. Then get fees in writing from up to five, without the sales calls.</p>
           <div className="hero-actions">
             <div className="hero-search"><AddressSearch /></div>
             <ul className="hero-ticks" aria-label="Why owners use us">
@@ -77,6 +76,15 @@ export default async function Home() {
       </div>
       </section>
 
+      {mk.managers > 0 && (
+        <ul className="proof" aria-label="CoHostCompare in numbers">
+          <li><b>{mk.managers}</b><span>managers compared</span></li>
+          <li><b>{mk.areas}</b><span>areas across NSW and Victoria</span></li>
+          <li><b>$0</b><span>cost to owners</span></li>
+          <li><b>0</b><span>paid rankings</span></li>
+        </ul>
+      )}
+
       <section className="steps home-steps desk-only" aria-labelledby="how">
         <div className="steps-head">
           <span className="label">How it works</span>
@@ -93,7 +101,7 @@ export default async function Home() {
             <span className="num" aria-hidden="true">02</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
             <h3>Compare</h3>
-            <p>Compare fees, guest ratings, homes nearby and platforms side by side, from the same data for everyone.</p>
+            <p>Compare homes nearby, guest ratings and published fees side by side, from the same data for everyone.</p>
           </li>
           <li>
             <span className="num" aria-hidden="true">03</span>

@@ -72,7 +72,7 @@ export default function AreaView({ place: a, managers, crumbs, back, nearby, nea
         </section>
       )}
 
-      {managers.length ? <ResultsList managers={managers} query={q.toString()} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
+      {managers.length ? <ResultsList managers={managers} query={q.toString()} feeHint={range} /> : <p className="panel">We haven&apos;t mapped managers here yet. <Link href="/">Search your address</Link>.</p>}
 
       {managers.length > 0 && (
         <section className="prose" style={{ marginTop: 28, maxWidth: 760 }}>

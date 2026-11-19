@@ -89,9 +89,9 @@ export async function withTestForAdmin(list: NearbyManager[]): Promise<NearbyMan
 /** Managers with homes within COVER_KM of a point, busiest nearby first. */
 /** Deduped within one render (a page and its metadata share the lookup). */
 export const managersNear = cache(managersNearUncached);
-async function managersNearUncached(lat: number, lng: number): Promise<NearbyManager[]> {
+async function managersNearUncached(lat: number, lng: number, km: number = COVER_KM): Promise<NearbyManager[]> {
   const db = adminClient();
-  const { data: near, error } = await db.rpc('managers_near', { p_lat: lat, p_lng: lng, p_km: COVER_KM });
+  const { data: near, error } = await db.rpc('managers_near', { p_lat: lat, p_lng: lng, p_km: km });
   if (error) { console.error(error); return []; }
   const hits = (near || []) as { manager_id: string; nearby: number; nearby_rating: number | null; nearest_km: number | null }[];
   if (!hits.length) return [];
@@ -101,6 +101,13 @@ async function managersNearUncached(lat: number, lng: number): Promise<NearbyMan
     const h = hits.find((x) => x.manager_id === r.id)!;
     return { ...toPublic(r, stats.get(r.id), extras.get(r.id)), nearby: h.nearby, nearbyRating: h.nearby_rating == null ? null : Number(h.nearby_rating), nearestKm: h.nearest_km == null ? null : Number(h.nearest_km) };
   }).sort((a, b) => b.nearby - a.nearby || (b.avgRating ?? 0) - (a.avgRating ?? 0));
+}
+
+/** For a search with nobody in range: the closest few managers further out (they don't cover the address, so can't be sent a request from it). */
+export const WIDER_KM = 20;
+export async function closestManagers(lat: number, lng: number, n = 3): Promise<NearbyManager[]> {
+  const wide = await managersNearUncached(lat, lng, WIDER_KM).catch(() => []);
+  return wide.filter((m) => m.nearestKm != null).sort((a, b) => a.nearestKm! - b.nearestKm!).slice(0, n);
 }
 
 /** Fallback when we only have a postcode: managers who've declared that postcode. */
