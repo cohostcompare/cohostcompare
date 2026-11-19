@@ -8,7 +8,7 @@ import { sign } from '@/lib/claims';
  When someone hits reply, Resend posts `email.received` to /api/inbound, we fetch the body,
  strip the quoted history and add it to the conversation as if they'd typed it on the site.
  Outreach emails carry o-<contact>-<sig>@... as a second Reply-To, so a reply stops the sequence
- (the first Reply-To is still hello@, so Ben sees it too).
+ (the first Reply-To is still hello@, and /api/inbound also copies every outreach reply to hello@, because some mail clients reply only to the tracking address).
  Off until INBOUND_DOMAIN and RESEND_INBOUND_SECRET are set in Vercel.
 */
 

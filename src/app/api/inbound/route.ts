@@ -41,8 +41,14 @@ export async function POST(req: NextRequest) {
 
   if (target.kind === 'outreach') {
     await db.from('outreach_contacts').update({ status: 'replied' }).eq('id', target.contactId).in('status', ['active', 'paused', 'finished']);
-    await log('outreach reply: sequence stopped');
-    return NextResponse.json({ outreach: true }); // Ben already has it: hello@ is the first Reply-To.
+    // Always copy it to hello@. hello@ is the first Reply-To, but some mail clients reply only to the tracking
+    // address (Dinner Plain, Nov 2026), and the webhook's `to` can't tell us which happened. A duplicate in Gmail is fine.
+    let copied = false;
+    try {
+      copied = Boolean(await sendEmail({ to: 'hello@cohostcompare.com', subject: `Manager reply: ${d.subject || '(no subject)'}`, text: `A manager replied to an outreach email. Their sequence has stopped. Replying to this email goes to them.\n\nFrom: ${d.from}\n\n${text || '(Couldn’t read the reply text. Open it in Resend under Receiving.)'}`, replyTo: from || undefined }));
+    } catch (e) { console.error('outreach reply copy', e); }
+    await log(`outreach reply: sequence stopped${copied ? ', copied to hello@' : ', COPY FAILED'}`);
+    return NextResponse.json({ outreach: true });
   }
 
   if (!text) return forward('The reply was empty after removing the quoted email.');
