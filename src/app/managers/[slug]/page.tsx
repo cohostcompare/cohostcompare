@@ -10,7 +10,7 @@ import OwnerReviews from '@/components/OwnerReviews';
 import { publishedReviews, stars } from '@/lib/reviews';
 import TrustBadges from '@/components/TrustBadges';
 import ProfileQuote from './ProfileQuote';
-import { COVER_KM, TEST_SLUG, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
+import { coverKm, TEST_SLUG, feeLabel, gatedDetails, managerAreas, managersNear, publicManager } from '@/lib/data';
 import { bump } from '@/lib/events';
 import { isAdminEmail } from '@/lib/admin';
 import { adminClient, currentUser } from '@/lib/supabase/server';
@@ -45,6 +45,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   const gAll = await gatedDetails(m.slug); // full terms: shown to signed-in owners; used below only to see what's published
   const g = user ? gAll : null;
   const lat = Number(sp.lat), lng = Number(sp.lng);
+  const COVER_KM = Number.isFinite(lat) && Number.isFinite(lng) && sp.lat && sp.lng ? coverKm(lat, lng) : 4;
   const near = sp.lat && sp.lng && Number.isFinite(lat) && Number.isFinite(lng) ? (await managersNear(lat, lng).catch(() => [])).find((x) => x.slug === m.slug) : undefined;
   const q = new URLSearchParams({ managers: m.slug });
   for (const k of ['postcode', 'street', 'suburb', 'state', 'lat', 'lng'] as const) if (sp[k]) q.set(k, sp[k]!);
@@ -72,7 +73,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
   // What to ask: turn gaps in the profile into questions, so "not published" becomes a prompt rather than a blank.
   const ask: string[] = [];
   if (!fee) ask.push('What is your management fee, as a percentage of booking income, and does it include GST?');
-  else if (!m.claimed) ask.push(`Is the ${fee} fee on your website still current, and does it include GST?`);
+  else if (!m.feeConfirmed) ask.push(`Is the ${fee} fee on your website still current, and does it include GST?`);
   if (gAll?.setupFee == null) ask.push('Is there a setup or onboarding fee, and what does it cover (photos, listing, furnishing advice)?');
   if (gAll?.minTermMonths == null) ask.push('Is there a minimum term, and how much notice do I give to leave?');
   if (gAll?.cleaningPassedOn == null) ask.push('Who pays for cleaning and linen: me or the guest?');
@@ -96,7 +97,7 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
       <div style={{ display: 'grid', gap: 20, minWidth: 0 }}>
         {!m.published && <p role="note" style={{ margin: 0, border: '1px solid var(--signal)', borderRadius: 10, padding: '10px 14px' }}><b>Not public.</b> Only you{isAdminEmail(user?.email) ? ' (admin)' : ' and your team'} can see this page{m.slug === TEST_SLUG ? ': it’s the internal test profile' : ''}. Owners won’t find it in search results. Questions? Email hello@cohostcompare.com.</p>}
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : m.tile ? { background: m.tile.bg, color: m.tile.fg } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
+          <div className="av" style={{ width: 64, height: 64, fontSize: 20, ...(m.logoUrl ? { background: '#fff', border: '1px solid var(--line)' } : {}) }} aria-hidden="true">{m.logoUrl ? <img src={m.logoUrl} alt="" style={{ objectFit: 'contain' }} /> : m.initials}</div>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontSize: 'clamp(28px,4.4vw,40px)', margin: 0 }}>{m.name}</h1>
             <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
@@ -126,13 +127,13 @@ export default async function ManagerPage({ params, searchParams }: { params: P;
               <div className="stat"><div className="n" style={{ fontSize: 18 }}>{m.cities.join(', ') || 'See below'}</div><div className="t">where they operate</div></div>
               {m.licensedAgent && <div className="stat"><div className="n" style={{ fontSize: 18 }}>Licensed agency</div><div className="t">real estate licence</div></div>}
             </div>
-            {fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
+            {fee && !m.feeConfirmed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
             <p className="hint" style={{ margin: 0 }}>No guest ratings or booking figures yet. We found {m.name} through its own website rather than in the Airbnb listing data we track, so it may list mainly on Stayz, Booking.com or its own site. Figures appear once its listings are linked, or when the manager claims this profile.</p>
           </div>
         )}
         <p className="phone-only" style={{ margin: 0 }}><a className="btn primary" href="#add-to-quote" style={{ width: '100%' }}>Request a quote</a></p>
         {near && <p className="near-line" style={{ margin: 0 }}><b>Near your address:</b> {near.nearby} home{near.nearby === 1 ? '' : 's'} within {COVER_KM} km{near.nearbyRating ? <>, averaging <b>{near.nearbyRating.toFixed(2)} ★</b></> : null}{near.nearestKm != null ? `. The closest is about ${near.nearestKm} km away.` : '.'}</p>}
-        {hasData && fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
+        {hasData && fee && !m.feeConfirmed && <p className="hint" style={{ margin: 0 }}>The fee shown is as published on {m.name}&apos;s website. {m.name} hasn&apos;t confirmed it on CoHostCompare yet, so check it with them, or request a quote to get their current fees in writing.</p>}
         {!m.claimed && <p className="hint" style={{ margin: 0 }}>Built from public information and refreshed regularly. <Link href="/managers#why-listed">How we build profiles</Link> · <a href="#claim">Is this your business?</a></p>}
 
 

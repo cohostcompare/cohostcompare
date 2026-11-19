@@ -21,7 +21,7 @@ Owners never pay. Managers can't pay for placement, ranking, ratings or badges, 
 - Managers listed: ${m.managers}, across ${m.areas} areas in New South Wales and Victoria.
 - Typical published management fee: ${m.fee.mid != null ? `${m.fee.mid}% of booking income` : 'n/a'}${feeRange(m.fee) ? ` (range ${feeRange(m.fee)}, from ${m.publishFees} managers that publish a fee)` : ''}.
 ${m.cities.map((c) => `- ${c.city}: ${c.managers} managers${c.fee.mid != null ? `, typical published fee ${c.fee.mid}%` : ''}${c.nightly ? `, typical nightly rate about A$${c.nightly}` : ''}.`).join('\n')}
-- Coverage: a manager covers an address if they run at least one short-term rental within 4 km of it.
+- Coverage: a manager covers an address if they run at least one short-term rental within 4 km of it (8 km in Sydney and Melbourne).
 - Home counts, nightly rates and guest ratings are estimates from public listings over the last 12 months. Data source: AirROI (www.airroi.com).
 - Full figures and how they're worked out: ${SITE}/facts
 

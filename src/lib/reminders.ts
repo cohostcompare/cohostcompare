@@ -136,6 +136,7 @@ export async function runDaily() {
   };
 
   const owners = await step('owner reminders', ownerReminders, 0);
+  const followUps = await step('follow-ups', async () => (await import('@/lib/followups')).followUpBatch(), { sent: 0, note: 'skipped' } as { sent: number; note?: string });
   const outreach = await step('outreach', async () => (await import('@/lib/outreach')).sendOutreachBatch(), { sent: 0, note: 'skipped' } as { sent: number; note?: string });
   const reports = await step('regional reports', async () => (await import('@/lib/reports')).runReports(), { made: 0, notified: 0, note: 'skipped' } as { made: number; notified: number; note?: string; remaining?: number });
   const expired = await step('expire unlocks', async () => (await import('@/lib/intro')).expireUnlocks(), 0);
@@ -166,6 +167,7 @@ export async function runDaily() {
     ...(problems.length ? ['PROBLEMS in today’s run (the other steps still ran):', ...problems.map((p) => `- ${p}`), ''] : []),
     ...claims, ...managers, ...abns,
     ...(outreach.sent ? [`Outreach: sent ${outreach.sent} manager emails today.`] : []),
+    ...(followUps.sent ? [`Manager follow-ups: sent ${followUps.sent} today (${followUps.note}).`] : []),
     ...(outreach.note && outreach.note !== 'Outreach is paused' ? [`Outreach note: ${outreach.note}.`] : []),
     ...outreachSoFar,
     ...(expired ? [`Unconfirmed accepted quotes past 48 hours: ${expired} (owners told they can choose another manager).`] : []),

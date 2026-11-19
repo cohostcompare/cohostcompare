@@ -37,11 +37,30 @@ export default function ForManagers() {
         </div>
         <ManagerSignup />
       </section>
-      <section className="band split">
+      <ul className="proof" aria-label="How it works for managers, in numbers" style={{ marginTop: 8 }}>
+        <li><b>$0</b><span>to be listed, get requests and reply</span></li>
+        <li><b>5</b><span>managers at most per owner request</span></li>
+        <li><b>1st</b><span>client you win is free</span></li>
+        <li><b>0</b><span>sales calls and paid rankings</span></li>
+      </ul>
+      <section className="band split" style={{ borderTop: 0, paddingTop: 0 }}>
         <Photo name="making" ratio="3 / 2" sizes="(max-width: 880px) 100vw, 540px" />
         <div style={{ display: 'grid', gap: 12 }}>
           <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>Spend your time on homes, not sales calls</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>Owners arrive having already compared you on the numbers that matter. You get the property details up front, reply with a quote in a few minutes, and the owner accepts or asks questions in one place.</p>
+        </div>
+      </section>
+      <section id="why-listed" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>
+        <div style={{ maxWidth: 760, display: 'grid', gap: 8 }}>
+          <span className="label" style={{ color: 'var(--brand)' }}>Why is my business listed?</span>
+          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>How we build manager profiles</h2>
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Owners deserve to see every manager who operates near them, not just the ones who advertise. So we build a starting profile for every identifiable short-term rental business we find, from public information. Every business is measured the same way, which keeps the comparison fair.</p>
+        </div>
+        <div className="facts-grid">
+          <div className="panel"><h3>Where the data comes from</h3><p>Figures come from public short-term rental listings, supplied by the data provider AirROI (www.airroi.com). For each business we count the homes it manages and combine their public guest ratings, review counts and nightly rates over the last 12 months. We don&apos;t show nights booked, because Airbnb data can&apos;t see bookings made through Stayz, Booking.com or your own website. Business details such as your website and services come from your own public website.</p></div>
+          <div className="panel"><h3>What we show, and what we don&apos;t</h3><p>We show totals and averages across your portfolio, labelled as estimates. We never show individual listings, addresses, photos or guest details, and we don&apos;t write reviews. Fees appear only where you publish them or set them yourself. Otherwise owners see &ldquo;Fee on request&rdquo;.</p></div>
+          <div className="panel"><h3>The same rules for everyone</h3><p>Every manager is measured the same way, from the same data. No one can pay to change their rating or their place in results, and quote comparisons use the same format for every manager. Private individuals who co-host a home or two don&apos;t get a profile unless they create one.</p></div>
+          <div className="panel"><h3>You&apos;re in control</h3><p>Claim your profile for free to correct anything, add your fees, services, logo and photos, and reply to owners directly. If something looks wrong, email us and we&apos;ll check it. If you&apos;d rather not be listed at all, email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> from your business address and we&apos;ll remove your profile.</p></div>
         </div>
       </section>
       <section id="pricing" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>
@@ -83,19 +102,6 @@ export default function ForManagers() {
           </div>
         </div>
         <p className="hint" style={{ margin: 0 }}>Launch prices in Australian dollars. Subscribe during launch and your price is fixed for 12 months. We&apos;ll always ask before your first charge, and you can cancel any time. <a href="/terms#paid-plans">Paid plan terms</a></p>
-      </section>
-      <section id="why-listed" className="band" style={{ display: 'grid', gap: 22, scrollMarginTop: 96 }}>
-        <div style={{ maxWidth: 760, display: 'grid', gap: 8 }}>
-          <span className="label" style={{ color: 'var(--brand)' }}>Why is my business listed?</span>
-          <h2 style={{ fontSize: 'clamp(26px,3.6vw,34px)', margin: 0 }}>How we build manager profiles</h2>
-          <p style={{ margin: 0, color: 'var(--muted)' }}>Owners deserve to see every manager who operates near them, not just the ones who advertise. So we build a starting profile for every identifiable short-term rental business we find, from public information. Every business is measured the same way, which keeps the comparison fair.</p>
-        </div>
-        <div className="facts-grid">
-          <div className="panel"><h3>Where the data comes from</h3><p>Figures come from public short-term rental listings, supplied by the data provider AirROI (www.airroi.com). For each business we count the homes it manages and combine their public guest ratings, review counts and nightly rates over the last 12 months. We don&apos;t show nights booked, because Airbnb data can&apos;t see bookings made through Stayz, Booking.com or your own website. Business details such as your website and services come from your own public website.</p></div>
-          <div className="panel"><h3>What we show, and what we don&apos;t</h3><p>We show totals and averages across your portfolio, labelled as estimates. We never show individual listings, addresses, photos or guest details, and we don&apos;t write reviews. Fees appear only where you publish them or set them yourself. Otherwise owners see &ldquo;Fee on request&rdquo;.</p></div>
-          <div className="panel"><h3>The same rules for everyone</h3><p>Every manager is measured the same way, from the same data. No one can pay to change their rating or their place in results, and quote comparisons use the same format for every manager. Private individuals who co-host a home or two don&apos;t get a profile unless they create one.</p></div>
-          <div className="panel"><h3>You&apos;re in control</h3><p>Claim your profile for free to correct anything, add your fees, services, logo and photos, and reply to owners directly. If something looks wrong, email us and we&apos;ll check it. If you&apos;d rather not be listed at all, email <a href="mailto:hello@cohostcompare.com">hello@cohostcompare.com</a> from your business address and we&apos;ll remove your profile.</p></div>
-        </div>
       </section>
       <section style={{ borderTop: '1px solid var(--line)', paddingBlock: 48, maxWidth: 760 }}>
         <JsonLd data={faqPage(faqs)} />

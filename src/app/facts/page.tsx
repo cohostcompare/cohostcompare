@@ -81,7 +81,7 @@ export default async function Facts() {
       <section className="panel" style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>How these figures are worked out</h2>
         <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
-          <li>A manager covers an area if they run at least one short-term rental within 4 km of its centre.</li>
+          <li>A manager covers an area if they run at least one short-term rental within 4 km of its centre (8 km in Sydney and Melbourne).</li>
           <li>Fees are only from managers who publish one, on their own website or their CoHostCompare profile. The typical fee is the median of each manager’s mid-point, shown only where at least five managers publish a fee. Fees on unclaimed profiles haven’t been confirmed by the manager.</li>
           <li>Homes, nightly rates and guest ratings are estimates from public listings over the last 12 months{m.dataAsOf ? `, with listing data as of ${fmtDate(m.dataAsOf)}` : ''}. We never show individual listings.</li>
           <li>Figures update automatically as managers and listing data change. This page was last worked out on {date}.</li>

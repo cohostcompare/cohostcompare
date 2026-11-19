@@ -133,7 +133,7 @@ export default function ResultsList({ managers, query, fresh, feeHint }: { manag
                   </div>
                   {(m.photos?.length ?? 0) > 0 && <div className="gallery" tabIndex={0} role="region" aria-label={`Photos of homes managed by ${m.name}`}>{m.photos!.slice(0, 4).map((p) => <img key={p} src={p} alt={`A home managed by ${m.name}`} loading="lazy" />)}</div>}
                   {(m.platforms.length > 0 || m.services.length > 0) && <div className="chips">{m.platforms.map((p) => <span className="chip" key={p}>{p}</span>)}{m.services.map((x) => <span className="chip" key={x} style={{ background: 'transparent', border: '1px solid var(--line)' }}>{x}</span>)}</div>}
-                  {fee && !m.claimed && <p className="hint" style={{ margin: 0 }}>The fee is from their website, hasn&apos;t been confirmed by them, and GST isn&apos;t stated.</p>}
+                  {fee && !m.feeConfirmed && <p className="hint" style={{ margin: 0 }}>The fee is from their website, hasn&apos;t been confirmed by them, and GST isn&apos;t stated.</p>}
                   <div className="actions">
                     <Link className="btn secondary" href={profile}>View full profile →</Link>
                     <button type="button" className="linkish" onClick={() => setOpen(null)} style={{ marginLeft: 'auto' }}>Show less</button>
@@ -171,7 +171,7 @@ export default function ResultsList({ managers, query, fresh, feeHint }: { manag
           <h2>{hidden > 0 ? `Top ${short.length} of ${fits.length} for this address` : `${fits.length} manager${fits.length === 1 ? '' : 's'} for this address`}</h2>
           <details className="how-ranked">
             <summary>How is this ranked?</summary>
-            <p>{sort === 'recommended' ? 'Recommended is a blend of guest rating (50%), homes they run near you (30%), being on CoHostCompare to reply (10%) and owner reviews (10%). Hotels and serviced apartments are never in the top 3.' : sort === 'rating' ? 'By the guest rating of the homes each manager runs within 4 km of this address.' : sort === 'overall' ? 'By the guest rating across all of each manager’s homes.' : sort === 'homes' ? 'By the homes each manager runs within 4 km of this address, not their whole portfolio.' : 'Managers without this figure go last.'} No one can pay to rank higher.</p>
+            <p>{sort === 'recommended' ? 'Recommended is a blend of guest rating (50%), homes they run near you (30%), being on CoHostCompare to reply (10%) and owner reviews (10%). Hotels and serviced apartments are never in the top 3.' : sort === 'rating' ? 'By the guest rating of the homes each manager runs near this address.' : sort === 'overall' ? 'By the guest rating across all of each manager’s homes.' : sort === 'homes' ? 'By the homes each manager runs near this address, not their whole portfolio.' : 'Managers without this figure go last.'} No one can pay to rank higher.</p>
           </details>
         </div>
         <label className="sort-pick">Sort

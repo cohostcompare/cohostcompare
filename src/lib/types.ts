@@ -24,6 +24,7 @@ export type PublicManager = {
   services: string[];
   feeMin: number | null; // % of booking revenue, only when published by the manager
   feeMax: number | null;
+  feeConfirmed?: boolean; // set by the manager: claimed, or confirmed from an email link (SQL 037)
   licensedAgent: boolean | null;
   responseHours: number | null; // median hours to reply, claimed managers with 3+ replies
   replies?: number;

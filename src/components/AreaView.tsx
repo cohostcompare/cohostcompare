@@ -4,7 +4,7 @@ import JsonLd from '@/components/JsonLd';
 import ResultsList from '@/components/ResultsList';
 import { feeRange, feeStats } from '@/lib/market';
 import { breadcrumbs, faqPage, itemList } from '@/lib/seo';
-import { COVER_KM, managersNear } from '@/lib/data';
+import { coverKm, managersNear } from '@/lib/data';
 import { RULES } from '@/lib/rules';
 
 /*
@@ -27,6 +27,7 @@ export type PlaceManagers = Awaited<ReturnType<typeof placeManagers>>;
 export default function AreaView({ place: a, managers, crumbs, back, nearby, nearbyTitle = 'Nearby areas', related, relatedTitle, lead, heading }: {
   place: Place; managers: PlaceManagers; crumbs: [string, string][]; back: L; nearby: L[]; nearbyTitle?: string; related?: L[]; relatedTitle?: string; lead?: React.ReactNode; heading?: string;
 }) {
+  const COVER_KM = coverKm(a.lat, a.lng);
   const q = new URLSearchParams({ lat: String(a.lat), lng: String(a.lng), suburb: a.label, state: a.state.toUpperCase(), ...(a.postcode ? { postcode: a.postcode } : {}) });
   // Area snapshot from the same figures shown on each card.
   const homes = managers.reduce((s, m) => s + (m.nearby || 0), 0);

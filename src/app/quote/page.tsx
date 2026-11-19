@@ -38,7 +38,7 @@ export default async function Quote({ searchParams }: { searchParams: SP }) {
         <div className="panel">Pick managers from your search results first. <Link href="/">Start a search</Link></div>
       )}
       {picked.length > 0 && (
-        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name, claimed: m.claimed, slowReply: m.slowReply, requirements: reqs.get(m.slug) ?? null }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '', lat: sp.lat ? Number(sp.lat) : null, lng: sp.lng ? Number(sp.lng) : null }} email={user?.email || ''} fresh={Boolean(user?.email && isAdminEmail(user.email))} />
+        <QuoteForm managers={picked.map((m) => ({ slug: m.slug, name: m.name, claimed: m.claimed, slowReply: m.slowReply, requirements: reqs.get(m.slug) ?? null }))} initial={{ street: sp.street || '', suburb: sp.suburb || '', state: sp.state || '', postcode: sp.postcode || '', lat: sp.lat ? Number(sp.lat) : null, lng: sp.lng ? Number(sp.lng) : null }} email={user?.email || ''} fresh={Boolean(user?.email && isAdminEmail(user.email))} codeOn={user?.email ? false : await (await import('@/lib/partners')).getSetting('email_code', false)} />
       )}
     </main>
   );

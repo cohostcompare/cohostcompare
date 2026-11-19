@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const faqs: [string, string][] = [
   ['What is CoHostCompare?', POSITIONING],
   ['Is it free for owners?', 'Yes. Owners never pay. Searching, comparing and requesting quotes are free, and there are no sales calls: managers reply in your inbox here.'],
-  ['How do you decide which managers cover my address?', 'A manager covers your address if they already run at least one short-term rental within 4 km of it, based on public listing data. Some also cover areas they list on their own website.'],
+  ['How do you decide which managers cover my address?', 'A manager covers your address if they already run at least one short-term rental within 4 km of it (8 km in Sydney and Melbourne), based on public listing data. Some also cover areas they list on their own website.'],
   ['Can managers pay to rank higher?', 'No. No manager can pay for placement, ranking, ratings or badges. You choose how results are sorted, for example by guest rating near you or homes nearby.'],
   ['Where do the ratings and home counts come from?', 'From public guest ratings on the short-term rental listings each manager runs, over the last 12 months, via AirROI. They are estimates, and we never show individual listings.'],
   ['When does a manager get my contact details?', 'Only after you accept their quote. Until then you message them through CoHostCompare.'],

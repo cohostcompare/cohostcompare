@@ -4,7 +4,7 @@ import ResultsList from '@/components/ResultsList';
 import { isAdminViewer } from '@/lib/admin';
 import Link from 'next/link';
 import NotifyForm from './NotifyForm';
-import { COVER_KM, closestManagers, managersForArea, managersForPostcode, withTestForAdmin } from '@/lib/data';
+import { coverKm, closestManagers, managersForArea, managersForPostcode, withTestForAdmin } from '@/lib/data';
 import { bump, logSearch } from '@/lib/events';
 import { logFunnel } from '@/lib/traffic';
 import { earningsHref } from '@/lib/requirements';
@@ -19,6 +19,7 @@ export default async function Search({ searchParams }: { searchParams: SP }) {
   const postcode = /^\d{4}$/.test(sp.postcode || '') ? sp.postcode! : '';
   const lat = Number(sp.lat), lng = Number(sp.lng);
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng) && sp.lat && sp.lng;
+  const COVER_KM = hasPoint ? coverKm(lat, lng) : 4;
   const found = hasPoint ? await managersForArea(lat, lng, postcode) : postcode ? await managersForPostcode(postcode) : [];
   const closest = !found.length && hasPoint ? await closestManagers(lat, lng) : [];
   const { withReviewSummaries } = await import('@/lib/reviews');

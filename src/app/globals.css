@@ -1042,3 +1042,23 @@ footer.site { display: grid; gap: 24px; }
 .mstats dd { order: 2; margin-top: 2px; }
 .mstats dd .req { font-size: 16px; line-height: 1.6; }
 .rp-stats span { display: flex; flex-direction: column-reverse; justify-content: flex-end; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.fee-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.fee-fields label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+.fee-fields input.field { font-family: var(--display); font-weight: 800; font-size: 24px; min-height: 56px; background: var(--panel); }
+/* Quote form: the emailed code, typed on the page */
+.code-form { display: grid; gap: 8px; background: var(--panel); border-radius: 12px; padding: 14px 16px; }
+.code-form label { font-weight: 700; }
+.code-form > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.code-form input { flex: 1 1 150px; max-width: 220px; font-family: var(--display); font-weight: 800; font-size: 24px; letter-spacing: .22em; text-align: center; background: var(--surface); }
+.code-form p { margin: 0; color: var(--signal); font-weight: 600; }
+/* Manager profile in the new style: ink monogram, figures with their labels on top */
+.profile .av { background: var(--ink); color: #fff; font-family: var(--display); font-weight: 800; }
+.profile .stats { gap: 0; padding: 18px 8px; }
+.profile .stat { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px; padding: 4px 16px; border-left: 1px solid var(--line); }
+.profile .stat:first-child { border-left: 0; }
+.profile .stat .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.profile .stat .n { font-size: 28px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .profile .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; } .profile .stat:nth-child(odd) { border-left: 0; } }
+.profile .panel h2 { font-family: var(--display); }
+.profile .locked { background: var(--panel); }
+.fee-fields select.field { min-height: 56px; background-color: var(--panel); }

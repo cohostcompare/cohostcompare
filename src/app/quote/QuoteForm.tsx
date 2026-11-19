@@ -20,7 +20,7 @@ type Addr = { street: string; suburb: string; state: string; postcode: string; l
 
 type M = { slug: string; name: string; claimed?: boolean; slowReply?: boolean; requirements?: Requirements | null };
 
-export default function QuoteForm({ managers, initial, email, fresh }: { managers: M[]; initial: Addr; email: string; fresh?: boolean }) {
+export default function QuoteForm({ managers, initial, email, fresh, codeOn }: { managers: M[]; initial: Addr; email: string; fresh?: boolean; /** The sign-in email carries a 6-digit code (site_settings email_code), so it can be typed here instead of opening the link. */ codeOn?: boolean }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitQuoteRequest, {});
   const signedIn = Boolean(email);
   // Not signed in: the request is held and we email a sign-in link; opening it sends the request (/quote/send/[id]).
@@ -32,6 +32,18 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
     supabase.auth.signInWithOtp({ email: state.pending.email, options: { emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(`/quote/send/${state.pending.id}`)}`, shouldCreateUser: true } })
       .then(({ error }) => setLink(error ? 'failed' : 'sent'));
   }, [state.pending]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The code from the same email, typed here: the owner never leaves the page (better on phones, where the link opens in the mail app's own browser).
+  const [code, setCode] = useState('');
+  const [codeState, setCodeState] = useState<'idle' | 'checking' | 'bad'>('idle');
+  const submitCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!state.pending || code.length < 6) return;
+    setCodeState('checking');
+    const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    const { error } = await supabase.auth.verifyOtp({ email: state.pending.email, token: code, type: 'email' });
+    if (error) { setCodeState('bad'); return; }
+    location.assign(`/quote/send/${state.pending.id}`);
+  };
   const [addr, setAddr] = useState<Addr>({ ...initial, state: initial.state || 'NSW' });
   const known = Boolean(initial.suburb && /^\d{4}$/.test(initial.postcode) && initial.lat != null);
   const [editing, setEditing] = useState(!known);
@@ -88,7 +100,17 @@ export default function QuoteForm({ managers, initial, email, fresh }: { manager
           <p style={{ margin: 0 }}>Your request to {state.pending.count} manager{state.pending.count === 1 ? '' : 's'} is saved. <a href={`/signin?next=${encodeURIComponent(`/quote/send/${state.pending.id}`)}`}>Sign in with {state.pending.email}</a> and it goes straight out.</p>
         ) : (
           <>
-            <p style={{ margin: 0 }}>We&apos;ve {link === 'sent' ? 'sent' : 'sending'} a link to <b>{state.pending.email}</b>. Tap it and your request goes to {state.pending.count} manager{state.pending.count === 1 ? '' : 's'} straight away. It can take a minute, so check spam if it hasn&apos;t arrived.</p>
+            <p style={{ margin: 0 }}>We&apos;ve {link === 'sent' ? 'sent' : 'sending'} {codeOn ? 'an email' : 'a link'} to <b>{state.pending.email}</b>. Tap {codeOn ? 'the link in it' : 'it'} and your request goes to {state.pending.count} manager{state.pending.count === 1 ? '' : 's'} straight away. It can take a minute, so check spam if it hasn&apos;t arrived.</p>
+            {codeOn && (
+              <form onSubmit={submitCode} className="code-form">
+                <label htmlFor="otp">Or enter the 6-digit code from the email</label>
+                <div>
+                  <input id="otp" className="field" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} placeholder="000000" value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setCodeState('idle'); }} />
+                  <button className="btn primary" disabled={code.length < 6 || codeState === 'checking'}>{codeState === 'checking' ? 'Checking…' : 'Send my request'}</button>
+                </div>
+                {codeState === 'bad' && <p role="alert">That code didn&apos;t work. Check the newest email, or tap the link in it instead.</p>}
+              </form>
+            )}
             <p className="hint" style={{ margin: 0 }}>This confirms your email so managers can reply to you. No password needed, and it also signs you in to your free inbox to compare the quotes.</p>
           </>
         )}
