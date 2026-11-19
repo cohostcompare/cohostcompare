@@ -105,7 +105,7 @@ export default function ResultsList({ managers, query, fresh, feeHint }: { manag
               <dl className="mstats">
                 <div className={sort === 'homes' ? 'hit' : undefined}><dt>Homes near you</dt><dd>{m.nearby > 0 ? m.nearby : <span className="none">–</span>}</dd></div>
                 <div className={sort === 'rating' || sort === 'overall' ? 'hit' : undefined}><dt>Guest rating{rating != null && !ratingNear ? ', all homes' : ''}</dt><dd>{rating != null ? <>{(sort === 'overall' && m.avgRating != null ? m.avgRating : rating).toFixed(2)}<small> ★</small></> : <span className="none">–</span>}</dd></div>
-                <div><dt>Fee</dt><dd>{fee ?? <span className="req">On request</span>}</dd>{!fee && feeHint ? <span className="ctx">Others publish {feeHint.replace('% to ', '–')}</span> : fee && !m.claimed ? <span className="ctx">From their website</span> : null}</div>
+                <div><dt>Fee</dt><dd>{fee ?? <span className="req">On request</span>}</dd></div>
               </dl>
               <div className="mrow-act">
                 {bad.length ? (
